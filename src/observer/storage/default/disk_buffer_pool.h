@@ -23,6 +23,8 @@ See the Mulan PSL v2 for more details. */
 #include <time.h>
 
 #include <vector>
+#include <limits>
+#include <stdexcept>
 
 #include "rc.h"
 
@@ -97,11 +99,43 @@ public:
   }
 
   Frame *alloc() {
-    return nullptr; // TODO for test
+    int lru_idx = 0;
+    unsigned long lru_acc_time = std::numeric_limits<unsigned long>::max();
+    for (int i = 0; i < this->size; i++) {
+      if (!this->allocated[i]) {
+        this->allocated[i] = true;
+        return this->frame + i;
+      }
+      if (this->frame[i].acc_time < lru_acc_time) {
+        lru_idx = i;
+        lru_acc_time = this->frame[i].acc_time;
+      }
+    }
+
+    if (this->frame[lru_idx].dirty) {
+      // TODO: flush block.
+      // Not implemented yet because this method appears to be for testing only.
+      throw std::logic_error("Not implemented");
+    }
+
+    this->frame[lru_idx].acc_time = this->current_time();
+    return this->frame + lru_idx;
   }
 
   Frame *get(int file_desc, PageNum page_num) {
-    return nullptr; // TODO for test
+    for (int i = 0; i < this->size; i++) {
+      if (!this->allocated[i]) continue;
+
+      if (
+        this->frame[i].file_desc == file_desc &&
+        this->frame[i].page.page_num == page_num
+      ) {
+        this->frame[i].acc_time = this->current_time();
+        return this->frame + i;
+      }
+    }
+
+    return nullptr;
   }
 
   Frame *getFrame() { return frame; }
@@ -112,6 +146,13 @@ public:
   int size;
   Frame * frame = nullptr;
   bool *allocated = nullptr;
+
+private:
+  unsigned long current_time() {
+    struct timespec tp;
+    clock_gettime(CLOCK_MONOTONIC, &tp);
+    return tp.tv_sec * 1000 * 1000 * 1000UL + tp.tv_nsec;
+  }
 };
 
 class DiskBufferPool {
