@@ -1,0 +1,3 @@
+[submodule "docs/lectures"]
+	path = docs/lectures
+	url = https://github.com/OceanBase-Partner/lectures-on-dbms-implementation.git
