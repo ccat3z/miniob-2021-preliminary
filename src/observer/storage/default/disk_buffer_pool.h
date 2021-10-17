@@ -169,6 +169,12 @@ public:
   RC open_file(const char *file_name, int *file_id);
 
   /**
+   * 根据文件名删除一个分页文件
+   * @return
+   */
+  RC remove_file(const char *file_name);
+
+  /**
    * 关闭fileID对应的分页文件
    */
   RC close_file(int file_id);

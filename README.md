@@ -15,7 +15,7 @@ See details [here](./docs/lectures/miniob-topics.md).
 ### 必做题
 
 - [X] 优化buffer pool
-- [ ] drop table
+- [X] drop table
 - [ ] 实现update功能
 - [ ] 增加date字段
 - [ ] 查询元数据校验
