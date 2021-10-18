@@ -22,6 +22,16 @@ See details [here](./docs/lectures/miniob-topics.md).
 - [X] 实现update功能
   - [ ] Support trx
 - [ ] 增加date字段
+  - [ ] Parser
+    - [ ] Lex & Yacc
+    - [ ] Parse date string to ulong
+  - [ ] Executor
+    - [ ] Query
+      - [ ] Record -> Tuple (see `class TupleRecordConvertor`)
+  - [ ] Storage
+    - [ ] Deserialize
+    - [ ] Index (see `bplus_tree.cpp`)
+    - [ ] Condition (see `condition.cpp`)
 - [ ] 查询元数据校验
 - [ ] 多表查询
 - [ ] 聚合运算
