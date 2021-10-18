@@ -12,6 +12,8 @@ please refer to docs/how_to_build.md
 
 See details [here](./docs/lectures/miniob-topics.md).
 
+- [ ] RC stringify
+
 ### 必做题
 
 - [X] 优化buffer pool
