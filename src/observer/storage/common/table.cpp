@@ -558,7 +558,26 @@ RC Table::create_index(Trx *trx, const char *index_name, const char *attribute_n
 }
 
 RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value, int condition_num, const Condition conditions[], int *updated_count) {
-  return RC::GENERIC_ERROR;
+  if (trx != nullptr) {
+    return RC::GENERIC_ERROR;
+  }
+
+  CompositeConditionFilter filter;
+  filter.init(*this, conditions, condition_num);
+
+  const FieldMeta *field = table_meta_.field(attribute_name);
+  if (field == nullptr) {
+    return RC::SCHEMA_FIELD_MISSING;
+  }
+
+  auto updater = [&](Record rec){
+    memcpy(rec.data + field->offset(), value->data, field->len());
+    return RC::SUCCESS;
+  };
+  auto rc = scan_record(trx, &filter, -1, [this, &updater](Record *record)->RC {
+    return record_handler_->update_record_in_place<>(&record->rid, updater);
+  });
+  return rc;
 }
 
 class RecordDeleter {
