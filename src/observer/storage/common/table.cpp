@@ -559,7 +559,8 @@ RC Table::create_index(Trx *trx, const char *index_name, const char *attribute_n
 
 RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value, int condition_num, const Condition conditions[], int *updated_count) {
   if (trx != nullptr) {
-    return RC::GENERIC_ERROR;
+    LOG_WARN("Update transaction not supported yet, all changes cannot be rollbacked.");
+    // return RC::GENERIC_ERROR;
   }
 
   CompositeConditionFilter filter;
