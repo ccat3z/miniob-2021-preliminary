@@ -13,12 +13,13 @@ please refer to docs/how_to_build.md
 See details [here](./docs/lectures/miniob-topics.md).
 
 - [ ] RC stringify
+- [ ] Colorful log
 
 ### 必做题
 
 - [X] 优化buffer pool
 - [X] drop table
-- [ ] 实现update功能
+- [X] 实现update功能
   - [ ] Support trx
 - [ ] 增加date字段
 - [ ] 查询元数据校验
