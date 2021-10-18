@@ -23,7 +23,7 @@ See details [here](./docs/lectures/miniob-topics.md).
   - [ ] Support trx
 - [ ] 增加date字段
   - [ ] Parser
-    - [ ] Lex & Yacc
+    - [X] Lex & Yacc
     - [ ] Parse date string to ulong
   - [ ] Executor
     - [ ] Query

@@ -82,6 +82,7 @@ ParserContext *get_context(yyscan_t scanner)
         TRX_ROLLBACK
         INT_T
         STRING_T
+		DATE_T
         FLOAT_T
         HELP
         EXIT
@@ -267,6 +268,7 @@ number:
 type:
 	INT_T { $$=INTS; }
        | STRING_T { $$=CHARS; }
+	   | DATE_T { $$=DATE; }
        | FLOAT_T { $$=FLOATS; }
        ;
 ID_get:
