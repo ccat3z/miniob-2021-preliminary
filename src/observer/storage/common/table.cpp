@@ -369,6 +369,13 @@ RC Table::scan_record(Trx *trx, ConditionFilter *filter, int limit, void *contex
   return scan_record(trx, filter, limit, (void *)&adapter, scan_record_reader_adapter);
 }
 
+static RC scan_record_invoke_function(Record *record, void* ptr) {
+    return (*static_cast<std::function<RC(Record *record)>*>(ptr))(record);
+}
+RC Table::scan_record(Trx *trx, ConditionFilter *filter, int limit, std::function<RC(Record *record)> record_reader) {
+  return scan_record(trx, filter, limit, (void *)&record_reader, scan_record_invoke_function);
+}
+
 RC Table::scan_record(Trx *trx, ConditionFilter *filter, int limit, void *context, RC (*record_reader)(Record *record, void *context)) {
   if (nullptr == record_reader) {
     return RC::INVALID_ARGUMENT;

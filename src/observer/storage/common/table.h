@@ -16,6 +16,7 @@ See the Mulan PSL v2 for more details. */
 #define __OBSERVER_STORAGE_COMMON_TABLE_H__
 
 #include "storage/common/table_meta.h"
+#include <functional>
 
 class DiskBufferPool;
 class RecordFileHandler;
@@ -77,6 +78,7 @@ public:
   RC rollback_delete(Trx *trx, const RID &rid);
 
 private:
+  RC scan_record(Trx *trx, ConditionFilter *filter, int limit, std::function<RC(Record *record)> record_reader);
   RC scan_record(Trx *trx, ConditionFilter *filter, int limit, void *context, RC (*record_reader)(Record *record, void *context));
   RC scan_record_by_index(Trx *trx, IndexScanner *scanner, ConditionFilter *filter, int limit, void *context, RC (*record_reader)(Record *record, void *context));
   IndexScanner *find_index_for_scan(const ConditionFilter *filter);
