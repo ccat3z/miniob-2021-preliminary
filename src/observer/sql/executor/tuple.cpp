@@ -234,6 +234,7 @@ void TupleRecordConverter::add_record(const char *record) {
         tuple.add(s, strlen(s));
       }
       break;
+      // TODO: case Date
       default: {
         LOG_PANIC("Unsupported field type. type=%d", field_meta->type());
       }

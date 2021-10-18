@@ -129,6 +129,7 @@ public:
   const TupleSchema &get_schema() const;
 
   void add(Tuple && tuple);
+  // TODO: void Tuple::add_date(ulong)
 
   void clear();
 

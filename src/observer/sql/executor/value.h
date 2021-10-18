@@ -91,5 +91,7 @@ private:
   std::string value_;
 };
 
+// TODO: class DateValue (ulong)
+
 
 #endif //__OBSERVER_SQL_EXECUTOR_VALUE_H_
