@@ -224,9 +224,49 @@ TEST_F(SQLTest, Basic) {
   ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
 }
 
-TEST_F(SQLTest, UpdateMeta) {
-  ASSERT_EQ(exec_sql("show tables;"), "No table\n");
+TEST_F(SQLTest, SelectMetaInvalidTableShouldFailure) {
+  ASSERT_EQ(exec_sql("select * from t2;"), "FAILURE\n");
+}
+
+TEST_F(SQLTest, DropTableShouldWork) {
   ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("show tables;"), "t\n\n");
+  ASSERT_EQ(exec_sql("drop table t;"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("show tables;"), "No table\n");
+}
+
+TEST_F(SQLTest, DropTableWithIndexShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create index t_a_idx on t(a);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("show tables;"), "t\n\n");
+  ASSERT_EQ(exec_sql("drop table t;"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("show tables;"), "No table\n");
+}
+
+TEST_F(SQLTest, DropTableFailureIfNotExist) {
+  ASSERT_EQ(exec_sql("drop table t2;"), "FAILURE\n");
+}
+
+TEST_F(SQLTest, DropTableCanCreateAgain) {
+  ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("show tables;"), "t\n\n");
+  ASSERT_EQ(exec_sql("drop table t;"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("show tables;"), "t\n\n");
+}
+
+TEST_F(SQLTest, DropTableWithIndexCreateAgain) {
+  ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create index t_a_idx on t(a);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("show tables;"), "t\n\n");
+
+  ASSERT_EQ(exec_sql("drop table t;"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("show tables;"), "No table\n");
+
+  ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create index t_a_idx on t(a);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("show tables;"), "t\n\n");
 }
 
 int main(int argc, char **argv) {
