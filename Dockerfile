@@ -1,13 +1,16 @@
 # This Dockerfile is just for testing if it can be built in the competition's test environment
 FROM gcc:8.3
 
+RUN apt-get update && apt-get install cmake -y \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install dependencies
 ENV MAKEFLAGS=-j8
 WORKDIR /usr/src
-RUN git clone https://gitlab.kitware.com/cmake/cmake.git --branch v3.20.6 --depth 1 \
-    && cd cmake \
-    && ./bootstrap && make install \
-    && cd /usr/src && rm -rf cmake
+# RUN git clone https://gitlab.kitware.com/cmake/cmake.git --branch v3.20.6 --depth 1 \
+#     && cd cmake \
+#     && ./bootstrap && make install \
+#     && cd /usr/src && rm -rf cmake
 RUN git clone https://github.com/libevent/libevent --branch release-2.1.12-stable --depth 1 \
     && cd libevent \
     && mkdir build \
