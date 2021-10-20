@@ -158,5 +158,6 @@ template <class T> std::string get_type_name(const T &val) {
 
 bool is_blank(const char *s);
 
+std::string random_string(size_t length);
 } //namespace common
 #endif // __COMMON_LANG_STRING_H__
