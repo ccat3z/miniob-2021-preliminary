@@ -9,7 +9,14 @@ MESSAGE("${CMAKE_COMMON_FLAGS}")
 
 
 #INCLUDE_DIRECTORIES([AFTER|BEFORE] [SYSTEM] dir1 dir2 ...)
-INCLUDE_DIRECTORIES(. ${PROJECT_SOURCE_DIR}/../deps /usr/local/include SYSTEM)
+INCLUDE_DIRECTORIES(
+    .
+    ${PROJECT_SOURCE_DIR}/../deps
+    ${PROJECT_SOURCE_DIR}/../deps/filesystem/include
+    ${PROJECT_SOURCE_DIR}/../src/observer
+    /usr/local/include
+    SYSTEM
+)
 # 父cmake 设置的include_directories 和link_directories并不传导到子cmake里面
 #INCLUDE_DIRECTORIES(BEFORE ${CMAKE_INSTALL_PREFIX}/include)
 LINK_DIRECTORIES(/usr/local/lib ${PROJECT_BINARY_DIR}/../lib)
@@ -27,16 +34,19 @@ ENDIF ()
 
 
 
+enable_testing()
+include(GoogleTest)
 #get_filename_component(<VAR> FileName
 #        PATH|ABSOLUTE|NAME|EXT|NAME_WE|REALPATH
 #        [CACHE])
-FILE(GLOB_RECURSE ALL_SRC *.cpp)
+# FILE(GLOB_RECURSE ALL_SRC *.cpp)
+SET(ALL_SRC sql_test.cpp)
 # AUX_SOURCE_DIRECTORY 类似功能
 FOREACH (F ${ALL_SRC})
     get_filename_component(prjName ${F} NAME_WE)
     MESSAGE("Build ${prjName} according to ${F}")
     ADD_EXECUTABLE(${prjName} ${F})
-    TARGET_LINK_LIBRARIES(${prjName} common pthread dl observer_static)
-
+    TARGET_LINK_LIBRARIES(${prjName} common pthread dl gtest gtest_main observer_static ghc_filesystem)
+    gtest_discover_tests(${prjName})
 ENDFOREACH (F)
 
