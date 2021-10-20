@@ -19,6 +19,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/conf/ini.h"
 
 int init(common::ProcessParam *processParam);
+int init(common::ProcessParam *processParam, bool force); // Just for test
 void cleanup();
 
 #endif //__OBSERVER_INIT_H__

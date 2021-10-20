@@ -159,10 +159,17 @@ int prepare_init_seda() {
 }
 
 int init(ProcessParam *process_param) {
+  init(process_param, false);
+}
+
+int init(ProcessParam *process_param, bool force) {
 
   if (get_init()) {
-
-    return 0;
+    if (force) {
+      cleanup_seda();
+    } else {
+      return 0;
+    }
   }
 
   set_init(true);
