@@ -265,7 +265,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
 
   std::stringstream ss;
   if (tuple_sets.size() > 1) {
-    // 本次查询了多张表，需要做join操作
+    // TODO: 本次查询了多张表，需要做join操作
   } else {
     // 当前只查询一张表，直接返回结果即可
     if (used_conditions_mask != ((1 << selects.condition_num) - 1)) {
