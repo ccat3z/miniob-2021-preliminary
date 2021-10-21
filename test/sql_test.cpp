@@ -266,6 +266,7 @@ TEST_F(SQLTest, SelectMetaInvalidTableShouldFailure) {
 TEST_F(SQLTest, SelectMetaSelectInvalidColumnShouldFailure) {
   ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("select b from t;"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("select t2.a from t;"), "FAILURE\n");
 }
 
 TEST_F(SQLTest, SelectMetaSelectInvalidConditionShouldFailure) {
