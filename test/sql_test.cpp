@@ -235,7 +235,17 @@ TEST_F(SQLTest, SelectMetaSelectInvalidColumnShouldFailure) {
 
 TEST_F(SQLTest, SelectMetaSelectInvalidConditionShouldFailure) {
   ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t where a > 0;"), "a\n");
+
   ASSERT_EQ(exec_sql("select * from t where b > a;"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("select * from t where b > 1;"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("select * from t where 1 > b;"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("select * from t where b = 1;"), "FAILURE\n");
+
+  ASSERT_EQ(exec_sql("select * from t where b < c;"), "FAILURE\n");
+
+  ASSERT_EQ(exec_sql("select * from t where t.b > 1;"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("select * from t where t2.b > 1;"), "FAILURE\n");
 }
 
 TEST_F(SQLTest, DropTableShouldWork) {
