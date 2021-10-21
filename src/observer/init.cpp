@@ -159,7 +159,7 @@ int prepare_init_seda() {
 }
 
 int init(ProcessParam *process_param) {
-  init(process_param, false);
+  return init(process_param, false);
 }
 
 int init(ProcessParam *process_param, bool force) {
