@@ -233,6 +233,7 @@ TEST_F(SQLTest, DropTableShouldWork) {
   ASSERT_EQ(exec_sql("show tables;"), "t\n\n");
   ASSERT_EQ(exec_sql("drop table t;"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("show tables;"), "No table\n");
+  ASSERT_EQ(exec_sql("select * from t;"), "FAILURE\n");
 }
 
 TEST_F(SQLTest, DropTableWithIndexShouldWork) {
@@ -241,6 +242,18 @@ TEST_F(SQLTest, DropTableWithIndexShouldWork) {
   ASSERT_EQ(exec_sql("show tables;"), "t\n\n");
   ASSERT_EQ(exec_sql("drop table t;"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("show tables;"), "No table\n");
+}
+
+TEST_F(SQLTest, DropTableWithDataShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t;"), "a\n1\n");
+  ASSERT_EQ(exec_sql("sync;"), "SUCCESS");
+
+  ASSERT_EQ(exec_sql("drop table t;"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t;"), "a\n");
 }
 
 TEST_F(SQLTest, DropTableFailureIfNotExist) {
