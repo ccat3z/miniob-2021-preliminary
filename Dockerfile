@@ -33,11 +33,12 @@ RUN git clone https://github.com/google/googletest --depth 1 \
     && make install \
     && cd /usr/src && rm -rf googletest
 
-# Install miniob
+# Build and test miniob
 ENV LD_LIBRARY_PATH=/usr/local/lib
 COPY . /usr/src/miniob
 RUN cd /usr/src/miniob \
     && mkdir build \
     && cd build \
     && cmake .. \
-    && make install
+    && make \
+    && SQL_TEST_SERVER_WORKAROUND=exec ./bin/sql_test
