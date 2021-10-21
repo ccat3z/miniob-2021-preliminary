@@ -8,6 +8,12 @@ miniob设计的目标是让不熟悉数据库设计和实现的同学能够快�
 ## How to build
 please refer to docs/how_to_build.md
 
+## 相关连接
+
+[日测结果](https://open.oceanbase.com/answer)
+
+[榜单](https://open.oceanbase.com/competition/index)
+
 ## TODO
 
 See details [here](./docs/lectures/miniob-topics.md).
@@ -18,7 +24,7 @@ See details [here](./docs/lectures/miniob-topics.md).
 ### 必做题
 
 - [X] 优化buffer pool
-- [ ] 查询元数据校验
+- [X] 查询元数据校验
 - [X] drop table
 - [X] 实现update功能
   - [ ] Support trx
