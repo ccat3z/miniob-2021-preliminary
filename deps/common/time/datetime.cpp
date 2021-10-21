@@ -20,6 +20,7 @@ See the Mulan PSL v2 for more details. */
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <date/date.h>
 namespace common {
 
 DateTime::DateTime(std::string &xml_str) {
@@ -387,4 +388,27 @@ bool DateTime::is_valid_xml_datetime(const std::string &str) {
   return true;
 }
 
+bool Date::parse(const char *date_str) {
+  date::year_month_day date;
+  std::istringstream ss(date_str);
+  ss >> date::parse("%Y-%m-%d", date);
+  if (ss.fail()) {
+    return false;
+  } else {
+    this->m_date = julian_date((int) date.year(), (unsigned) date.month(), (unsigned) date.day());
+  }
+  return true;
+}
+
+std::string Date::format() {
+  int year, month, day;
+  get_ymd(this->m_date, year, month, day);
+
+  std::ostringstream os;
+  os << std::setfill('0')
+     << std::setw(4) << year << '-'
+     << std::setw(2) << month << '-'
+     << std::setw(2) << day;
+  return os.str();
+}
 } //namespace common
