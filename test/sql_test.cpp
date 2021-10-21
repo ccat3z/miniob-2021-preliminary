@@ -256,7 +256,17 @@ private:
 
 TEST_F(SQLTest, Basic) {
   ASSERT_EQ(exec_sql("show tables;"), "No table\n");
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("insert into t values (1, 2);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t;"), "a | b\n1 | 2\n");
+  ASSERT_EQ(exec_sql("select a from t;"), "a\n1\n");
+  ASSERT_EQ(exec_sql("select t.a from t;"), "a\n1\n");
+}
+
+TEST_F(SQLTest, SelectMetaShouldResponseHeadWhenNoData) {
   ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t;"), "a\n");
 }
 
 TEST_F(SQLTest, SelectMetaInvalidTableShouldFailure) {
