@@ -28,6 +28,7 @@
 namespace fs = ghc::filesystem;
 using namespace std::chrono_literals;
 std::string conf_path = "../etc/observer.ini";
+std::string observer_binary = "./bin/observer";
 
 
 int init_unix_sock(const char *unix_sock_path) {
@@ -154,6 +155,29 @@ class ForkTestServer : public TestServer {
     pid_t pid;
 };
 
+class ExecTestServer : public TestServer {
+  public:
+    ~ExecTestServer() { };
+    void start(std::string data_dir, std::string socket_path) {
+      pid = fork();
+      if (pid == 0) {
+        fs::current_path(data_dir);
+        if (execl(observer_binary.c_str(), "observer", "-s", socket_path.c_str(), "-f", conf_path.c_str(), NULL) != 0) {
+          std::cerr << "Failed to start observer" << std::endl;
+        }
+        exit(0);
+      }
+    }
+    void stop() {
+      kill(pid, SIGTERM);
+      std::this_thread::sleep_for(.5s);
+      kill(pid, SIGTERM);
+      waitpid(pid, nullptr, 0);
+    }
+  private:
+    pid_t pid;
+};
+
 class SQLTest : public ::testing::Test {
 public:
   SQLTest() {
@@ -162,6 +186,8 @@ public:
       server = new ThreadTestServer();
     } else if (strcmp(test_server_workaround, "fork") == 0) {
       server = new ForkTestServer();
+    } else if (strcmp(test_server_workaround, "exec") == 0) {
+      server = new ExecTestServer();
     } else {
       server = new ThreadTestServer();
     }
@@ -312,5 +338,6 @@ TEST_F(SQLTest, DropTableWithIndexCreateAgain) {
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   conf_path = fs::absolute(conf_path);
+  observer_binary = fs::absolute(observer_binary);
   return RUN_ALL_TESTS();
 }
