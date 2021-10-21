@@ -157,7 +157,14 @@ class ForkTestServer : public TestServer {
 class SQLTest : public ::testing::Test {
 public:
   SQLTest() {
-    server = new ThreadTestServer();
+    const char *test_server_workaround = std::getenv("SQL_TEST_SERVER_WORKAROUND");
+    if (test_server_workaround == nullptr) {
+      server = new ThreadTestServer();
+    } else if (strcmp(test_server_workaround, "fork") == 0) {
+      server = new ForkTestServer();
+    } else {
+      server = new ThreadTestServer();
+    }
   }
 
   ~SQLTest() {
