@@ -124,6 +124,7 @@ class ThreadTestServer : public TestServer {
     void start(std::string data_dir, std::string socket_path) {
       server = init_server(socket_path);
       pthread_create(&pid, nullptr, ThreadTestServer::start_server_func, server);
+      std::this_thread::sleep_for(SERVER_START_STOP_TIMEOUT);
     }
     void stop() {
       server->shutdown();
@@ -146,6 +147,7 @@ class ForkTestServer : public TestServer {
         server->serve();
         exit(0);
       }
+      std::this_thread::sleep_for(SERVER_START_STOP_TIMEOUT);
     }
     void stop() {
       kill(pid, SIGTERM);
@@ -167,6 +169,7 @@ class ExecTestServer : public TestServer {
         }
         exit(0);
       }
+      std::this_thread::sleep_for(SERVER_START_STOP_TIMEOUT);
     }
     void stop() {
       kill(pid, SIGTERM);
@@ -205,7 +208,6 @@ public:
     fs::current_path(data_dir);
     server->start(data_dir, socket_path);
 
-    std::this_thread::sleep_for(SERVER_START_STOP_TIMEOUT);
     sockfd = init_unix_sock(socket_path.c_str());
   }
 
