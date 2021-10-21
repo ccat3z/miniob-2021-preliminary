@@ -349,6 +349,7 @@ TEST_F(SQLTest, DropTableWithIndexCreateAgain) {
 }
 
 int main(int argc, char **argv) {
+  srand((unsigned)time(NULL));
   testing::InitGoogleTest(&argc, argv);
   conf_path = fs::absolute(conf_path);
   observer_binary = fs::absolute(observer_binary);
