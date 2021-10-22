@@ -20,6 +20,7 @@ See details [here](./docs/lectures/miniob-topics.md).
 
 - [ ] RC stringify
 - [ ] Colorful log
+- [ ] Memory leak of Value
 
 ### 必做题
 
