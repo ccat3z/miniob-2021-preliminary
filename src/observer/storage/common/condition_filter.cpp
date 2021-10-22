@@ -17,6 +17,7 @@ See the Mulan PSL v2 for more details. */
 #include "record_manager.h"
 #include "common/log/log.h"
 #include "storage/common/table.h"
+#include "storage/common/value.h"
 
 using namespace common;
 
@@ -40,7 +41,7 @@ DefaultConditionFilter::~DefaultConditionFilter()
 
 RC DefaultConditionFilter::init(const ConDesc &left, const ConDesc &right, AttrType attr_type, CompOp comp_op)
 {
-  if (attr_type < CHARS || attr_type > FLOATS) {
+  if (attr_type < CHARS || attr_type > DATE) {
     LOG_ERROR("Invalid condition with unsupported attribute type: %d", attr_type);
     return RC::INVALID_ARGUMENT;
   }
@@ -57,7 +58,7 @@ RC DefaultConditionFilter::init(const ConDesc &left, const ConDesc &right, AttrT
   return RC::SUCCESS;
 }
 
-RC DefaultConditionFilter::init(Table &table, const Condition &condition)
+RC DefaultConditionFilter::init(Table &table, Condition &condition)
 {
   const TableMeta &table_meta = table.table_meta();
   ConDesc left;
@@ -66,6 +67,7 @@ RC DefaultConditionFilter::init(Table &table, const Condition &condition)
   AttrType type_left = UNDEFINED;
   AttrType type_right = UNDEFINED;
 
+  // Prepare attr first, because value_cast is based on attrs
   if (1 == condition.left_is_attr) {
     left.is_attr = true;
     const FieldMeta *field_left = table_meta.field(condition.left_attr.attribute_name);
@@ -79,15 +81,8 @@ RC DefaultConditionFilter::init(Table &table, const Condition &condition)
     left.value = nullptr;
 
     type_left = field_left->type();
-  } else {
-    left.is_attr = false;
-    left.value = condition.left_value.data;  // 校验type 或者转换类型
-    type_left = condition.left_value.type;
-
-    left.attr_length = 0;
-    left.attr_offset = 0;
   }
-
+  
   if (1 == condition.right_is_attr) {
     right.is_attr = true;
     const FieldMeta *field_right = table_meta.field(condition.right_attr.attribute_name);
@@ -100,7 +95,28 @@ RC DefaultConditionFilter::init(Table &table, const Condition &condition)
     type_right = field_right->type();
 
     right.value = nullptr;
-  } else {
+  }
+
+  if (1 != condition.left_is_attr) {
+    // Detect value's type by another attr
+    if (condition.right_is_attr) {
+      value_cast(&condition.left_value, type_right);
+    }
+
+    left.is_attr = false;
+    left.value = condition.left_value.data;  // 校验type 或者转换类型
+    type_left = condition.left_value.type;
+
+    left.attr_length = 0;
+    left.attr_offset = 0;
+  }
+
+  if (1 != condition.right_is_attr) {
+    // Detect value's type by another attr
+    if (condition.left_is_attr) {
+      value_cast(&condition.right_value, type_left);
+    }
+
     right.is_attr = false;
     right.value = condition.right_value.data;
     type_right = condition.right_value.type;
@@ -146,7 +162,8 @@ bool DefaultConditionFilter::filter(const Record &rec) const
       // 按照C字符串风格来定
       cmp_result = strcmp(left_value, right_value);
     } break;
-    case INTS: {
+    case INTS:
+    case DATE: {
       // 没有考虑大小端问题
       // 对int和float，要考虑字节对齐问题,有些平台下直接转换可能会跪
       int left = *(int *)left_value;
@@ -204,7 +221,7 @@ RC CompositeConditionFilter::init(const ConditionFilter *filters[], int filter_n
   return init(filters, filter_num, false);
 }
 
-RC CompositeConditionFilter::init(Table &table, const Condition *conditions, int condition_num)
+RC CompositeConditionFilter::init(Table &table, Condition *conditions, int condition_num)
 {
   if (condition_num == 0) {
     return RC::SUCCESS;

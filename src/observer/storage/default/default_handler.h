@@ -134,7 +134,7 @@ public:
    * @return
    */
   RC delete_record(Trx *trx, const char *dbname, const char *relation_name,
-                           int condition_num, const Condition *conditions, int *deleted_count);
+                           int condition_num, Condition *conditions, int *deleted_count);
 
   /**
    * 该函数用于更新relName表中所有满足指定条件的元组，
@@ -149,7 +149,7 @@ public:
    * @return
    */
   RC update_record(Trx * trx, const char *dbname, const char *relation_name, const char *attribute_name, Value *value,
-                            int condition_num, const Condition *conditions, int *updated_count);
+                            int condition_num, Condition *conditions, int *updated_count);
 
 public:
   Db *find_db(const char *dbname) const;

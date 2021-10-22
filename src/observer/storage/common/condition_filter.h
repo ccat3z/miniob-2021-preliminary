@@ -46,7 +46,7 @@ public:
   virtual ~DefaultConditionFilter();
 
   RC init(const ConDesc &left, const ConDesc &right, AttrType attr_type, CompOp comp_op);
-  RC init(Table &table, const Condition &condition);
+  RC init(Table &table, Condition &condition);
 
   virtual bool filter(const Record &rec) const;
 
@@ -76,7 +76,7 @@ public:
   virtual ~CompositeConditionFilter();
 
   RC init(const ConditionFilter *filters[], int filter_num);
-  RC init(Table &table, const Condition *conditions, int condition_num);
+  RC init(Table &table, Condition *conditions, int condition_num);
   virtual bool filter(const Record &rec) const;
 
 public:
