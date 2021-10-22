@@ -348,6 +348,22 @@ TEST_F(SQLTest, DropTableWithIndexCreateAgain) {
   ASSERT_EQ(exec_sql("show tables;"), "t\n\n");
 }
 
+TEST_F(SQLTest, DateCanCreateTable) {
+  ASSERT_EQ(exec_sql("create table t(a int, d date);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("desc t;"),
+    "t(\n"
+    "\tfield name=__trx, type=ints, len=4, visible=no\n"
+    "\tfield name=a, type=ints, len=4, visible=yes\n"
+    "\tfield name=d, type=date, len=4, visible=yes\n"
+    ")\n"
+  );
+}
+
+TEST_F(SQLTest, DateCanInsert) {
+  ASSERT_EQ(exec_sql("create table t(a int, d date);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values(1, \"2020-10-10\");"), "SUCCESS\n");
+}
+
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
   testing::InitGoogleTest(&argc, argv);
