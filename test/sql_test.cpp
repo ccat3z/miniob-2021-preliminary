@@ -254,6 +254,14 @@ private:
   char recv_buf[MAX_MEM_BUFFER_SIZE];
 };
 
+// ########     ###     ######  ####  ######  
+// ##     ##   ## ##   ##    ##  ##  ##    ## 
+// ##     ##  ##   ##  ##        ##  ##       
+// ########  ##     ##  ######   ##  ##       
+// ##     ## #########       ##  ##  ##       
+// ##     ## ##     ## ##    ##  ##  ##    ## 
+// ########  ##     ##  ######  ####  ######  
+
 TEST_F(SQLTest, BasicCreateTableShouldWork) {
   ASSERT_EQ(exec_sql("show tables;"), "No table\n");
   ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
@@ -272,6 +280,22 @@ TEST_F(SQLTest, BasicSelectShouldWork) {
   ASSERT_EQ(exec_sql("select a from t;"), "a\n1\n");
   ASSERT_EQ(exec_sql("select t.a from t;"), "a\n1\n");
 }
+
+//  ######  ######## ##       ########  ######  ######## 
+// ##    ## ##       ##       ##       ##    ##    ##    
+// ##       ##       ##       ##       ##          ##    
+//  ######  ######   ##       ######   ##          ##    
+//       ## ##       ##       ##       ##          ##    
+// ##    ## ##       ##       ##       ##    ##    ##    
+//  ######  ######## ######## ########  ######     ##    
+
+// ##     ## ######## ########    ###    
+// ###   ### ##          ##      ## ##   
+// #### #### ##          ##     ##   ##  
+// ## ### ## ######      ##    ##     ## 
+// ##     ## ##          ##    ######### 
+// ##     ## ##          ##    ##     ## 
+// ##     ## ########    ##    ##     ## 
 
 TEST_F(SQLTest, SelectMetaShouldResponseHeadWhenNoData) {
   ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
@@ -302,6 +326,22 @@ TEST_F(SQLTest, SelectMetaSelectInvalidConditionShouldFailure) {
   ASSERT_EQ(exec_sql("select * from t where t.b > 1;"), "FAILURE\n");
   ASSERT_EQ(exec_sql("select * from t where t2.b > 1;"), "FAILURE\n");
 }
+
+// ########  ########   #######  ########  
+// ##     ## ##     ## ##     ## ##     ## 
+// ##     ## ##     ## ##     ## ##     ## 
+// ##     ## ########  ##     ## ########  
+// ##     ## ##   ##   ##     ## ##        
+// ##     ## ##    ##  ##     ## ##        
+// ########  ##     ##  #######  ##        
+
+// ########    ###    ########  ##       ######## 
+//    ##      ## ##   ##     ## ##       ##       
+//    ##     ##   ##  ##     ## ##       ##       
+//    ##    ##     ## ########  ##       ######   
+//    ##    ######### ##     ## ##       ##       
+//    ##    ##     ## ##     ## ##       ##       
+//    ##    ##     ## ########  ######## ######## 
 
 TEST_F(SQLTest, DropTableShouldWork) {
   ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
@@ -356,6 +396,14 @@ TEST_F(SQLTest, DropTableWithIndexCreateAgain) {
   ASSERT_EQ(exec_sql("create index t_a_idx on t(a);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("show tables;"), "t\n\n");
 }
+
+// ########     ###    ######## ######## 
+// ##     ##   ## ##      ##    ##       
+// ##     ##  ##   ##     ##    ##       
+// ##     ## ##     ##    ##    ######   
+// ##     ## #########    ##    ##       
+// ##     ## ##     ##    ##    ##       
+// ########  ##     ##    ##    ######## 
 
 TEST_F(SQLTest, DateCanCreateTable) {
   ASSERT_EQ(exec_sql("create table t(a int, d date);"), "SUCCESS\n");
