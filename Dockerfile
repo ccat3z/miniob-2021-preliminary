@@ -41,4 +41,4 @@ RUN cd /usr/src/miniob \
     && cd build \
     && cmake .. \
     && make \
-    && SQL_TEST_SERVER_WORKAROUND=exec ./bin/sql_test
+    && SQL_TEST_SERVER_WORKAROUND=exec ctest --output-on-failure
