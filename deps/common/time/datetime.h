@@ -394,6 +394,8 @@ public:
   Date(int date, int month, int year)
       : DateTime(year, month, date, 0, 0, 0, 0) {}
 
+  Date(int julian) { m_date = julian; };
+
   Date(long sec) : DateTime(sec / DateTime::SECONDS_PER_DAY, 0) {}
 
   Date(const tm *time) : DateTime(from_tm(*time)) { clear_time(); }
@@ -405,8 +407,8 @@ public:
   }
 
   bool parse(const char *date_str);
-  std::string format();
-  int &julian();
+  std::string format() const;
+  int julian() const;
 };
 
 class Now {

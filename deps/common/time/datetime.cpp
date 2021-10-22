@@ -400,7 +400,7 @@ bool Date::parse(const char *date_str) {
   return true;
 }
 
-std::string Date::format() {
+std::string Date::format() const {
   int year, month, day;
   get_ymd(this->m_date, year, month, day);
 
@@ -412,7 +412,7 @@ std::string Date::format() {
   return os.str();
 }
 
-int &Date::julian() {
+int Date::julian() const {
   return m_date;
 }
 } //namespace common
