@@ -397,6 +397,99 @@ TEST_F(SQLTest, DropTableWithIndexCreateAgain) {
   ASSERT_EQ(exec_sql("show tables;"), "t\n\n");
 }
 
+// ##     ## ########  ########     ###    ######## ######## 
+// ##     ## ##     ## ##     ##   ## ##      ##    ##       
+// ##     ## ##     ## ##     ##  ##   ##     ##    ##       
+// ##     ## ########  ##     ## ##     ##    ##    ######   
+// ##     ## ##        ##     ## #########    ##    ##       
+// ##     ## ##        ##     ## ##     ##    ##    ##       
+//  #######  ##        ########  ##     ##    ##    ######## 
+
+TEST_F(SQLTest, UpdateShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 10);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 5);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("update t set a = 100;"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t;"),
+    "a | b\n"
+    "100 | 1\n"
+    "100 | 10\n"
+    "100 | 3\n"
+    "100 | 5\n"
+  );
+}
+
+TEST_F(SQLTest, UpdateWithConditionsShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 10);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 5);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("update t set a = 100 where a = 1;"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t;"),
+    "a | b\n"
+    "100 | 1\n"
+    "100 | 10\n"
+    "2 | 3\n"
+    "2 | 5\n"
+  );
+}
+
+TEST_F(SQLTest, UpdateWithInvalidColumnShouldFailure) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 10);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 5);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("update t set c = 100 where a = 1;"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("select * from t;"),
+    "a | b\n"
+    "1 | 1\n"
+    "1 | 10\n"
+    "2 | 3\n"
+    "2 | 5\n"
+  );
+}
+
+TEST_F(SQLTest, UpdateWithInvalidConditionShouldFailure) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 10);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 5);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("update t set a = 100 where c = 1;"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("select * from t;"),
+    "a | b\n"
+    "1 | 1\n"
+    "1 | 10\n"
+    "2 | 3\n"
+    "2 | 5\n"
+  );
+}
+
+TEST_F(SQLTest, UpdateWithInvalidValueShouldFailure) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 10);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 5);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("update t set a = 1.0 where a = 1;"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("select * from t;"),
+    "a | b\n"
+    "1 | 1\n"
+    "1 | 10\n"
+    "2 | 3\n"
+    "2 | 5\n"
+  );
+}
+
 // ########     ###    ######## ######## 
 // ##     ##   ## ##      ##    ##       
 // ##     ##  ##   ##     ##    ##       
