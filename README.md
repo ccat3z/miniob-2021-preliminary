@@ -21,6 +21,7 @@ See details [here](./docs/lectures/miniob-topics.md).
 - [ ] RC stringify
 - [ ] Colorful log
 - [ ] Memory leak of Value
+- [ ] Parallel sql test
 
 ### 必做题
 
