@@ -19,6 +19,7 @@ See the Mulan PSL v2 for more details. */
 
 #include <string>
 #include <ostream>
+#include "common/time/datetime.h"
 
 class TupleValue {
 public:
@@ -91,7 +92,14 @@ private:
   std::string value_;
 };
 
-// TODO: class DateValue (ulong)
+class DateValue : public TupleValue {
+public:
+  explicit DateValue(int julian) : date(julian) {};
+  void to_string(std::ostream &os) const override;
+  int compare(const TupleValue &other) const override;
+private:
+  const common::Date date;
+};
 
 
 #endif //__OBSERVER_SQL_EXECUTOR_VALUE_H_
