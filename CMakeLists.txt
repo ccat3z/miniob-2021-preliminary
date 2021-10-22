@@ -110,3 +110,5 @@ INSTALL(CODE "MESSAGE(\"Sample install message.\")")
 #IF(not LS_RVALUE)
 #    MESSAGE(STATUS "ls result: " ${LS_OUTPUT})
 #ENDIF(not LS_RVALUE)
+
+enable_testing()

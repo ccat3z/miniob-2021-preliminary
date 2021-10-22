@@ -47,6 +47,6 @@ FOREACH (F ${ALL_SRC})
     MESSAGE("Build ${prjName} according to ${F}")
     ADD_EXECUTABLE(${prjName} ${F})
     TARGET_LINK_LIBRARIES(${prjName} common pthread dl gtest gtest_main observer_static ghc_filesystem)
-    gtest_discover_tests(${prjName})
+    gtest_discover_tests(${prjName} WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 ENDFOREACH (F)
 

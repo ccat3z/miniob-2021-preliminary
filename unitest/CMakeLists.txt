@@ -42,6 +42,6 @@ FOREACH (F ${ALL_SRC})
     ADD_EXECUTABLE(${prjName} ${F})
     # 不是所有的单测都需要链接observer_static
     TARGET_LINK_LIBRARIES(${prjName} common pthread dl gtest gtest_main observer_static)
-    gtest_discover_tests(${prjName})
+    gtest_discover_tests(${prjName} WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 ENDFOREACH (F)
 
