@@ -49,7 +49,6 @@ void value_init_float(Value *value, float v) {
   memcpy(value->data, &v, sizeof(v));
 }
 void value_init_string(Value *value, const char *v) {
-  // TODO: parse based on attrtype
   value->type = CHARS;
   value->data = strdup(v);
 }
