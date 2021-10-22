@@ -24,7 +24,7 @@ bool value_cast(Value *value, AttrType type) {
     free(value->data);
 
     value->type = DATE;
-    void *data = malloc(sizeof(int));
+    value->data = malloc(sizeof(int));
     int julian = date.julian();
     memcpy(value->data, &julian, sizeof(int));
     return true;
