@@ -29,15 +29,15 @@ See details [here](./docs/lectures/miniob-topics.md).
 - [X] drop table
 - [X] 实现update功能
   - [ ] Support trx
+  - [ ] Check meta
 - [ ] 增加date字段
-  - [ ] Parser
+  - [X] Parser
     - [X] Lex & Yacc
-    - [ ] Parse date string to ulong
-  - [ ] Executor
-    - [ ] Query
-      - [ ] Record -> Tuple (see `class TupleRecordConvertor`)
+  - [X] Executor
+    - [X] Query
+      - [X] Record -> Tuple (see `class TupleRecordConvertor`)
   - [ ] Storage
-    - [ ] Deserialize
+    - [ ] Deserialize (see [`default_storage_stage`](https://github.com/ccat3z/miniob/blob/cf1e48282549d46c3c181068d1f2c8604194f314/src/observer/storage/default/default_storage_stage.cpp#L289))
     - [ ] Index (see `bplus_tree.cpp`)
     - [ ] Condition (see `condition.cpp`)
 - [ ] 多表查询
