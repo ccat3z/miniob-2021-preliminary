@@ -29,7 +29,7 @@ See details [here](./docs/lectures/miniob-topics.md).
 - [X] drop table
 - [X] 实现update功能
   - [ ] Support trx
-  - [ ] Check meta
+  - [X] Check meta
 - [X] 增加date字段
   - [X] Parser
     - [X] Lex & Yacc
