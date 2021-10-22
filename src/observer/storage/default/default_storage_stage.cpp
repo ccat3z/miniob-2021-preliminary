@@ -34,6 +34,7 @@ See the Mulan PSL v2 for more details. */
 #include "event/sql_event.h"
 #include "event/storage_event.h"
 #include "session/session.h"
+#include "storage/common/value.h"
 
 using namespace common;
 
@@ -340,6 +341,14 @@ RC insert_record_from_file(Table *table, std::vector<std::string> &file_values,
       break;
       case CHARS: {
         value_init_string(&record_values[i], file_value.c_str());
+      }
+      break;
+      case DATE: {
+        value_init_string(&record_values[i], file_value.c_str());
+        if (!value_cast(&record_values[i], DATE)) {
+          errmsg << "need a date but got '" << file_values[i] 
+              << "'(field index:" << i << ")"; 
+        }
       }
       break;
       default: {
