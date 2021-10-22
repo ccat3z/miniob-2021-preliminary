@@ -403,6 +403,25 @@ TEST_F(SQLTest, DateCharsNotBeAffected) {
   );
 }
 
+TEST_F(SQLTest, DateUpdateShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, d date);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values(1, '2020-10-10');"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values(1, '2021-1-1');"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("update t set d='2022-2-22' where d < '2020-12-31';"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t;"),
+    "a | d\n"
+    "1 | 2022-02-22\n"
+    "1 | 2021-01-01\n"
+  );
+}
+
+TEST_F(SQLTest, DateUpdateInvalidDateShouldFailure) {
+  ASSERT_EQ(exec_sql("create table t(a int, d date);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values(1, '2020-10-10');"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values(1, '2021-1-1');"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("update t set d='2022-2-30' where d < '2020-12-31';"), "FAILURE\n");
+}
+
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
   testing::InitGoogleTest(&argc, argv);

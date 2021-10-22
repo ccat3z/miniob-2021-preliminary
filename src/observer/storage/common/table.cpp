@@ -571,6 +571,10 @@ RC Table::update_record(Trx *trx, const char *attribute_name, Value *value, int 
   if (field == nullptr) {
     return RC::SCHEMA_FIELD_MISSING;
   }
+  if (!value_cast(value, field->type())) {
+    LOG_ERROR("Got invaild value type: %d, expected: %d", value->type, field->type());
+    return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+  }
 
   auto updater = [&](Record rec){
     memcpy(rec.data + field->offset(), value->data, field->len());
