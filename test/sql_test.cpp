@@ -368,16 +368,25 @@ TEST_F(SQLTest, DateCanCreateTable) {
   );
 }
 
-TEST_F(SQLTest, DateCanInsert) {
+TEST_F(SQLTest, DateInsertShouldWork) {
   ASSERT_EQ(exec_sql("create table t(a int, d date);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values(1, '2020-10-10');"), "SUCCESS\n");
 }
 
-TEST_F(SQLTest, DateCanSelect) {
+TEST_F(SQLTest, DateSelectShouldWork) {
   ASSERT_EQ(exec_sql("create table t(a int, d date);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values(1, '2020-10-10');"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values(1, '2020-1-1');"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("select * from t;"), "a | d\n1 | 2020-10-10\n1 | 2020-01-01\n");
+}
+
+TEST_F(SQLTest, DateCharsNotBeAffected) {
+  ASSERT_EQ(exec_sql("create table t(a int, b char(20), d date);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values(1, '2020-1-1', '2020-1-1');"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t;"),
+    "a | b | d\n"
+    "1 | 2020-1-1 | 2020-01-01\n"
+  );
 }
 
 int main(int argc, char **argv) {
