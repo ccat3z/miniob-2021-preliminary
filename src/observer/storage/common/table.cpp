@@ -257,7 +257,7 @@ RC Table::insert_record(Trx *trx, Record *record) {
   }
   return rc;
 }
-RC Table::insert_record(Trx *trx, int value_num, const Value *values) {
+RC Table::insert_record(Trx *trx, int value_num, Value *values) {
   if (value_num <= 0 || nullptr == values ) {
     LOG_ERROR("Invalid argument. value num=%d, values=%p", value_num, values);
     return RC::INVALID_ARGUMENT;
@@ -286,7 +286,7 @@ const TableMeta &Table::table_meta() const {
   return table_meta_;
 }
 
-RC Table::make_record(int value_num, const Value *values, char * &record_out) {
+RC Table::make_record(int value_num, Value *values, char * &record_out) {
   // 检查字段类型是否一致
   if (value_num + table_meta_.sys_field_num() != table_meta_.field_num()) {
     return RC::SCHEMA_FIELD_MISSING;
@@ -295,7 +295,7 @@ RC Table::make_record(int value_num, const Value *values, char * &record_out) {
   const int normal_field_start_index = table_meta_.sys_field_num();
   for (int i = 0; i < value_num; i++) {
     const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
-    const Value &value = values[i];
+    Value &value = values[i];
     if (field->type() != value.type) {
       LOG_ERROR("Invalid value type. field name=%s, type=%d, but given=%d",
         field->name(), field->type(), value.type);
@@ -309,7 +309,7 @@ RC Table::make_record(int value_num, const Value *values, char * &record_out) {
 
   for (int i = 0; i < value_num; i++) {
     const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
-    const Value &value = values[i];
+    Value &value = values[i];
     memcpy(record + field->offset(), value.data, field->len());
   }
 
@@ -557,7 +557,7 @@ RC Table::create_index(Trx *trx, const char *index_name, const char *attribute_n
   return rc;
 }
 
-RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value, int condition_num, const Condition conditions[], int *updated_count) {
+RC Table::update_record(Trx *trx, const char *attribute_name, Value *value, int condition_num, const Condition conditions[], int *updated_count) {
   if (trx != nullptr) {
     LOG_WARN("Update transaction not supported yet, all changes cannot be rollbacked.");
     // return RC::GENERIC_ERROR;

@@ -149,7 +149,7 @@ RC DefaultHandler::drop_index(Trx *trx, const char *dbname, const char *relation
   return RC::GENERIC_ERROR;
 }
 
-RC DefaultHandler::insert_record(Trx *trx, const char *dbname, const char *relation_name, int value_num, const Value *values) {
+RC DefaultHandler::insert_record(Trx *trx, const char *dbname, const char *relation_name, int value_num, Value *values) {
   Table *table = find_table(dbname, relation_name);
   if (nullptr == table) {
     return RC::SCHEMA_TABLE_NOT_EXIST;
@@ -172,7 +172,7 @@ RC DefaultHandler::delete_record(Trx *trx, const char *dbname, const char *relat
   return table->delete_record(trx, &condition_filter, deleted_count);
 }
 
-RC DefaultHandler::update_record(Trx *trx, const char *dbname, const char *relation_name, const char *attribute_name, const Value *value,
+RC DefaultHandler::update_record(Trx *trx, const char *dbname, const char *relation_name, const char *attribute_name, Value *value,
                           int condition_num, const Condition *conditions, int *updated_count) {
   Table *table = find_table(dbname, relation_name);
   if (nullptr == table) {
