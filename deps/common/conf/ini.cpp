@@ -85,7 +85,7 @@ int Ini::put(const std::string &key, const std::string &value,
              const std::string &section) {
   std::map<std::string, std::string> *section_map = switch_session(section);
 
-  section_map->insert(std::pair<std::string, std::string>(key, value));
+  (*section_map)[key] = value;
 
   return 0;
 }
