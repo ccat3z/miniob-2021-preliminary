@@ -297,9 +297,10 @@ TEST_F(SQLTest, BasicSelectWithIndex) {
   ASSERT_EQ(exec_sql("create index t_a on t(a);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1, 2);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (2, 2);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
 
-  ASSERT_EQ(exec_sql("select * from t where a > 1;"), "a | b\n2 | 2\n");
-  ASSERT_EQ(exec_sql("select * from t where a = 2;"), "a | b\n2 | 2\n");
+  ASSERT_EQ(exec_sql("select * from t where a > 1;"), "a | b\n2 | 2\n2 | 3\n");
+  ASSERT_EQ(exec_sql("select * from t where a = 2;"), "a | b\n2 | 2\n2 | 3\n");
   ASSERT_EQ(exec_sql("select * from t where a < 2;"), "a | b\n1 | 2\n");
 }
 
@@ -470,6 +471,38 @@ TEST_F(SQLTest, UpdateWithConditionsShouldWork) {
   );
 }
 
+TEST_F(SQLTest, UpdateWithIndexShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create index t_a on t(a);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 10);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 5);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select * from t where a = 1;"),
+    "a | b\n"
+    "1 | 1\n"
+    "1 | 10\n"
+  );
+
+  ASSERT_EQ(exec_sql("update t set a = 100 where a = 1;"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t;"),
+    "a | b\n"
+    "100 | 1\n"
+    "100 | 10\n"
+    "2 | 3\n"
+    "2 | 5\n"
+  );
+  ASSERT_EQ(exec_sql("select * from t where a = 1;"),
+    "a | b\n"
+  );
+  ASSERT_EQ(exec_sql("select * from t where a = 100;"),
+    "a | b\n"
+    "100 | 1\n"
+    "100 | 10\n"
+  );
+}
+
 TEST_F(SQLTest, UpdateWithInvalidColumnShouldFailure) {
   ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
@@ -596,6 +629,19 @@ TEST_F(SQLTest, DateUpdateShouldWork) {
     "a | d\n"
     "1 | 2022-02-22\n"
     "1 | 2021-01-01\n"
+  );
+}
+
+TEST_F(SQLTest, DateUpdateWithIndexShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, d date);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create index t_d on t(d);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values(1, '2020-10-10');"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values(1, '2021-1-1');"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("update t set d='2022-2-22' where d < '2020-12-31';"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t where d='2022-2-22';"),
+    "a | d\n"
+    "1 | 2022-02-22\n"
   );
 }
 
