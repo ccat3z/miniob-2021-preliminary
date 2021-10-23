@@ -281,6 +281,16 @@ TEST_F(SQLTest, BasicSelectShouldWork) {
   ASSERT_EQ(exec_sql("select t.a from t;"), "a\n1\n");
 }
 
+// TODO: Fix issues that select after sync not work
+TEST_F(SQLTest, DISABLED_BasicSelectAfterSyncShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 2);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("sync;"), "SUCCESS");
+  ASSERT_EQ(exec_sql("select * from t;"), "a | b\n1 | 2\n");
+  ASSERT_EQ(exec_sql("select a from t;"), "a\n1\n");
+  ASSERT_EQ(exec_sql("select t.a from t;"), "a\n1\n");
+}
+
 //  ######  ######## ##       ########  ######  ######## 
 // ##    ## ##       ##       ##       ##    ##    ##    
 // ##       ##       ##       ##       ##          ##    
