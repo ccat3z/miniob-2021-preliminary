@@ -54,10 +54,11 @@ int init_unix_sock(const char *unix_sock_path) {
   return sockfd;
 }
 
-Server *init_server(std::string socket_path) {
+Server *init_server(std::string socket_path, std::string storage_dir) {
   common::ProcessParam *process_param = common::the_process_param();
   process_param->set_unix_socket_path(socket_path.c_str());
   process_param->set_conf(conf_path);
+  common::get_properties()->put("BaseDir", storage_dir, "DefaultStorageStage");
   init(process_param, true);
 
   std::map<std::string, std::string> net_section =
@@ -122,7 +123,7 @@ class ThreadTestServer : public TestServer {
       return nullptr;
     }
     void start(std::string data_dir, std::string socket_path) {
-      server = init_server(socket_path);
+      server = init_server(socket_path, data_dir);
       pthread_create(&pid, nullptr, ThreadTestServer::start_server_func, server);
       std::this_thread::sleep_for(SERVER_START_STOP_TIMEOUT);
     }
@@ -143,7 +144,7 @@ class ForkTestServer : public TestServer {
       pid = fork();
       if (pid == 0) {
         fs::current_path(data_dir);
-        Server *server = init_server(socket_path);
+        Server *server = init_server(socket_path, data_dir);
         server->serve();
         exit(0);
       }
