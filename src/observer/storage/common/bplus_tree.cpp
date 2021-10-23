@@ -1714,19 +1714,21 @@ RC BplusTreeScanner::next_entry(RID *rid) {
   if(!opened_){
     return RC::RECORD_CLOSED;
   }
-  rc = get_next_idx_in_memory(rid);//和RM中一样，有可能有错误，一次只查当前页和当前页的下一页，有待确定
-  if(rc == RC::RECORD_NO_MORE_IDX_IN_MEM){
-    rc = find_idx_pages();
-    if(rc != SUCCESS){
-      return rc;
+
+  while (rc = get_next_idx_in_memory(rid)) {
+    if(rc == RC::RECORD_NO_MORE_IDX_IN_MEM){
+      rc = find_idx_pages();
+      if(rc != SUCCESS){
+        return rc;
+      }
     }
-    return get_next_idx_in_memory(rid);
-  }
-  else{
-    if(rc != SUCCESS){
-      return rc;
+    else{
+      if(rc != SUCCESS){
+        return rc;
+      }
     }
   }
+
   return SUCCESS;
 }
 
