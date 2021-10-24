@@ -16,7 +16,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/common/table.h"
 #include "common/log/log.h"
 
-SelectExeNode::SelectExeNode() : table_(nullptr) {
+SelectExeNode::SelectExeNode(Trx *trx, Table *table) : trx_(trx), table_(table) {
 }
 
 SelectExeNode::~SelectExeNode() {
@@ -26,13 +26,43 @@ SelectExeNode::~SelectExeNode() {
   condition_filters_.clear();
 }
 
-RC
-SelectExeNode::init(Trx *trx, Table *table, TupleSchema &&tuple_schema, std::vector<DefaultConditionFilter *> &&condition_filters) {
-  trx_ = trx;
-  table_ = table;
-  tuple_schema_ = tuple_schema;
-  condition_filters_ = std::move(condition_filters);
-  return RC::SUCCESS;
+const TupleSchema &SelectExeNode::schema() {
+  return tuple_schema_;
+};
+
+void SelectExeNode::select_all_fields() {
+  tuple_schema_.add_field_from_table(table_);
+}
+
+RC SelectExeNode::select_field(const char *field_name) {
+  return tuple_schema_.add_field_from_table(table_, field_name);
+}
+
+bool table_contains_attr(const Table *table, RelAttr &attr) {
+  if (attr.relation_name != nullptr && strcmp(table->table_meta().name(), attr.relation_name) != 0) {
+    return false;
+  }
+
+  return table->table_meta().field(attr.attribute_name) != nullptr;
+}
+
+bool SelectExeNode::add_filter(Condition &condition) {
+  if (condition.left_is_attr && !table_contains_attr(table_, condition.left_attr)) {
+    return false;
+  }
+
+  if (condition.right_is_attr && !table_contains_attr(table_, condition.right_attr)) {
+    return false;
+  }
+
+  DefaultConditionFilter *condition_filter = new DefaultConditionFilter();
+  RC rc = condition_filter->init(*table_, condition);
+  if (rc != RC::SUCCESS) {
+    delete condition_filter;
+    return false;
+  }
+  condition_filters_.push_back(condition_filter);
+  return true;
 }
 
 void record_reader(const char *data, void *context) {

@@ -14,6 +14,7 @@ See the Mulan PSL v2 for more details. */
 
 #include <string>
 #include <sstream>
+#include <unordered_map>
 
 #include "execute_stage.h"
 
@@ -34,8 +35,6 @@ See the Mulan PSL v2 for more details. */
 #include "storage/trx/trx.h"
 
 using namespace common;
-
-RC create_selection_executor(Trx *trx, Selects &selects, const char *db, const char *table_name, SelectExeNode &select_node, u32_t &used_attr_mask, u32_t &used_conditions_mask);
 
 //! Constructor
 ExecuteStage::ExecuteStage(const char *tag) : Stage(tag) {}
@@ -216,32 +215,27 @@ void end_trx_if_need(Session *session, Trx *trx, bool all_right) {
   }
 }
 
-// 这里没有对输入的某些信息做合法性校验，比如查询的列名、where条件中的列名等，没有做必要的合法性校验
-// 需要补充上这一部分. 校验部分也可以放在resolve，不过跟execution放一起也没有关系
 RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_event) {
-
   RC rc = RC::SUCCESS;
   Session *session = session_event->get_client()->session;
   Trx *trx = session->current_trx();
   Selects &selects = sql->sstr.selection;
 
-  u32_t used_attr_mask = 0;
-  u32_t used_conditions_mask = 0;
-  // 把所有的表和只跟这张表关联的condition都拿出来，生成最底层的select 执行节点
-  std::vector<SelectExeNode *> select_nodes;
+  // Build select nodes from relations
+  std::unordered_map<std::string, SelectExeNode *> select_nodes;
   for (size_t i = 0; i < selects.relation_num; i++) {
     const char *table_name = selects.relations[i];
-    SelectExeNode *select_node = new SelectExeNode;
-    rc = create_selection_executor(trx, selects, db, table_name, *select_node, used_attr_mask, used_conditions_mask);
-    if (rc != RC::SUCCESS) {
-      delete select_node;
-      for (SelectExeNode *& tmp_node: select_nodes) {
-        delete tmp_node;
-      }
-      end_trx_if_need(session, trx, false);
-      return rc;
+    Table * table = DefaultHandler::get_default().find_table(db, table_name);
+    if (table == nullptr) {
+      LOG_ERROR("Invalid table: %s", table_name);
+      return RC::SQL_SYNTAX;
     }
-    select_nodes.push_back(select_node);
+
+    SelectExeNode *select_node = new SelectExeNode(trx, table);
+    if (!select_nodes.insert({table_name, select_node}).second) {
+      LOG_WARN("Duplicate table is ignored");
+    }
+    end_trx_if_need(session, trx, false);
   }
 
   if (select_nodes.empty()) {
@@ -250,104 +244,97 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
     return RC::SQL_SYNTAX;
   }
 
-  std::vector<TupleSet> tuple_sets;
-  for (SelectExeNode *&node: select_nodes) {
-    TupleSet tuple_set;
-    rc = node->execute(tuple_set);
-    if (rc != RC::SUCCESS) {
-      for (SelectExeNode *& tmp_node: select_nodes) {
-        delete tmp_node;
+  // Config schema of select nodes
+  for (size_t i = 0; i < selects.attr_num; i++) {
+    RelAttr &attr = selects.attributes[i];
+
+    // select t1.a or t1.*
+    if (attr.relation_name != nullptr) {
+      if (select_nodes.find(attr.relation_name) == select_nodes.end()) {
+        LOG_ERROR("Invalid table: %s", attr.relation_name);
+        return RC::SQL_SYNTAX;
       }
-      end_trx_if_need(session, trx, false);
-      return rc;
-    } else {
-      tuple_sets.push_back(std::move(tuple_set));
-    }
-  }
 
-  std::stringstream ss;
-  if (tuple_sets.size() > 1) {
-    // TODO: 本次查询了多张表，需要做join操作
-  } else {
-    // 当前只查询一张表，直接返回结果即可
-    if (used_attr_mask != (((u32_t) 1 << selects.attr_num) - 1)) {
-      LOG_ERROR("Some attriubtes not used");
-      return RC::SCHEMA_FIELD_NOT_EXIST;
-    }
-    if (used_conditions_mask != (((u32_t) 1 << selects.condition_num) - 1)) {
-      LOG_ERROR("Some conditions not used");
-      return RC::SCHEMA_FIELD_NOT_EXIST;
-    }
-    tuple_sets.front().print(ss);
-  }
-
-  for (SelectExeNode *& tmp_node: select_nodes) {
-    delete tmp_node;
-  }
-  session_event->set_response(ss.str());
-  end_trx_if_need(session, trx, true);
-  return rc;
-}
-
-bool match_table(const Selects &selects, const char *table_name_in_condition, const char *table_name_to_match) {
-  if (table_name_in_condition != nullptr) {
-    return 0 == strcmp(table_name_in_condition, table_name_to_match);
-  }
-
-  return selects.relation_num == 1;
-}
-
-// 把所有的表和只跟这张表关联的condition都拿出来，生成最底层的select 执行节点
-RC create_selection_executor(Trx *trx, Selects &selects, const char *db, const char *table_name, SelectExeNode &select_node, u32_t &used_attr_mask, u32_t &used_conditions_mask) {
-  // 列出跟这张表关联的Attr
-  TupleSchema schema;
-  Table * table = DefaultHandler::get_default().find_table(db, table_name);
-  if (nullptr == table) {
-    LOG_WARN("No such table [%s] in db [%s]", table_name, db);
-    return RC::SCHEMA_TABLE_NOT_EXIST;
-  }
-
-  for (int i = selects.attr_num - 1; i >= 0; i--) {
-    const RelAttr &attr = selects.attributes[i];
-    if (nullptr == attr.relation_name || 0 == strcmp(table_name, attr.relation_name)) {
-      used_attr_mask |= 1 << i;
-      if (0 == strcmp("*", attr.attribute_name)) {
-        // 列出这张表所有字段
-        schema.add_field_from_table(table);
-        break; // 没有校验，给出* 之后，再写字段的错误
-      } else {
-        // 列出这张表相关字段
-        RC rc = schema.add_field_from_table(table, attr.attribute_name);
-        if (rc != RC::SUCCESS) {
-          return rc;
-        }
+      // select t1.*
+      if (strcmp(attr.attribute_name, "*") == 0) {
+        select_nodes[attr.relation_name]->select_all_fields();
+        continue;
       }
-    }
-  }
 
-  // 找出仅与此表相关的过滤条件, 或者都是值的过滤条件
-  std::vector<DefaultConditionFilter *> condition_filters;
-  for (size_t i = 0; i < selects.condition_num; i++) {
-    Condition &condition = selects.conditions[i];
-    if ((condition.left_is_attr == 0 && condition.right_is_attr == 0) || // 两边都是值
-        (condition.left_is_attr == 1 && condition.right_is_attr == 0 && match_table(selects, condition.left_attr.relation_name, table_name)) ||  // 左边是属性右边是值
-        (condition.left_is_attr == 0 && condition.right_is_attr == 1 && match_table(selects, condition.right_attr.relation_name, table_name)) ||  // 左边是值，右边是属性名
-        (condition.left_is_attr == 1 && condition.right_is_attr == 1 &&
-            match_table(selects, condition.left_attr.relation_name, table_name) && match_table(selects, condition.right_attr.relation_name, table_name)) // 左右都是属性名，并且表名都符合
-        ) {
-      DefaultConditionFilter *condition_filter = new DefaultConditionFilter();
-      RC rc = condition_filter->init(*table, condition);
+      // select t1.a
+      rc = select_nodes[attr.relation_name]->select_field(attr.attribute_name);
       if (rc != RC::SUCCESS) {
-        delete condition_filter;
-        for (DefaultConditionFilter * &filter : condition_filters) {
-          delete filter;
-        }
+        LOG_ERROR("Invalid attribute: %s.%s", attr.relation_name, attr.attribute_name);
         return rc;
       }
-      used_conditions_mask |= 1 << i;
-      condition_filters.push_back(condition_filter);
+      continue;
+    }
+
+    // select *
+    if (strcmp(attr.attribute_name, "*") == 0) {
+      for (auto it : select_nodes) {
+        it.second->select_all_fields();
+      }
+      continue;
+    }
+
+    // select a
+    size_t target_nodes_num = 0;
+    for (auto it : select_nodes) {
+      rc = it.second->select_field(attr.attribute_name);
+      if (rc == RC::SUCCESS) {
+        target_nodes_num++;
+      }
+    }
+    if (target_nodes_num != 1) {
+      LOG_ERROR("Attribute %s matched %d tables", attr.attribute_name, target_nodes_num);
+      return RC::SQL_SYNTAX;
     }
   }
 
-  return select_node.init(trx, table, std::move(schema), std::move(condition_filters));
+  // Set filters for select nodes
+  u32_t used_conditions_mask = 0;
+  for (size_t i = 0; i < selects.relation_num; i++) {
+    for (auto it : select_nodes) {
+      if (it.second->add_filter(selects.conditions[i])) {
+        used_conditions_mask |= 1 << i;
+      }
+    }
+  }
+
+  // Build root select node
+  ExecutionNode *exec_node;
+  if (select_nodes.size() == 1) {
+    exec_node = select_nodes.begin()->second;
+  } else {
+    // TODO: Build CartesianSelectNode
+    exec_node = select_nodes.begin()->second;
+  }
+
+  // Check whether all conditions have been used
+  if (used_conditions_mask != (((u32_t) 1 << selects.condition_num) - 1)) {
+    LOG_ERROR("Some conditions not used");
+    return RC::SCHEMA_FIELD_NOT_EXIST;
+  }
+
+  // Execute node
+  TupleSet tuple_set;
+  rc = exec_node->execute(tuple_set);
+  if (rc != RC::SUCCESS) {
+    end_trx_if_need(session, trx, false);
+    return rc;
+  }
+
+  // Response
+  std::stringstream ss;
+  tuple_set.print(ss);
+  session_event->set_response(ss.str());
+
+  // TODO: defer cleanup
+  for (auto it : select_nodes) {
+    delete it.second;
+  }
+  end_trx_if_need(session, trx, true);
+
+  return rc;
 }

@@ -27,17 +27,21 @@ public:
   ExecutionNode() = default;
   virtual ~ExecutionNode() = default;
 
+  virtual const TupleSchema &schema() = 0;
   virtual RC execute(TupleSet &tuple_set) = 0;
 };
 
 class SelectExeNode : public ExecutionNode {
 public:
-  SelectExeNode();
+  SelectExeNode(Trx *trx, Table *table);
   virtual ~SelectExeNode();
 
-  RC init(Trx *trx, Table *table, TupleSchema && tuple_schema, std::vector<DefaultConditionFilter *> &&condition_filters);
-
+  const TupleSchema &schema() override;
   RC execute(TupleSet &tuple_set) override;
+
+  void select_all_fields();
+  RC select_field(const char *field_name);
+  bool add_filter(Condition &condition);
 private:
   Trx *trx_ = nullptr;
   Table  * table_;
