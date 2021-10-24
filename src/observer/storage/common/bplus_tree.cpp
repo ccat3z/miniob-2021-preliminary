@@ -1715,7 +1715,8 @@ RC BplusTreeScanner::next_entry(RID *rid) {
     return RC::RECORD_CLOSED;
   }
 
-  while (rc = get_next_idx_in_memory(rid)) {
+  for (;;) {
+    rc = get_next_idx_in_memory(rid);
     if(rc == RC::RECORD_NO_MORE_IDX_IN_MEM){
       rc = find_idx_pages();
       if(rc != SUCCESS){
@@ -1723,9 +1724,7 @@ RC BplusTreeScanner::next_entry(RID *rid) {
       }
     }
     else{
-      if(rc != SUCCESS){
-        return rc;
-      }
+      return rc;
     }
   }
 
