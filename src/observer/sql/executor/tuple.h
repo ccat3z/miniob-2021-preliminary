@@ -109,7 +109,8 @@ public:
 
   void print(std::ostream &os) const;
 public:
-  static void from_table(const Table *table, TupleSchema &schema);
+  void add_field_from_table(const Table *table);
+  RC add_field_from_table(const Table *table, const char *field_name);
 private:
   std::vector<TupleField> fields_;
 };

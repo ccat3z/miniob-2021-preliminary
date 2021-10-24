@@ -297,17 +297,6 @@ bool match_table(const Selects &selects, const char *table_name_in_condition, co
   return selects.relation_num == 1;
 }
 
-static RC schema_add_field(Table *table, const char *field_name, TupleSchema &schema) {
-  const FieldMeta *field_meta = table->table_meta().field(field_name);
-  if (nullptr == field_meta) {
-    LOG_WARN("No such field. %s.%s", table->name(), field_name);
-    return RC::SCHEMA_FIELD_MISSING;
-  }
-
-  schema.add_if_not_exists(field_meta->type(), table->name(), field_meta->name());
-  return RC::SUCCESS;
-}
-
 // 把所有的表和只跟这张表关联的condition都拿出来，生成最底层的select 执行节点
 RC create_selection_executor(Trx *trx, Selects &selects, const char *db, const char *table_name, SelectExeNode &select_node, u32_t &used_attr_mask, u32_t &used_conditions_mask) {
   // 列出跟这张表关联的Attr
@@ -324,11 +313,11 @@ RC create_selection_executor(Trx *trx, Selects &selects, const char *db, const c
       used_attr_mask |= 1 << i;
       if (0 == strcmp("*", attr.attribute_name)) {
         // 列出这张表所有字段
-        TupleSchema::from_table(table, schema);
+        schema.add_field_from_table(table);
         break; // 没有校验，给出* 之后，再写字段的错误
       } else {
         // 列出这张表相关字段
-        RC rc = schema_add_field(table, attr.attribute_name, schema);
+        RC rc = schema.add_field_from_table(table, attr.attribute_name);
         if (rc != RC::SUCCESS) {
           return rc;
         }
