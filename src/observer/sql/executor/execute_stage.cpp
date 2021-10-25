@@ -217,11 +217,11 @@ void end_trx_if_need(Session *session, Trx *trx, bool all_right) {
   }
 }
 
-bool ensure_and_complete_relattr(std::unordered_map<std::string, std::unique_ptr<SelectExeNode>> &select_nodes, RelAttr &attr) {
+bool ensure_and_complete_relattr(std::unordered_map<std::string, std::unique_ptr<TableScaner>> &table_scaners, RelAttr &attr) {
   // If relation is specified
   if (attr.relation_name != nullptr) {
-    auto node = select_nodes.find(attr.relation_name);
-    if (node == select_nodes.end()) {
+    auto node = table_scaners.find(attr.relation_name);
+    if (node == table_scaners.end()) {
       LOG_ERROR("Table %s not exists", attr.relation_name);
       return false;
     }
@@ -231,7 +231,7 @@ bool ensure_and_complete_relattr(std::unordered_map<std::string, std::unique_ptr
 
   // If relation is not specified
   char *matched_relation_name = nullptr;
-  for (auto &it : select_nodes) {
+  for (auto &it : table_scaners) {
     if (it.second->can_filter_by(attr)) {
       if (matched_relation_name != nullptr) {
         LOG_ERROR("Ambiguous column: %s", attr.attribute_name);
@@ -257,8 +257,8 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   Trx *trx = session->current_trx();
   Selects &selects = sql->sstr.selection;
 
-  // Build select nodes from relations
-  std::unordered_map<std::string, std::unique_ptr<SelectExeNode>> select_nodes;
+  // Build table scanners
+  std::unordered_map<std::string, std::unique_ptr<TableScaner>> table_scaners;
   for (size_t i = 0; i < selects.relation_num; i++) {
     const char *table_name = selects.relations[i];
     Table * table = DefaultHandler::get_default().find_table(db, table_name);
@@ -267,20 +267,20 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
       return RC::SQL_SYNTAX;
     }
 
-    auto select_node = std::make_unique<SelectExeNode>(trx, table);
-    if (!select_nodes.insert({table_name, std::move(select_node)}).second) {
+    auto table_scanner = std::make_unique<TableScaner>(trx, table);
+    if (!table_scaners.insert({table_name, std::move(table_scanner)}).second) {
       LOG_WARN("Duplicate table is ignored");
     }
     end_trx_if_need(session, trx, false);
   }
 
-  if (select_nodes.empty()) {
+  if (table_scaners.empty()) {
     LOG_ERROR("No table given");
     end_trx_if_need(session, trx, false);
     return RC::SQL_SYNTAX;
   }
 
-  // Check and apply attrs to select nodes
+  // Check and apply attrs to table scanners
   for (int i = selects.attr_num - 1; i >= 0; i--) {
     RelAttr &attr = selects.attributes[i];
 
@@ -288,29 +288,29 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
       assert(selects.attr_num = 1);
       assert(attr.relation_name == nullptr);
 
-      for (auto &it : select_nodes) {
+      for (auto &it : table_scaners) {
         it.second->select_all_fields();
       }
       break;
     }
 
-    if (!ensure_and_complete_relattr(select_nodes, attr)) {
+    if (!ensure_and_complete_relattr(table_scaners, attr)) {
       return RC::SQL_SYNTAX;
     }
-    rc = select_nodes[attr.relation_name]->select_field(attr.attribute_name);
+    rc = table_scaners[attr.relation_name]->select_field(attr.attribute_name);
     if (rc != RC::SUCCESS) {
       LOG_ERROR("Invalid attribute: %s.%s", attr.relation_name, attr.attribute_name);
       return rc;
     }
   }
 
-  // Check and apply conditions to SelectExeNode
+  // Check and apply conditions to table scaners
   for (size_t i = 0; i < selects.condition_num; i++) {
     Condition &condition = selects.conditions[i];
 
     // Apply static condition to all nodes
     if (!condition.left_is_attr && !condition.right_is_attr) {
-      for (auto &it : select_nodes) {
+      for (auto &it : table_scaners) {
         if (!it.second->add_filter(condition)) {
           return RC::SQL_SYNTAX;
         }
@@ -319,10 +319,10 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
     }
 
     // Fill relation name in condition
-    if (condition.left_is_attr && !ensure_and_complete_relattr(select_nodes, condition.left_attr)) {
+    if (condition.left_is_attr && !ensure_and_complete_relattr(table_scaners, condition.left_attr)) {
       return RC::SQL_SYNTAX;
     }
-    if (condition.right_is_attr && !ensure_and_complete_relattr(select_nodes, condition.right_attr)) {
+    if (condition.right_is_attr && !ensure_and_complete_relattr(table_scaners, condition.right_attr)) {
       return RC::SQL_SYNTAX;
     }
 
@@ -335,7 +335,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
     } else if (strcmp(condition.left_attr.relation_name, condition.right_attr.relation_name) == 0) {
       rel_name = condition.left_attr.relation_name;
     }
-    if (rel_name != nullptr && !select_nodes[rel_name]->add_filter(condition)) {
+    if (rel_name != nullptr && !table_scaners[rel_name]->add_filter(condition)) {
       return RC::SQL_SYNTAX;
     }
     if (rel_name == nullptr) {
@@ -343,16 +343,16 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
     }
   }
 
-  // Build root select node
+  // Build root execution node
   std::unique_ptr<ExecutionNode> exec_node;
-  if (select_nodes.size() == 1) {
-    exec_node = std::move(select_nodes.begin()->second);
+  if (table_scaners.size() == 1) {
+    exec_node = std::move(table_scaners.begin()->second);
   } else {
     std::vector<std::unique_ptr<ExecutionNode>> nodes;
-    for (auto &it : select_nodes) {
+    for (auto &it : table_scaners) {
       nodes.push_back(std::move(it.second));
     }
-    exec_node = CartesianSelectExeNode::create(nodes);
+    exec_node = CartesianSelectNode::create(nodes);
   }
 
   // Execute node

@@ -16,25 +16,25 @@ See the Mulan PSL v2 for more details. */
 #include "storage/common/table.h"
 #include "common/log/log.h"
 
-SelectExeNode::SelectExeNode(Trx *trx, Table *table) : trx_(trx), table_(table) {
+TableScaner::TableScaner(Trx *trx, Table *table) : trx_(trx), table_(table) {
 }
 
-SelectExeNode::~SelectExeNode() {
+TableScaner::~TableScaner() {
   for (DefaultConditionFilter * &filter : condition_filters_) {
     delete filter;
   }
   condition_filters_.clear();
 }
 
-const TupleSchema &SelectExeNode::schema() {
+const TupleSchema &TableScaner::schema() {
   return tuple_schema_;
 };
 
-void SelectExeNode::select_all_fields() {
+void TableScaner::select_all_fields() {
   tuple_schema_.add_field_from_table(table_);
 }
 
-RC SelectExeNode::select_field(const char *field_name) {
+RC TableScaner::select_field(const char *field_name) {
   return tuple_schema_.add_field_from_table(table_, field_name);
 }
 
@@ -46,7 +46,7 @@ bool table_contains_attr(const Table *table, RelAttr &attr) {
   return table->table_meta().field(attr.attribute_name) != nullptr;
 }
 
-bool SelectExeNode::add_filter(Condition &condition) {
+bool TableScaner::add_filter(Condition &condition) {
   if (condition.left_is_attr && !table_contains_attr(table_, condition.left_attr)) {
     return false;
   }
@@ -65,7 +65,7 @@ bool SelectExeNode::add_filter(Condition &condition) {
   return true;
 }
 
-bool SelectExeNode::can_filter_by(RelAttr &attr) {
+bool TableScaner::can_filter_by(RelAttr &attr) {
   return table_contains_attr(table_, attr);
 }
 
@@ -73,7 +73,7 @@ void record_reader(const char *data, void *context) {
   TupleRecordConverter *converter = (TupleRecordConverter *)context;
   converter->add_record(data);
 }
-RC SelectExeNode::execute(TupleSet &tuple_set) {
+RC TableScaner::execute(TupleSet &tuple_set) {
   CompositeConditionFilter condition_filter;
   condition_filter.init((const ConditionFilter **)condition_filters_.data(), condition_filters_.size());
 
@@ -83,17 +83,17 @@ RC SelectExeNode::execute(TupleSet &tuple_set) {
   return table_->scan_record(trx_, &condition_filter, -1, (void *)&converter, record_reader);
 }
 
-CartesianSelectExeNode::CartesianSelectExeNode(
+CartesianSelectNode::CartesianSelectNode(
   std::unique_ptr<ExecutionNode> left_node,
   std::unique_ptr<ExecutionNode> right_node)
   : left_node(std::move(left_node)), right_node(std::move(right_node)) {
   tuple_schema_.append(this->left_node->schema());
   tuple_schema_.append(this->right_node->schema());
 };
-CartesianSelectExeNode::~CartesianSelectExeNode() { }
-const TupleSchema &CartesianSelectExeNode::schema() { return tuple_schema_; };
+CartesianSelectNode::~CartesianSelectNode() { }
+const TupleSchema &CartesianSelectNode::schema() { return tuple_schema_; };
 
-RC CartesianSelectExeNode::execute(TupleSet &tuple_set) {
+RC CartesianSelectNode::execute(TupleSet &tuple_set) {
   TupleSet tuple_left, tuple_right;
 
   RC rc;
@@ -123,12 +123,12 @@ RC CartesianSelectExeNode::execute(TupleSet &tuple_set) {
   return RC::SUCCESS;
 };
 
-std::unique_ptr<CartesianSelectExeNode> CartesianSelectExeNode::create(
+std::unique_ptr<CartesianSelectNode> CartesianSelectNode::create(
   std::vector<std::unique_ptr<ExecutionNode>> &nodes
 ) {
   if (nodes.size() < 2) return nullptr;
 
-  std::unique_ptr<CartesianSelectExeNode> root(new CartesianSelectExeNode(
+  std::unique_ptr<CartesianSelectNode> root(new CartesianSelectNode(
     std::move(nodes[0]),
     std::move(nodes[1])
   ));
@@ -136,7 +136,7 @@ std::unique_ptr<CartesianSelectExeNode> CartesianSelectExeNode::create(
   auto it = nodes.begin();
   std::advance(it, 2);
   for (; it != nodes.end(); it++) {
-    root = std::unique_ptr<CartesianSelectExeNode>(new CartesianSelectExeNode(
+    root = std::unique_ptr<CartesianSelectNode>(new CartesianSelectNode(
       std::move(root),
       std::move(*it)
     ));

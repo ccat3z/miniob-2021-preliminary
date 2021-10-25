@@ -32,10 +32,10 @@ public:
   virtual RC execute(TupleSet &tuple_set) = 0;
 };
 
-class SelectExeNode : public ExecutionNode {
+class TableScaner : public ExecutionNode {
 public:
-  SelectExeNode(Trx *trx, Table *table);
-  virtual ~SelectExeNode();
+  TableScaner(Trx *trx, Table *table);
+  virtual ~TableScaner();
 
   const TupleSchema &schema() override;
   RC execute(TupleSet &tuple_set) override;
@@ -51,17 +51,17 @@ private:
   std::vector<DefaultConditionFilter *> condition_filters_;
 };
 
-class CartesianSelectExeNode : public ExecutionNode {
+class CartesianSelectNode : public ExecutionNode {
 public:
-  virtual ~CartesianSelectExeNode();
-  static std::unique_ptr<CartesianSelectExeNode> create(
+  virtual ~CartesianSelectNode();
+  static std::unique_ptr<CartesianSelectNode> create(
     std::vector<std::unique_ptr<ExecutionNode>> &nodes
   );
 
   const TupleSchema &schema() override;
   RC execute(TupleSet &tuple_set) override;
 private:
-  CartesianSelectExeNode(std::unique_ptr<ExecutionNode> left_node, std::unique_ptr<ExecutionNode> right_node);
+  CartesianSelectNode(std::unique_ptr<ExecutionNode> left_node, std::unique_ptr<ExecutionNode> right_node);
   TupleSchema tuple_schema_;
   std::unique_ptr<ExecutionNode> left_node;
   std::unique_ptr<ExecutionNode> right_node;
