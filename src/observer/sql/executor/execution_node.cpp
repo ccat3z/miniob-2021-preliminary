@@ -156,7 +156,7 @@ std::unique_ptr<ProjectionNode> ProjectionNode::create(std::unique_ptr<Execution
 
   for (int i = attr_num - 1; i >= 0; i--) {
     auto &attr = attrs[i];
-    for (int j = 0; j < child_fields.size(); j++) {
+    for (size_t j = 0; j < child_fields.size(); j++) {
       auto &child_field = child_fields[j];
       if (
         (strcmp(attr.attribute_name, child_field.field_name()) == 0) &&
