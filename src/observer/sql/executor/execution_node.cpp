@@ -149,34 +149,39 @@ std::unique_ptr<CartesianSelectNode> CartesianSelectNode::create(
   return root;
 }
 
+std::unique_ptr<ProjectionNode> ProjectionNode::create(std::unique_ptr<ExecutionNode> child, RelAttr *attrs, int attr_num) {
+  auto proj = std::unique_ptr<ProjectionNode>(new ProjectionNode(std::move(child), attr_num));
+
+  auto &child_fields = proj->child->schema().fields();
+
+  for (int i = attr_num - 1; i >= 0; i--) {
+    auto &attr = attrs[i];
+    for (int j = 0; j < child_fields.size(); j++) {
+      auto &child_field = child_fields[j];
+      if (
+        (strcmp(attr.attribute_name, child_field.field_name()) == 0) &&
+        (strcmp(attr.relation_name, child_field.table_name()) == 0)
+      ) {
+        proj->fields_map[attr_num - i - 1] = j;
+        proj->tuple_schema_.add(child_field.type(), child_field.table_name(), child_field.field_name());
+        break;
+      }
+    }
+    if (proj->fields_map[attr_num - i - 1] == -1) {
+      LOG_ERROR("Failed to find field %s.%s in child node", attr.relation_name, attr.attribute_name);
+      return nullptr;
+    }
+  }
+
+  return proj;
+}
+
 ProjectionNode::~ProjectionNode() {}
 const TupleSchema &ProjectionNode::schema() { return tuple_schema_; }
 
 RC ProjectionNode::execute(TupleSet &tuple_set) {
   tuple_set.clear();
   tuple_set.set_schema(tuple_schema_);
-
-  auto &fields = tuple_schema_.fields();
-  auto &child_fields = child->schema().fields();
-
-  std::vector<int> schema_map(tuple_schema_.fields().size(), -1);
-  for (int i = 0; i < fields.size(); i++) {
-    auto &field = fields[i];
-    for (int j = 0; j < child_fields.size(); j++) {
-      auto &child_field = child_fields[j];
-      if (
-        (strcmp(field.field_name(), child_field.field_name()) == 0) &&
-        (strcmp(field.table_name(), child_field.table_name()) == 0)
-      ) {
-        schema_map[i] = j;
-        break;
-      }
-    }
-    if (schema_map[i] == -1) {
-      LOG_ERROR("Failed to find field %s.%s in child node", field.table_name(), field.field_name());
-      return RC::SQL_SYNTAX;
-    }
-  }
 
   TupleSet buf;
   RC rc = child->execute(buf);
@@ -186,7 +191,7 @@ RC ProjectionNode::execute(TupleSet &tuple_set) {
 
   for (auto &v : buf.tuples()) {
     Tuple tuple;
-    for (auto &i : schema_map) {
+    for (auto &i : fields_map) {
       tuple.add(v.values()[i]);
     }
     tuple_set.add(std::move(tuple));

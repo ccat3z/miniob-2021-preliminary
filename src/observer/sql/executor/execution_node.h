@@ -70,14 +70,15 @@ private:
 
 class ProjectionNode : public ExecutionNode {
 public:
-  ProjectionNode(std::unique_ptr<ExecutionNode> child, TupleSchema &&schema)
-    : tuple_schema_(schema), child(std::move(child)) {};
+  static std::unique_ptr<ProjectionNode> create(std::unique_ptr<ExecutionNode> child, RelAttr *attrs, int attr_num);
   virtual ~ProjectionNode();
   const TupleSchema &schema() override;
   RC execute(TupleSet &tuple_set) override;
 
 private:
+  ProjectionNode(std::unique_ptr<ExecutionNode> child, int fields_size) : child(std::move(child)), fields_map(fields_size, -1) {};
   TupleSchema tuple_schema_;
+  std::vector<int> fields_map;
   std::unique_ptr<ExecutionNode> child;
 };
 #endif //__OBSERVER_SQL_EXECUTOR_EXECUTION_NODE_H_

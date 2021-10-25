@@ -772,16 +772,16 @@ TEST_F(SQLTest, SelectTablesWithColumnsShouldCorrect) {
   ASSERT_EQ(exec_sql("insert into t3 values (999, 888);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t3 values (777, 666);"), "SUCCESS\n");
 
-  ASSERT_EQ(exec_sql("select o, t.a from t, t2, t3;"),
-    "t3.o | t.a\n"
-    "999 | 1\n"
-    "777 | 1\n"
-    "999 | 1\n"
-    "777 | 1\n"
-    "999 | 2\n"
-    "777 | 2\n"
-    "999 | 2\n"
-    "777 | 2\n"
+  ASSERT_EQ(exec_sql("select o, t.a, t2.b from t, t2, t3;"),
+    "t3.o | t.a | t2.b\n"
+    "999 | 1 | 100\n"
+    "777 | 1 | 100\n"
+    "999 | 1 | 300\n"
+    "777 | 1 | 300\n"
+    "999 | 2 | 100\n"
+    "777 | 2 | 100\n"
+    "999 | 2 | 300\n"
+    "777 | 2 | 300\n"
   );
 }
 
