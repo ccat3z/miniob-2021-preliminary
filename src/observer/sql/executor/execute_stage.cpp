@@ -279,7 +279,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   }
 
   // Config schema of select nodes
-  for (size_t i = 0; i < selects.attr_num; i++) {
+  for (int i = selects.attr_num - 1; i >= 0; i--) {
     RelAttr &attr = selects.attributes[i];
 
     // select t1.a or t1.*
