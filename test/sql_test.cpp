@@ -785,7 +785,7 @@ TEST_F(SQLTest, SelectTablesWithColumnsShouldCorrect) {
   );
 }
 
-TEST_F(SQLTest, SelectTablesWithConditionsShouldWork) {
+TEST_F(SQLTest, DISABLED_SelectTablesWithConditionsShouldWork) {
   ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("create table t2(b int, d int);"), "SUCCESS\n");
 
