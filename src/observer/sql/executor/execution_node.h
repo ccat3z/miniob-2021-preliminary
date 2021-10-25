@@ -44,6 +44,7 @@ public:
   RC select_field(const char *field_name);
   bool add_filter(Condition &condition);
   bool can_filter_by(RelAttr &attr);
+  const Table *table();
 private:
   Trx *trx_ = nullptr;
   Table  * table_;
@@ -65,5 +66,18 @@ private:
   TupleSchema tuple_schema_;
   std::unique_ptr<ExecutionNode> left_node;
   std::unique_ptr<ExecutionNode> right_node;
+};
+
+class ProjectionNode : public ExecutionNode {
+public:
+  ProjectionNode(std::unique_ptr<ExecutionNode> child, TupleSchema &&schema)
+    : tuple_schema_(schema), child(std::move(child)) {};
+  virtual ~ProjectionNode();
+  const TupleSchema &schema() override;
+  RC execute(TupleSet &tuple_set) override;
+
+private:
+  TupleSchema tuple_schema_;
+  std::unique_ptr<ExecutionNode> child;
 };
 #endif //__OBSERVER_SQL_EXECUTOR_EXECUTION_NODE_H_

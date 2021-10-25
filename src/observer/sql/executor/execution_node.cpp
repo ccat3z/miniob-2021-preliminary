@@ -30,6 +30,10 @@ const TupleSchema &TableScaner::schema() {
   return tuple_schema_;
 };
 
+const Table *TableScaner::table() {
+  return table_;
+}
+
 void TableScaner::select_all_fields() {
   tuple_schema_.add_field_from_table(table_);
 }
@@ -143,4 +147,50 @@ std::unique_ptr<CartesianSelectNode> CartesianSelectNode::create(
   }
 
   return root;
+}
+
+ProjectionNode::~ProjectionNode() {}
+const TupleSchema &ProjectionNode::schema() { return tuple_schema_; }
+
+RC ProjectionNode::execute(TupleSet &tuple_set) {
+  tuple_set.clear();
+  tuple_set.set_schema(tuple_schema_);
+
+  auto &fields = tuple_schema_.fields();
+  auto &child_fields = child->schema().fields();
+
+  std::vector<int> schema_map(tuple_schema_.fields().size(), -1);
+  for (int i = 0; i < fields.size(); i++) {
+    auto &field = fields[i];
+    for (int j = 0; j < child_fields.size(); j++) {
+      auto &child_field = child_fields[j];
+      if (
+        (strcmp(field.field_name(), child_field.field_name()) == 0) &&
+        (strcmp(field.table_name(), child_field.table_name()) == 0)
+      ) {
+        schema_map[i] = j;
+        break;
+      }
+    }
+    if (schema_map[i] == -1) {
+      LOG_ERROR("Failed to find field %s.%s in child node", field.table_name(), field.field_name());
+      return RC::SQL_SYNTAX;
+    }
+  }
+
+  TupleSet buf;
+  RC rc = child->execute(buf);
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+
+  for (auto &v : buf.tuples()) {
+    Tuple tuple;
+    for (auto &i : schema_map) {
+      tuple.add(v.values()[i]);
+    }
+    tuple_set.add(std::move(tuple));
+  }
+
+  return RC::SUCCESS;
 }

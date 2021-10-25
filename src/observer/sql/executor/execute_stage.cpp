@@ -281,6 +281,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   }
 
   // Check and apply attrs to table scanners
+  TupleSchema projectionSchema;
   for (int i = selects.attr_num - 1; i >= 0; i--) {
     RelAttr &attr = selects.attributes[i];
 
@@ -302,6 +303,8 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
       LOG_ERROR("Invalid attribute: %s.%s", attr.relation_name, attr.attribute_name);
       return rc;
     }
+
+    projectionSchema.add_field_from_table(table_scaners[attr.relation_name]->table(), attr.attribute_name);
   }
 
   // Check and apply conditions to table scaners
@@ -353,6 +356,13 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
       nodes.push_back(std::move(it.second));
     }
     exec_node = CartesianSelectNode::create(nodes);
+
+    if (projectionSchema.fields().size() > 0) {
+      exec_node = std::make_unique<ProjectionNode>(
+        std::move(exec_node),
+        std::move(projectionSchema)
+      );
+    }
   }
 
   // Execute node
