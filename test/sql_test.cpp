@@ -710,6 +710,110 @@ TEST_F(SQLTest, DateUpdateInvalidDateShouldFailure) {
   ASSERT_EQ(exec_sql("update t set d='2022-2-30' where d < '2020-12-31';"), "FAILURE\n");
 }
 
+//  ######  ######## ##       ########  ######  ########
+// ##    ## ##       ##       ##       ##    ##    ##   
+// ##       ##       ##       ##       ##          ##   
+//  ######  ######   ##       ######   ##          ##   
+//       ## ##       ##       ##       ##          ##   
+// ##    ## ##       ##       ##       ##    ##    ##   
+//  ######  ######## ######## ########  ######     ##   
+// ########    ###    ########  ##       ########  ######  
+//    ##      ## ##   ##     ## ##       ##       ##    ## 
+//    ##     ##   ##  ##     ## ##       ##       ##       
+//    ##    ##     ## ########  ##       ######    ######  
+//    ##    ######### ##     ## ##       ##             ## 
+//    ##    ##     ## ##     ## ##       ##       ##    ## 
+//    ##    ##     ## ########  ######## ########  ######  
+
+TEST_F(SQLTest, SelectTablesShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create table t2(b int, d int);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t2 values (100, 200);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t2 values (300, 500);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select * from t, t2;"),
+    "t.a | t.b | t2.b | t2.d\n"
+    "1 | 1 | 100 | 200\n"
+    "1 | 1 | 300 | 500\n"
+    "2 | 3 | 100 | 200\n"
+    "2 | 3 | 300 | 500\n"
+  );
+
+  ASSERT_EQ(exec_sql("create table t3(o int, a int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t3 values (999, 888);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t3 values (777, 666);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select * from t, t2, t3;"),
+    "t.a | t.b | t2.b | t2.d | t3.o | t3.a\n"
+    "1 | 1 | 100 | 200 | 999 | 888\n"
+    "1 | 1 | 100 | 200 | 777 | 666\n"
+    "1 | 1 | 300 | 500 | 999 | 888\n"
+    "1 | 1 | 300 | 500 | 777 | 666\n"
+    "2 | 3 | 100 | 200 | 999 | 888\n"
+    "2 | 3 | 100 | 200 | 777 | 666\n"
+    "2 | 3 | 300 | 500 | 999 | 888\n"
+    "2 | 3 | 300 | 500 | 777 | 666\n"
+  );
+}
+
+TEST_F(SQLTest, SelectTablesWithColumnsShouldCorrect) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create table t2(b int, d int);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t2 values (100, 200);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t2 values (300, 500);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("create table t3(o int, a int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t3 values (999, 888);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t3 values (777, 666);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select o, t.a from t, t2, t3;"),
+    "t3.o | t.a\n"
+    "999 | 1\n"
+    "777 | 1\n"
+    "999 | 1\n"
+    "777 | 1\n"
+    "999 | 2\n"
+    "777 | 2\n"
+    "999 | 2\n"
+    "777 | 2\n"
+  );
+}
+
+TEST_F(SQLTest, SelectTablesWithConditionsShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create table t2(b int, d int);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t2 values (100, 200);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t2 values (300, 500);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("create table t3(o int, a int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t3 values (999, 888);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t3 values (777, 666);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t3 values (777, 0);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select * from t, t2, t3 where o <= 777 and t.a >= 2;"),
+    "t.a | t.b | t2.b | t2.d | t3.o | t3.a\n"
+    "2 | 3 | 100 | 200 | 777 | 666\n"
+    "2 | 3 | 100 | 200 | 777 | 0\n"
+    "2 | 3 | 300 | 500 | 777 | 666\n"
+    "2 | 3 | 300 | 500 | 777 | 0\n"
+  );
+
+  ASSERT_EQ(exec_sql("select * from t, t2, t3 where o <= 777 and t.a >= 2 and t.a < t3.a;"),
+    "t.a | t.b | t2.b | t2.d | t3.o | t3.a\n"
+    "2 | 3 | 100 | 200 | 777 | 666\n"
+    "2 | 3 | 300 | 500 | 777 | 666\n"
+  );
+}
+
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
   testing::InitGoogleTest(&argc, argv);

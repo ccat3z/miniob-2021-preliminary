@@ -16,6 +16,7 @@ See the Mulan PSL v2 for more details. */
 #define __OBSERVER_SQL_EXECUTOR_EXECUTION_NODE_H_
 
 #include <vector>
+#include <memory>
 #include "storage/common/condition_filter.h"
 #include "sql/executor/tuple.h"
 
@@ -50,4 +51,19 @@ private:
   std::vector<DefaultConditionFilter *> condition_filters_;
 };
 
+class CartesianSelectExeNode : public ExecutionNode {
+public:
+  virtual ~CartesianSelectExeNode();
+  static std::unique_ptr<CartesianSelectExeNode> create(
+    std::vector<std::unique_ptr<ExecutionNode>> &nodes
+  );
+
+  const TupleSchema &schema() override;
+  RC execute(TupleSet &tuple_set) override;
+private:
+  CartesianSelectExeNode(std::unique_ptr<ExecutionNode> left_node, std::unique_ptr<ExecutionNode> right_node);
+  TupleSchema tuple_schema_;
+  std::unique_ptr<ExecutionNode> left_node;
+  std::unique_ptr<ExecutionNode> right_node;
+};
 #endif //__OBSERVER_SQL_EXECUTOR_EXECUTION_NODE_H_

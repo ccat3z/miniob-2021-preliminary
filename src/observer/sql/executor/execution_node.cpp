@@ -82,3 +82,65 @@ RC SelectExeNode::execute(TupleSet &tuple_set) {
   TupleRecordConverter converter(table_, tuple_set);
   return table_->scan_record(trx_, &condition_filter, -1, (void *)&converter, record_reader);
 }
+
+CartesianSelectExeNode::CartesianSelectExeNode(
+  std::unique_ptr<ExecutionNode> left_node,
+  std::unique_ptr<ExecutionNode> right_node)
+  : left_node(std::move(left_node)), right_node(std::move(right_node)) {
+  tuple_schema_.append(this->left_node->schema());
+  tuple_schema_.append(this->right_node->schema());
+};
+CartesianSelectExeNode::~CartesianSelectExeNode() { }
+const TupleSchema &CartesianSelectExeNode::schema() { return tuple_schema_; };
+
+RC CartesianSelectExeNode::execute(TupleSet &tuple_set) {
+  TupleSet tuple_left, tuple_right;
+
+  RC rc;
+  if ((rc = left_node->execute(tuple_left)) != RC::SUCCESS) {
+    return rc;
+  }
+  if ((rc = right_node->execute(tuple_right)) != RC::SUCCESS) {
+    return rc;
+  }
+
+  tuple_set.clear();
+  tuple_set.set_schema(tuple_schema_);
+  for (auto &tuple_left : tuple_left.tuples()) {
+    for (auto &tuple_right : tuple_right.tuples()) {
+      Tuple tuple;
+      for (auto &v : tuple_left.values()) {
+        tuple.add(v);
+      }
+      for (auto &v : tuple_right.values()) {
+        tuple.add(v);
+      }
+
+      tuple_set.add(std::move(tuple));
+    }
+  }
+
+  return RC::SUCCESS;
+};
+
+std::unique_ptr<CartesianSelectExeNode> CartesianSelectExeNode::create(
+  std::vector<std::unique_ptr<ExecutionNode>> &nodes
+) {
+  if (nodes.size() < 2) return nullptr;
+
+  std::unique_ptr<CartesianSelectExeNode> root(new CartesianSelectExeNode(
+    std::move(nodes[0]),
+    std::move(nodes[1])
+  ));
+
+  auto it = nodes.begin();
+  std::advance(it, 2);
+  for (; it != nodes.end(); it++) {
+    root = std::unique_ptr<CartesianSelectExeNode>(new CartesianSelectExeNode(
+      std::move(root),
+      std::move(*it)
+    ));
+  }
+
+  return root;
+}

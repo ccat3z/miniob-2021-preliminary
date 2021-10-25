@@ -16,6 +16,7 @@ See the Mulan PSL v2 for more details. */
 #include <sstream>
 #include <unordered_map>
 #include <memory>
+#include <algorithm>
 
 #include "execute_stage.h"
 
@@ -371,10 +372,12 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   if (select_nodes.size() == 1) {
     exec_node = std::move(select_nodes.begin()->second);
   } else {
-    // TODO: Build CartesianSelectNode
-    exec_node = std::move(select_nodes.begin()->second);
+    std::vector<std::unique_ptr<ExecutionNode>> nodes;
+    for (auto &it : select_nodes) {
+      nodes.push_back(std::move(it.second));
+    }
+    exec_node = CartesianSelectExeNode::create(nodes);
   }
-  select_nodes.clear();
 
   // Execute node
   TupleSet tuple_set;
