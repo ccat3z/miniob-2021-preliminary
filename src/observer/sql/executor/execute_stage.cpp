@@ -286,7 +286,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
     RelAttr &attr = selects.attributes[i];
 
     if (strcmp(attr.attribute_name, "*") == 0) {
-      assert(selects.attr_num = 1);
+      assert(selects.attr_num == 1);
       assert(attr.relation_name == nullptr);
 
       for (auto &it : table_scaners) {
