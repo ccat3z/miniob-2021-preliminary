@@ -14,7 +14,7 @@ See the Mulan PSL v2 for more details. */
 
 #include <string>
 #include <sstream>
-#include <unordered_map>
+#include <map>
 #include <memory>
 #include <algorithm>
 
@@ -217,7 +217,7 @@ void end_trx_if_need(Session *session, Trx *trx, bool all_right) {
   }
 }
 
-bool ensure_and_complete_relattr(std::unordered_map<std::string, std::unique_ptr<TableScaner>> &table_scaners, RelAttr &attr) {
+bool ensure_and_complete_relattr(std::map<std::string, std::unique_ptr<TableScaner>> &table_scaners, RelAttr &attr) {
   // If relation is specified
   if (attr.relation_name != nullptr) {
     auto node = table_scaners.find(attr.relation_name);
@@ -258,7 +258,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   Selects &selects = sql->sstr.selection;
 
   // Build table scanners
-  std::unordered_map<std::string, std::unique_ptr<TableScaner>> table_scaners;
+  std::map<std::string, std::unique_ptr<TableScaner>> table_scaners;
   for (size_t i = 0; i < selects.relation_num; i++) {
     const char *table_name = selects.relations[i];
     Table * table = DefaultHandler::get_default().find_table(db, table_name);
