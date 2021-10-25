@@ -389,7 +389,7 @@ TEST_F(SQLTest, SelectMetaSelectInvalidConditionShouldFailure) {
   ASSERT_EQ(exec_sql("select * from t where a = 1.1;"), "FAILURE\n");
 }
 
-TEST_F(SQLTest, DISABLED_SelectMetaSelectValidConditionInMultiTablesShouldSuccess) {
+TEST_F(SQLTest, SelectMetaSelectValidConditionInMultiTablesShouldSuccess) {
   ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("create table t2(b int);"), "SUCCESS\n");
   ASSERT_NE(exec_sql("select * from t, t2 where a > b;"), "FAILURE\n");
@@ -403,6 +403,12 @@ TEST_F(SQLTest, SelectMetaSelectInvalidConditionInMultiTablesShouldFailure) {
   ASSERT_EQ(exec_sql("select * from t, t2 where a > c;"), "FAILURE\n");
   ASSERT_EQ(exec_sql("select * from t, t2 where t.a > t3.b;"), "FAILURE\n");
   ASSERT_EQ(exec_sql("select * from t, t2 where a > 1 and b > 1 and t.a > t3.b;"), "FAILURE\n");
+}
+
+TEST_F(SQLTest, SelectMetaSelectIndeterminableConditionInMultiTablesShouldFailure) {
+  ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create table t2(a int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t, t2 where a > 0;"), "FAILURE\n");
 }
 
 // ########  ########   #######  ########  

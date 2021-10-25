@@ -215,6 +215,40 @@ void end_trx_if_need(Session *session, Trx *trx, bool all_right) {
   }
 }
 
+bool check_and_fill_relattr(std::unordered_map<std::string, SelectExeNode *> &select_nodes, RelAttr &attr) {
+  // If relation is specified
+  if (attr.relation_name != nullptr) {
+    auto node = select_nodes.find(attr.relation_name);
+    if (node == select_nodes.end()) {
+      LOG_ERROR("Table %s not exists", attr.relation_name);
+      return false;
+    }
+
+    return node->second->can_filter_by(attr);
+  }
+
+  // If relation is not specified
+  char *matched_relation_name = nullptr;
+  for (auto it : select_nodes) {
+    if (it.second->can_filter_by(attr)) {
+      if (matched_relation_name != nullptr) {
+        LOG_ERROR("Ambiguous column in condition: %s", attr.attribute_name);
+        return false;
+      }
+
+      matched_relation_name = strdup(it.first.c_str());
+    }
+  }
+
+  if (matched_relation_name == nullptr) {
+    LOG_ERROR("Column %s not exist in any table", attr.attribute_name);
+    return false;
+  }
+
+  attr.relation_name = matched_relation_name;
+  return true;
+}
+
 RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_event) {
   RC rc = RC::SUCCESS;
   Session *session = session_event->get_client()->session;
@@ -292,13 +326,42 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
     }
   }
 
-  // Set filters for select nodes
-  u32_t used_conditions_mask = 0;
-  for (size_t i = 0; i < selects.relation_num; i++) {
-    for (auto it : select_nodes) {
-      if (it.second->add_filter(selects.conditions[i])) {
-        used_conditions_mask |= 1 << i;
+  // Check and apply conditions to SelectExeNode
+  for (size_t i = 0; i < selects.condition_num; i++) {
+    Condition &condition = selects.conditions[i];
+
+    // Apply static condition to all nodes
+    if (!condition.left_is_attr && !condition.right_is_attr) {
+      for (auto it : select_nodes) {
+        if (!it.second->add_filter(condition)) {
+          return RC::SQL_SYNTAX;
+        }
       }
+      continue;
+    }
+
+    // Fill relation name in condition
+    if (condition.left_is_attr && !check_and_fill_relattr(select_nodes, condition.left_attr)) {
+      return RC::SQL_SYNTAX;
+    }
+    if (condition.right_is_attr && !check_and_fill_relattr(select_nodes, condition.right_attr)) {
+      return RC::SQL_SYNTAX;
+    }
+
+    // Apply conditions in specific node
+    const char *rel_name = nullptr;
+    if (condition.left_is_attr && !condition.right_is_attr) {
+      rel_name = condition.left_attr.relation_name;
+    } else if (!condition.left_is_attr && condition.right_is_attr) {
+      rel_name = condition.right_attr.relation_name;
+    } else if (strcmp(condition.left_attr.relation_name, condition.right_attr.relation_name) == 0) {
+      rel_name = condition.left_attr.relation_name;
+    }
+    if (rel_name != nullptr && !select_nodes[rel_name]->add_filter(condition)) {
+      return RC::SQL_SYNTAX;
+    }
+    if (rel_name == nullptr) {
+      // TODO: Save unused conditions
     }
   }
 
@@ -309,12 +372,6 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   } else {
     // TODO: Build CartesianSelectNode
     exec_node = select_nodes.begin()->second;
-  }
-
-  // Check whether all conditions have been used
-  if (used_conditions_mask != (((u32_t) 1 << selects.condition_num) - 1)) {
-    LOG_ERROR("Some conditions not used");
-    return RC::SCHEMA_FIELD_NOT_EXIST;
   }
 
   // Execute node

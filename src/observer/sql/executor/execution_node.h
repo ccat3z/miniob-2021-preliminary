@@ -42,6 +42,7 @@ public:
   void select_all_fields();
   RC select_field(const char *field_name);
   bool add_filter(Condition &condition);
+  bool can_filter_by(RelAttr &attr);
 private:
   Trx *trx_ = nullptr;
   Table  * table_;

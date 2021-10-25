@@ -65,6 +65,10 @@ bool SelectExeNode::add_filter(Condition &condition) {
   return true;
 }
 
+bool SelectExeNode::can_filter_by(RelAttr &attr) {
+  return table_contains_attr(table_, attr);
+}
+
 void record_reader(const char *data, void *context) {
   TupleRecordConverter *converter = (TupleRecordConverter *)context;
   converter->add_record(data);
