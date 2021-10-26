@@ -43,7 +43,7 @@ See details [here](./docs/lectures/miniob-topics.md).
     - [X] Index (see `bplus_tree.cpp`)
       - [X] Test case
     - [X] Condition (see `condition.cpp`)
-- [ ] 多表查询
+- [X] 多表查询
 - [ ] 聚合运算
 
 ### 选做题
