@@ -308,6 +308,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   }
 
   // Check and apply conditions to table scaners
+  std::vector<Condition *> unused_conditions;
   for (size_t i = 0; i < selects.condition_num; i++) {
     Condition &condition = selects.conditions[i];
 
@@ -342,7 +343,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
       return RC::SQL_SYNTAX;
     }
     if (rel_name == nullptr) {
-      // TODO: Save unused conditions
+      unused_conditions.push_back(&condition);
     }
   }
 
@@ -355,17 +356,23 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
     for (auto &it : table_scaners) {
       nodes.push_back(std::move(it.second));
     }
-    exec_node = CartesianSelectNode::create(nodes);
 
+    exec_node = CartesianSelectNode::create(nodes);
     if (exec_node == nullptr) {
       return RC::SQL_SYNTAX;
+    }
+
+    if (unused_conditions.size() > 0) {
+      exec_node = FilterNode::create(std::move(exec_node), unused_conditions);
+      if (exec_node == nullptr) {
+        return RC::SQL_SYNTAX;
+      }
     }
 
     if (need_project) {
       exec_node = ProjectionNode::create(
         std::move(exec_node), selects.attributes, selects.attr_num
       );
-
       if (exec_node == nullptr) {
         return RC::SQL_SYNTAX;
       }

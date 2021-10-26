@@ -19,6 +19,7 @@ See the Mulan PSL v2 for more details. */
 #include <memory>
 #include "storage/common/condition_filter.h"
 #include "sql/executor/tuple.h"
+#include "tuple_filter.h"
 
 class Table;
 class Trx;
@@ -80,5 +81,18 @@ private:
   TupleSchema tuple_schema_;
   std::unique_ptr<ExecutionNode> child;
   std::vector<int> fields_map;
+};
+
+class FilterNode : public ExecutionNode {
+public:
+  virtual ~FilterNode();
+  static std::unique_ptr<FilterNode> create(std::unique_ptr<ExecutionNode> child, std::vector<Condition *> &conditions);
+  const TupleSchema &schema() override;
+  RC execute(TupleSet &tuple_set) override;
+private:
+  FilterNode(std::unique_ptr<ExecutionNode> child, std::vector<std::unique_ptr<TupleFilter>> &&filters);
+  TupleSchema tuple_schema_;
+  std::unique_ptr<ExecutionNode> child;
+  std::vector<std::unique_ptr<TupleFilter>> filters;
 };
 #endif //__OBSERVER_SQL_EXECUTOR_EXECUTION_NODE_H_

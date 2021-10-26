@@ -18,8 +18,9 @@ See the Mulan PSL v2 for more details. */
 #include "common/time/datetime.h"
 
 Tuple::Tuple(const Tuple &other) {
-  LOG_PANIC("Copy constructor of tuple is not supported");
-  exit(1);
+  for (auto &v : other.values()) {
+    add(v);
+  }
 }
 
 Tuple::Tuple(Tuple &&other) noexcept : values_(std::move(other.values_)) {
