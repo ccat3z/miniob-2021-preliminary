@@ -18,7 +18,8 @@ please refer to docs/how_to_build.md
 
 See details [here](./docs/lectures/miniob-topics.md).
 
-- [ ] RC stringify
+- [ ] Build executor tree in parser stage
+- [ ] <del>RC stringify</del>
 - [ ] Colorful log
 - [ ] Memory leak of Value
 - [ ] Parallel sql test
