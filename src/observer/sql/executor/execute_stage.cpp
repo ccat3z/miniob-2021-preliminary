@@ -389,7 +389,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
 
   // Response
   std::stringstream ss;
-  tuple_set.print(ss);
+  tuple_set.print(ss, selects.relation_num > 1);
   session_event->set_response(ss.str());
 
   end_trx_if_need(session, trx, true);

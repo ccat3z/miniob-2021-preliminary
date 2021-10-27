@@ -107,7 +107,7 @@ public:
     fields_.clear();
   }
 
-  void print(std::ostream &os) const;
+  void print(std::ostream &os, bool show_table = false) const;
 public:
   void add_field_from_table(const Table *table);
   RC add_field_from_table(const Table *table, const char *field_name);
@@ -138,7 +138,7 @@ public:
   const Tuple &get(int index) const;
   const std::vector<Tuple> &tuples() const;
 
-  void print(std::ostream &os) const;
+  void print(std::ostream &os, bool show_table = false) const;
 public:
   const TupleSchema &schema() const {
     return schema_;
