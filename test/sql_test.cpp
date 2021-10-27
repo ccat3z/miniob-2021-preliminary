@@ -356,7 +356,7 @@ TEST_F(SQLTest, SelectMetaInvalidTableShouldFailureInMultiTables) {
 
 TEST_F(SQLTest, SelectMetaSameTableShouldWork) {
   ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
-  ASSERT_EQ(exec_sql("select * from t, t;"), "a\n");
+  ASSERT_EQ(exec_sql("select * from t, t;"), "t.a\n");
 }
 
 TEST_F(SQLTest, SelectMetaSelectInvalidColumnShouldFailure) {
@@ -762,7 +762,7 @@ TEST_F(SQLTest, SelectTablesShouldWork) {
   );
 }
 
-TEST_F(SQLTest, SelectTablesWithColumnsShouldCorrect) {
+TEST_F(SQLTest, SelectTablesColumnsOrderShouldCorrect) {
   ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("create table t2(b int, d int);"), "SUCCESS\n");
 
@@ -785,6 +785,42 @@ TEST_F(SQLTest, SelectTablesWithColumnsShouldCorrect) {
     "777 | 2 | 100\n"
     "999 | 2 | 300\n"
     "777 | 2 | 300\n"
+  );
+}
+
+TEST_F(SQLTest, SelectTablesSingleColumnShouldShowTableName) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create table t2(b int, d int);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t2 values (100, 200);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t2 values (300, 500);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select t.a from t, t2;"),
+    "t.a\n"
+    "1\n"
+    "1\n"
+    "2\n"
+    "2\n"
+  );
+}
+
+TEST_F(SQLTest, SelectTablesBothStarAndColumnsShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create table t2(b int, d int);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t2 values (100, 200);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t2 values (300, 500);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select t.*, t2.b from t, t2;"),
+    "t.a | t.b | t2.b\n"
+    "1 | 1 | 100\n"
+    "1 | 1 | 300\n"
+    "2 | 3 | 100\n"
+    "2 | 3 | 300\n"
   );
 }
 
