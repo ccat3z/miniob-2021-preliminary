@@ -281,20 +281,25 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   }
 
   // Check and apply attrs to table scanners
-  bool need_project = true;
   for (int i = selects.attr_num - 1; i >= 0; i--) {
     RelAttr &attr = selects.attributes[i];
 
     if (strcmp(attr.attribute_name, "*") == 0) {
-      assert(selects.attr_num == 1);
-      assert(attr.relation_name == nullptr);
+      if (attr.relation_name == nullptr) {
+        attr.relation_name = strdup("*");
+        for (auto &it : table_scaners) {
+          it.second->select_all_fields();
+        }
+      } else {
+        auto node = table_scaners.find(attr.relation_name);
+        if (node == table_scaners.end()) {
+          LOG_ERROR("Invalid relation: %s", attr.relation_name);
+          return RC::SQL_SYNTAX;
+        }
 
-      for (auto &it : table_scaners) {
-        it.second->select_all_fields();
+        node->second->select_all_fields();
       }
-
-      need_project = false;
-      break;
+      continue;
     }
 
     if (!ensure_and_complete_relattr(table_scaners, attr)) {
@@ -369,13 +374,11 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
       }
     }
 
-    if (need_project) {
-      exec_node = ProjectionNode::create(
-        std::move(exec_node), selects.attributes, selects.attr_num
-      );
-      if (exec_node == nullptr) {
-        return RC::SQL_SYNTAX;
-      }
+    exec_node = ProjectionNode::create(
+      std::move(exec_node), selects.attributes, selects.attr_num
+    );
+    if (exec_node == nullptr) {
+      return RC::SQL_SYNTAX;
     }
   }
 

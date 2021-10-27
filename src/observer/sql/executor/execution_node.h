@@ -77,7 +77,7 @@ public:
   RC execute(TupleSet &tuple_set) override;
 
 private:
-  ProjectionNode(std::unique_ptr<ExecutionNode> child, int fields_size) : child(std::move(child)), fields_map(fields_size, -1) {};
+  ProjectionNode(std::unique_ptr<ExecutionNode> child) : child(std::move(child)) {};
   TupleSchema tuple_schema_;
   std::unique_ptr<ExecutionNode> child;
   std::vector<int> fields_map;

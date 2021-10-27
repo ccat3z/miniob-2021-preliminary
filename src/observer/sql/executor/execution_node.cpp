@@ -151,24 +151,32 @@ std::unique_ptr<CartesianSelectNode> CartesianSelectNode::create(
 }
 
 std::unique_ptr<ProjectionNode> ProjectionNode::create(std::unique_ptr<ExecutionNode> child, RelAttr *attrs, int attr_num) {
-  auto proj = std::unique_ptr<ProjectionNode>(new ProjectionNode(std::move(child), attr_num));
+  auto proj = std::unique_ptr<ProjectionNode>(new ProjectionNode(std::move(child)));
+  proj->fields_map.reserve(attr_num);
 
   auto &child_fields = proj->child->schema().fields();
 
   for (int i = attr_num - 1; i >= 0; i--) {
     auto &attr = attrs[i];
+    bool any_table = strcmp(attr.relation_name, "*") == 0;
+    bool any_attr = strcmp(attr.attribute_name, "*") == 0;
+    bool matched = false;
     for (size_t j = 0; j < child_fields.size(); j++) {
       auto &child_field = child_fields[j];
       if (
-        (strcmp(attr.attribute_name, child_field.field_name()) == 0) &&
-        (strcmp(attr.relation_name, child_field.table_name()) == 0)
+        (any_attr || strcmp(attr.attribute_name, child_field.field_name()) == 0) &&
+        (any_table || strcmp(attr.relation_name, child_field.table_name()) == 0)
       ) {
-        proj->fields_map[attr_num - i - 1] = j;
+        matched = true;
+        proj->fields_map.push_back(j);
         proj->tuple_schema_.add(child_field.type(), child_field.table_name(), child_field.field_name());
-        break;
+
+        if (!(any_table || any_attr)) {
+          break;
+        }
       }
     }
-    if (proj->fields_map[attr_num - i - 1] == -1) {
+    if (!matched) {
       LOG_ERROR("Failed to find field %s.%s in child node", attr.relation_name, attr.attribute_name);
       return nullptr;
     }
