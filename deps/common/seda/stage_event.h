@@ -15,10 +15,10 @@ See the Mulan PSL v2 for more details. */
 #define __COMMON_SEDA_STAGE_EVENT_H__
 
 // Include Files
-#include <time.h>
 #include <list>
 #include <map>
 #include <string>
+#include <time.h>
 
 #include "common/defs.h"
 namespace common {
@@ -58,7 +58,7 @@ class TimeoutInfo;
 
 class StageEvent {
 
- public:
+public:
   // Interface for collecting debugging information
   typedef enum { HANDLE_EV = 0, CALLBACK_EV, TIMEOUT_EV } HistType;
 
@@ -123,23 +123,22 @@ class StageEvent {
   // If the event has timed out (and should be dropped)
   bool has_timed_out();
 
- private:
+private:
   typedef std::pair<Stage *, HistType> HistEntry;
 
   // Interface to allow callbacks to be run on target stage's threads
   void mark_callback() { cb_flag_ = true; }
   void clear_callback() { cb_flag_ = false; }
-  
+
   // Set a timeout info into the event
   void set_timeout_info(TimeoutInfo *tmi);
 
-  CompletionCallback *comp_cb_; // completion callback stack for this event
-  UserData *ud_;               // user data associated with event by caller
-  bool cb_flag_; // true if this event is a callback
+  CompletionCallback *comp_cb_;   // completion callback stack for this event
+  UserData *ud_;                  // user data associated with event by caller
+  bool cb_flag_;                  // true if this event is a callback
   std::list<HistEntry> *history_; // List of stages which have handled ev
-  u32_t stage_hops_;               // Number of stages which have handled ev
-  TimeoutInfo *tm_info_; // the timeout info for this event
-  
+  u32_t stage_hops_;              // Number of stages which have handled ev
+  TimeoutInfo *tm_info_;          // the timeout info for this event
 };
 
 /**
@@ -155,7 +154,7 @@ class StageEvent {
  *  originating stage can access the \c UserData member to recover its state.
  */
 class UserData {
- public:
+public:
   /**
    *  \brief A virtual destructor to enable the use of dynamic casts.
    */

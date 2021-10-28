@@ -28,15 +28,14 @@ See the Mulan PSL v2 for more details. */
 
 #include "common/io/io.h"
 #include "common/log/log.h"
-#include "common/time/datetime.h"
 #include "common/seda/kill_thread.h"
+#include "common/seda/metrics_stage.h"
 #include "common/seda/seda_config.h"
 #include "common/seda/stage_factory.h"
-#include "common/seda/metrics_stage.h"
 #include "common/seda/thread_pool.h"
 #include "common/seda/timer_stage.h"
+#include "common/time/datetime.h"
 namespace common {
-
 
 int init_seda(ProcessParam *process_cfg) {
   // Initialize the static data structures of threadpool
@@ -44,10 +43,10 @@ int init_seda(ProcessParam *process_cfg) {
 
   // initialize class factory instances here
   static StageFactory kill_thread_factory("KillThreads",
-                                        &KillThreadStage::make_stage);
+                                          &KillThreadStage::make_stage);
   static StageFactory timer_factory("TimerStage", &TimerStage::make_stage);
   static StageFactory seda_stats_factory("MetricsStage",
-                                       &MetricsStage::make_stage);
+                                         &MetricsStage::make_stage);
 
   // try to parse the seda configuration files
   SedaConfig *config = SedaConfig::get_instance();

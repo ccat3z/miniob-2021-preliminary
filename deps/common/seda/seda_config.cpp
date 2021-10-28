@@ -15,8 +15,8 @@ See the Mulan PSL v2 for more details. */
 
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
 #include <typeinfo>
+#include <unistd.h>
 #include <vector>
 
 #include "common/lang/string.h"
@@ -27,8 +27,6 @@ See the Mulan PSL v2 for more details. */
 namespace common {
 
 SedaConfig *SedaConfig::instance_ = NULL;
-
-
 
 SedaConfig *&SedaConfig::get_instance() {
   if (instance_ == NULL) {
@@ -173,7 +171,7 @@ void SedaConfig::cleanup() {
 
 void SedaConfig::init_event_history() {
   std::map<std::string, std::string> base_section =
-    get_properties()->get(SEDA_BASE_NAME);
+      get_properties()->get(SEDA_BASE_NAME);
   std::map<std::string, std::string>::iterator it;
   std::string key;
 
@@ -199,7 +197,7 @@ void SedaConfig::init_event_history() {
   get_max_event_hops() = max_event_hops;
 
   LOG_INFO("Successfully init_event_history, EventHistory:%d, MaxEventHops:%u",
-           (int) ev_hist, max_event_hops);
+           (int)ev_hist, max_event_hops);
   return;
 }
 
@@ -207,7 +205,7 @@ SedaConfig::status_t SedaConfig::init_thread_pool() {
   try {
 
     std::map<std::string, std::string> base_section =
-      get_properties()->get(SEDA_BASE_NAME);
+        get_properties()->get(SEDA_BASE_NAME);
     std::map<std::string, std::string>::iterator it;
     std::string key;
 
@@ -234,22 +232,24 @@ SedaConfig::status_t SedaConfig::init_thread_pool() {
 
       // get count number
       key = COUNT;
-      std::string count_str = get_properties()->get(key, default_cpu_num_str, thread_name);
+      std::string count_str =
+          get_properties()->get(key, default_cpu_num_str, thread_name);
 
       int thread_count = 1;
       str_to_val(count_str, thread_count);
       if (thread_count < 1) {
         LOG_INFO("Thread number of  %s is %d, it is same as cpu's cores.",
-                  thread_name.c_str(), cpu_num);
+                 thread_name.c_str(), cpu_num);
         thread_count = cpu_num;
       }
       const int max_thread_count = 1000000;
       if (thread_count >= max_thread_count) {
-        LOG_ERROR("Thread number is too big: %d(max:%d)", thread_count, max_thread_count);
+        LOG_ERROR("Thread number is too big: %d(max:%d)", thread_count,
+                  max_thread_count);
         return INITFAIL;
       }
 
-      Threadpool * thread_pool = new Threadpool(thread_count, thread_name);
+      Threadpool *thread_pool = new Threadpool(thread_count, thread_name);
       if (thread_pool == NULL) {
         LOG_ERROR("Failed to new %s threadpool\n", thread_name.c_str());
         return INITFAIL;
@@ -257,7 +257,7 @@ SedaConfig::status_t SedaConfig::init_thread_pool() {
       thread_pools_[thread_name] = thread_pool;
     }
 
-    if  (thread_pools_.find(DEFAULT_THREAD_POOL) == thread_pools_.end()) {
+    if (thread_pools_.find(DEFAULT_THREAD_POOL) == thread_pools_.end()) {
       LOG_ERROR("There is no default thread pool %s, please add it.",
                 DEFAULT_THREAD_POOL);
       return INITFAIL;
@@ -311,7 +311,7 @@ std::string SedaConfig::get_thread_pool(std::string &stage_name) {
 SedaConfig::status_t SedaConfig::init_stages() {
   try {
     std::map<std::string, std::string> base_section =
-      get_properties()->get(SEDA_BASE_NAME);
+        get_properties()->get(SEDA_BASE_NAME);
     std::map<std::string, std::string>::iterator it;
     std::string key;
 
@@ -344,8 +344,8 @@ SedaConfig::status_t SedaConfig::init_stages() {
       stages_[stage_name] = stage;
       stage->set_pool(t);
 
-      LOG_INFO("Stage %s use threadpool %s.",
-               stage_name.c_str(), thread_name.c_str());
+      LOG_INFO("Stage %s use threadpool %s.", stage_name.c_str(),
+               thread_name.c_str());
     } // end for stage
 
   } catch (std::exception &e) {
@@ -373,7 +373,7 @@ SedaConfig::status_t SedaConfig::gen_next_stages() {
       Stage *stage = stages_[stage_name];
 
       std::map<std::string, std::string> stage_section =
-        get_properties()->get(stage_name);
+          get_properties()->get(stage_name);
       std::map<std::string, std::string>::iterator it;
       std::string next_stage_id = NEXT_STAGES;
       it = stage_section.find(next_stage_id);
@@ -389,7 +389,7 @@ SedaConfig::status_t SedaConfig::gen_next_stages() {
       split_string(next_stage_names, split_tag, next_stage_name_list);
 
       for (std::vector<std::string>::iterator next_it =
-        next_stage_name_list.begin();
+               next_stage_name_list.begin();
            next_it != next_stage_name_list.end(); next_it++) {
         std::string &next_stage_name = *next_it;
         Stage *next_stage = stages_[next_stage_name];

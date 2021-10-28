@@ -17,9 +17,8 @@ See the Mulan PSL v2 for more details. */
 namespace common {
 
 //! Global process config
-ProcessParam*& the_process_param()
-{
-  static ProcessParam* process_cfg = new ProcessParam();
+ProcessParam *&the_process_param() {
+  static ProcessParam *process_cfg = new ProcessParam();
 
   return process_cfg;
 }
@@ -39,7 +38,5 @@ void ProcessParam::init_default(std::string &process_name) {
 
   demon = false;
 }
-
-
 
 } //namespace common

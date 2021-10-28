@@ -25,7 +25,7 @@ Sampler *&get_sampler() {
   return g_sampler;
 }
 
-Sampler::Sampler():random_() {}
+Sampler::Sampler() : random_() {}
 
 Sampler::~Sampler() {}
 
@@ -49,5 +49,4 @@ void Sampler::set_ratio(double ratio) {
   }
 }
 
-}//namespace common
-
+} //namespace common

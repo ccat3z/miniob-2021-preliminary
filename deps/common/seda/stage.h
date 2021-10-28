@@ -89,7 +89,7 @@ class Stage {
 
   // public interface operations
 
- public:
+public:
   /**
    * Destructor
    * @pre  stage is not connected
@@ -228,7 +228,7 @@ class Stage {
     this->callback_event(event, context);
   }
 
- protected:
+protected:
   /**
    * Constructor
    * @param[in] tag     The label that identifies this stage.
@@ -298,14 +298,13 @@ class Stage {
 
   friend class Threadpool;
 
- private:
+private:
   std::deque<StageEvent *> event_list_; // event queue
   mutable pthread_mutex_t list_mutex_;  // protects the event queue
   pthread_cond_t disconnect_cond_;      // wait here for disconnect
   bool connected_;                      // is stage connected to pool?
   unsigned long event_ref_;             // # of outstanding events
   Threadpool *th_pool_ = nullptr;       // Threadpool for this stage
-
 };
 
 inline void Stage::set_pool(Threadpool *th) {

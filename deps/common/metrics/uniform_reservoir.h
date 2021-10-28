@@ -38,7 +38,7 @@ public:
   virtual ~UniformReservoir();
 
 public:
-  size_t size();  // data buffer size
+  size_t size();      // data buffer size
   size_t get_count(); // how many items have been insert?
 
   void update(double one);

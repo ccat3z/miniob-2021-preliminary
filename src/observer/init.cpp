@@ -12,10 +12,8 @@ See the Mulan PSL v2 for more details. */
 // Created by Longda on 2021/5/3.
 //
 
-
 #include "init.h"
 
-#include "ini_setting.h"
 #include "common/conf/ini.h"
 #include "common/lang/string.h"
 #include "common/log/log.h"
@@ -25,6 +23,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/os/signal.h"
 #include "common/seda/init.h"
 #include "common/seda/stage_factory.h"
+#include "ini_setting.h"
 
 #include "common/metrics/log_reporter.h"
 #include "common/metrics/metrics_registry.h"
@@ -140,27 +139,27 @@ void cleanup_log() {
 
 int prepare_init_seda() {
   static StageFactory session_stage_factory("SessionStage",
-                                          &SessionStage::make_stage);
+                                            &SessionStage::make_stage);
   static StageFactory resolve_stage_factory("ResolveStage",
-                                          &ResolveStage::make_stage);
+                                            &ResolveStage::make_stage);
   static StageFactory query_cache_stage_factory("QueryCacheStage",
-                                             &QueryCacheStage::make_stage);
-  static StageFactory parse_stage_factory("ParseStage", &ParseStage::make_stage);
+                                                &QueryCacheStage::make_stage);
+  static StageFactory parse_stage_factory("ParseStage",
+                                          &ParseStage::make_stage);
   static StageFactory plan_cache_factory("PlanCacheStage",
-                                       &PlanCacheStage::make_stage);
+                                         &PlanCacheStage::make_stage);
   static StageFactory optimize_factory("OptimizeStage",
-                                      &OptimizeStage::make_stage);
-  static StageFactory execute_factory("ExecuteStage", &ExecuteStage::make_stage);
+                                       &OptimizeStage::make_stage);
+  static StageFactory execute_factory("ExecuteStage",
+                                      &ExecuteStage::make_stage);
   static StageFactory default_storage_factory("DefaultStorageStage",
-                                            &DefaultStorageStage::make_stage);
+                                              &DefaultStorageStage::make_stage);
   static StageFactory mem_storage_factory("MemStorageStage",
-                                        &MemStorageStage::make_stage);
+                                          &MemStorageStage::make_stage);
   return 0;
 }
 
-int init(ProcessParam *process_param) {
-  return init(process_param, false);
-}
+int init(ProcessParam *process_param) { return init(process_param, false); }
 
 int init(ProcessParam *process_param, bool force) {
 
@@ -178,7 +177,7 @@ int init(ProcessParam *process_param, bool force) {
   int rc = STATUS_SUCCESS;
   if (process_param->is_demon()) {
     rc = daemonize_service(process_param->get_std_out().c_str(),
-                          process_param->get_std_err().c_str());
+                           process_param->get_std_err().c_str());
     if (rc != 0) {
       std::cerr << "Shutdown due to failed to daemon current process!"
                 << std::endl;

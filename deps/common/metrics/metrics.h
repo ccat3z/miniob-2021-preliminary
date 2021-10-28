@@ -37,7 +37,7 @@ class Counter : public Metric {
 class Meter : public Metric {
 public:
   Meter();
-  virtual  ~Meter();
+  virtual ~Meter();
 
   void inc(long increase);
   void inc();
@@ -76,7 +76,6 @@ public:
   virtual ~Histogram();
 
   void snapshot();
-
 };
 
 // timeunit is ms

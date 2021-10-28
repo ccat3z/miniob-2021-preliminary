@@ -26,7 +26,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/os/pidfile.h"
 namespace common {
 
-std::string& getPidPath() {
+std::string &getPidPath() {
   static std::string path;
 
   return path;
@@ -37,12 +37,10 @@ void setPidPath(const char *progName) {
 
   if (progName != NULL) {
     path = std::string(_PATH_TMP) + progName + ".pid";
-  }else {
+  } else {
     path = "";
   }
-
 }
-
 
 int writePidFile(const char *progName) {
   assert(progName);
@@ -65,7 +63,6 @@ int writePidFile(const char *progName) {
   return rv;
 }
 
-
 void removePidFile(void) {
   std::string path = getPidPath();
   if (!path.empty()) {
@@ -74,6 +71,5 @@ void removePidFile(void) {
   }
   return;
 }
-
 
 } //namespace common

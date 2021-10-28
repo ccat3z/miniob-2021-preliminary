@@ -13,11 +13,12 @@
 #include <string.h>
 
 bool value_cast(Value *value, AttrType type) {
-  if (value->type == type) return true;
+  if (value->type == type)
+    return true;
 
   if (value->type == CHARS && type == DATE) {
     common::Date date;
-    if (!date.parse((char *) value->data)) {
+    if (!date.parse((char *)value->data)) {
       return false;
     }
 

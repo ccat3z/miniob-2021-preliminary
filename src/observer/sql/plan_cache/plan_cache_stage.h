@@ -31,7 +31,7 @@ protected:
   void cleanup();
   void handle_event(common::StageEvent *event);
   void callback_event(common::StageEvent *event,
-                     common::CallbackContext *context);
+                      common::CallbackContext *context);
 
 protected:
 private:

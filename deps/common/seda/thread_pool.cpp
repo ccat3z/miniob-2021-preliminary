@@ -31,8 +31,8 @@ extern bool &get_event_history_flag();
  * @post thread pool has <i>threads</i> threads running
  */
 Threadpool::Threadpool(unsigned int threads, const std::string &name)
-  : run_queue_(), eventhist_(get_event_history_flag()), nthreads_(0),
-    threads_to_kill_(0), n_idles_(0), killer_("KillThreads"), name_(name) {
+    : run_queue_(), eventhist_(get_event_history_flag()), nthreads_(0),
+      threads_to_kill_(0), n_idles_(0), killer_("KillThreads"), name_(name) {
   LOG_TRACE("Enter, thread number:%d", threads);
   MUTEX_INIT(&run_mutex_, NULL);
   COND_INIT(&run_cond_, NULL);
@@ -94,7 +94,7 @@ unsigned int Threadpool::add_threads(unsigned int threads) {
   // attempt to start the requested number of threads
   for (i = 0; i < threads; i++) {
     int stat = pthread_create(&pthread, &pthread_attrs, Threadpool::run_thread,
-                              (void *) this);
+                              (void *)this);
     if (stat != 0) {
       LOG_WARN("Failed to create one thread\n");
       break;
@@ -232,7 +232,7 @@ const std::string &Threadpool::get_name() { return name_; }
  * Should not be called except when a thread is created.
  */
 void *Threadpool::run_thread(void *pool_ptr) {
-  Threadpool *pool = (Threadpool *) pool_ptr;
+  Threadpool *pool = (Threadpool *)pool_ptr;
 
   // save thread pool pointer
   set_thread_pool_ptr(pool);
@@ -314,7 +314,7 @@ void Threadpool::set_thread_pool_ptr(const Threadpool *thd_Pool) {
 }
 
 const Threadpool *Threadpool::get_thread_pool_ptr() {
-  return (const Threadpool *) pthread_getspecific(pool_ptr_key_);
+  return (const Threadpool *)pthread_getspecific(pool_ptr_key_);
 }
 
 } //namespace common

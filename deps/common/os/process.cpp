@@ -107,7 +107,7 @@ void sys_log_redirect(const char *std_out_file, const char *std_err_file) {
 
   std::string err_file = getAboslutPath(std_err_file);
 
-  // CWE367: A check occurs on a file's attributes before the file is 
+  // CWE367: A check occurs on a file's attributes before the file is
   // used in a privileged operation, but things may have changed
   // Redirect stderr to std_err_file
   // struct stat st;

@@ -65,6 +65,7 @@ public:
   const std::vector<double> &get_values();
 
   std::string to_string();
+
 protected:
   std::vector<double> data_;
 };

@@ -15,9 +15,9 @@ See the Mulan PSL v2 for more details. */
 
 #include "gtest/gtest.h"
 
-#include "common/os/pidfile.h"
 #include "common/io/io.h"
 #include "common/lang/string.h"
+#include "common/os/pidfile.h"
 
 using namespace common;
 

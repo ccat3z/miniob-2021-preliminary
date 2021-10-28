@@ -95,7 +95,7 @@ void QueryCacheStage::handle_event(StageEvent *event) {
 }
 
 void QueryCacheStage::callback_event(StageEvent *event,
-                                    CallbackContext *context) {
+                                     CallbackContext *context) {
   LOG_TRACE("Enter\n");
 
   // update data to query cache here

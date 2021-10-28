@@ -16,7 +16,6 @@ See the Mulan PSL v2 for more details. */
 #define __COMMON_OS_PROCESS_H__
 namespace common {
 
-
 //! Get process Name
 /**
  * @param[in]   prog_full_name  process full name with full path

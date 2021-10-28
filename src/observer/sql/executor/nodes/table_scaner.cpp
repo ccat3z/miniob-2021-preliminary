@@ -8,29 +8,23 @@
 // NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE. See the
 // Mulan PSL v2 for more details.
 
-
+#include "table_scaner.h"
+#include "common/log/log.h"
 #include "sql/executor/execution_node.h"
 #include "storage/common/table.h"
-#include "common/log/log.h"
-#include "table_scaner.h"
 
-TableScaner::TableScaner(Trx *trx, Table *table) : trx_(trx), table_(table) {
-}
+TableScaner::TableScaner(Trx *trx, Table *table) : trx_(trx), table_(table) {}
 
 TableScaner::~TableScaner() {
-  for (DefaultConditionFilter * &filter : condition_filters_) {
+  for (DefaultConditionFilter *&filter : condition_filters_) {
     delete filter;
   }
   condition_filters_.clear();
 }
 
-const TupleSchema &TableScaner::schema() {
-  return tuple_schema_;
-};
+const TupleSchema &TableScaner::schema() { return tuple_schema_; };
 
-const Table *TableScaner::table() {
-  return table_;
-}
+const Table *TableScaner::table() { return table_; }
 
 void TableScaner::select_all_fields() {
   tuple_schema_.add_field_from_table(table_);
@@ -41,7 +35,8 @@ RC TableScaner::select_field(const char *field_name) {
 }
 
 bool table_contains_attr(const Table *table, RelAttr &attr) {
-  if (attr.relation_name != nullptr && strcmp(table->table_meta().name(), attr.relation_name) != 0) {
+  if (attr.relation_name != nullptr &&
+      strcmp(table->table_meta().name(), attr.relation_name) != 0) {
     return false;
   }
 
@@ -49,11 +44,13 @@ bool table_contains_attr(const Table *table, RelAttr &attr) {
 }
 
 bool TableScaner::add_filter(Condition &condition) {
-  if (condition.left_is_attr && !table_contains_attr(table_, condition.left_attr)) {
+  if (condition.left_is_attr &&
+      !table_contains_attr(table_, condition.left_attr)) {
     return false;
   }
 
-  if (condition.right_is_attr && !table_contains_attr(table_, condition.right_attr)) {
+  if (condition.right_is_attr &&
+      !table_contains_attr(table_, condition.right_attr)) {
     return false;
   }
 
@@ -77,10 +74,12 @@ void record_reader(const char *data, void *context) {
 }
 RC TableScaner::execute(TupleSet &tuple_set) {
   CompositeConditionFilter condition_filter;
-  condition_filter.init((const ConditionFilter **)condition_filters_.data(), condition_filters_.size());
+  condition_filter.init((const ConditionFilter **)condition_filters_.data(),
+                        condition_filters_.size());
 
   tuple_set.clear();
   tuple_set.set_schema(tuple_schema_);
   TupleRecordConverter converter(table_, tuple_set);
-  return table_->scan_record(trx_, &condition_filter, -1, (void *)&converter, record_reader);
+  return table_->scan_record(trx_, &condition_filter, -1, (void *)&converter,
+                             record_reader);
 }

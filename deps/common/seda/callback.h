@@ -59,7 +59,7 @@ class CompletionCallback {
 
   // public interface operations
 
- public:
+public:
   // Constructor
   CompletionCallback(Stage *trgt, CallbackContext *ctx = NULL);
 
@@ -84,13 +84,13 @@ class CompletionCallback {
   // Complete this event if it has timed out
   void event_timeout(StageEvent *ev);
 
- protected:
+protected:
   // implementation state
 
   Stage *target_stage_;         // stage which is setting this callback
-  CallbackContext *context_;   // argument to pass when invoking cb
+  CallbackContext *context_;    // argument to pass when invoking cb
   CompletionCallback *next_cb_; // next event in the chain
-  bool ev_hist_flag_;            // true if event histories are enabled
+  bool ev_hist_flag_;           // true if event histories are enabled
 };
 
 /**
@@ -101,17 +101,17 @@ class CompletionCallback {
  *  callback context class from this base.
  */
 class CallbackContext {
- public:
+public:
   virtual ~CallbackContext() {}
 };
 
 class CallbackContextEvent : public CallbackContext {
- public:
+public:
   CallbackContextEvent(StageEvent *event = NULL) : ev_(event) {}
   ~CallbackContextEvent() {}
   StageEvent *get_event() { return ev_; }
 
- private:
+private:
   StageEvent *ev_;
 };
 

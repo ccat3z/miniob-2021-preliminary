@@ -17,10 +17,10 @@ See the Mulan PSL v2 for more details. */
 #include "pthread.h"
 #include "stdio.h"
 #include "string.h"
+#include <date/date.h>
 #include <iomanip>
 #include <sstream>
 #include <string>
-#include <date/date.h>
 namespace common {
 
 DateTime::DateTime(std::string &xml_str) {
@@ -86,7 +86,8 @@ std::string DateTime::str_to_time_t_str(std::string &xml_str) {
 time_t DateTime::nowtimet() {
   struct timeval tv;
   gettimeofday(&tv, 0);
-  return tv.tv_sec;;
+  return tv.tv_sec;
+  ;
 }
 
 DateTime DateTime::now() {
@@ -206,16 +207,17 @@ int DateTime::max_day_in_month_for(int yr, int month) {
   int tmp_year = yr + ((tmp_month - 1) / 12);
 
   if (tmp_month == MON_JAN || tmp_month == MON_MAR || tmp_month == MON_MAY ||
-    tmp_month == MON_JUL || tmp_month == MON_AUG || tmp_month == MON_OCT ||
-    tmp_month == MON_DEC) {
+      tmp_month == MON_JUL || tmp_month == MON_AUG || tmp_month == MON_OCT ||
+      tmp_month == MON_DEC) {
     return 31;
   } else {
     if (tmp_month == MON_APR || tmp_month == MON_JUN || tmp_month == MON_SEP ||
-      tmp_month == MON_NOV)
+        tmp_month == MON_NOV)
       return 30;
     else {
-      if (tmp_month == MON_FEB && ((0 == tmp_year % 400) ||
-        ((0 != tmp_year % 100) && 0 == tmp_year % 4))) {
+      if (tmp_month == MON_FEB &&
+          ((0 == tmp_year % 400) ||
+           ((0 != tmp_year % 100) && 0 == tmp_year % 4))) {
         return 29;
       } else
         return 28;
@@ -325,7 +327,7 @@ std::string Now::unique() {
   static pthread_mutex_t mutex = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER;
 #endif
   gettimeofday(&tv, NULL);
-  temp = (((u64_t) tv.tv_sec) << 20) + tv.tv_usec;
+  temp = (((u64_t)tv.tv_sec) << 20) + tv.tv_usec;
   pthread_mutex_lock(&mutex);
   if (temp > last_unique) {
     // record last timeStamp
@@ -368,8 +370,8 @@ bool DateTime::is_valid_xml_datetime(const std::string &str) {
   // check month, date, hour, min, second is valid
   tm tmp;
   int ret =
-    sscanf(str.c_str(), "%04d-%02d-%02dT%02d:%02d:%02dZ", &tmp.tm_year,
-           &tmp.tm_mon, &tmp.tm_mday, &tmp.tm_hour, &tmp.tm_min, &tmp.tm_sec);
+      sscanf(str.c_str(), "%04d-%02d-%02dT%02d:%02d:%02dZ", &tmp.tm_year,
+             &tmp.tm_mon, &tmp.tm_mday, &tmp.tm_hour, &tmp.tm_min, &tmp.tm_sec);
 
   if (ret != 6)
     return false; // should have 6 match
@@ -395,7 +397,8 @@ bool Date::parse(const char *date_str) {
   if (ss.fail()) {
     return false;
   } else {
-    this->m_date = julian_date((int) date.year(), (unsigned) date.month(), (unsigned) date.day());
+    this->m_date = julian_date((int)date.year(), (unsigned)date.month(),
+                               (unsigned)date.day());
   }
   return true;
 }
@@ -405,14 +408,10 @@ std::string Date::format() const {
   get_ymd(this->m_date, year, month, day);
 
   std::ostringstream os;
-  os << std::setfill('0')
-     << std::setw(4) << year << '-'
-     << std::setw(2) << month << '-'
-     << std::setw(2) << day;
+  os << std::setfill('0') << std::setw(4) << year << '-' << std::setw(2)
+     << month << '-' << std::setw(2) << day;
   return os.str();
 }
 
-int Date::julian() const {
-  return m_date;
-}
+int Date::julian() const { return m_date; }
 } //namespace common

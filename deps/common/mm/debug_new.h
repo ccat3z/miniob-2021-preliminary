@@ -26,7 +26,7 @@ void *operator new[](size_t size, const char *file, int line);
 #ifndef NO_PLACEMENT_DELETE
 void operator delete(void *pointer, const char *file, int line);
 void operator delete[](void *pointer, const char *file, int line);
-#endif // NO_PLACEMENT_DELETE
+#endif                          // NO_PLACEMENT_DELETE
 void operator delete[](void *); // MSVC 6 requires this declaration
 
 /* Macros */

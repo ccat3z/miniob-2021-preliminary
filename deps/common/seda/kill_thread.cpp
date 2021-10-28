@@ -19,7 +19,6 @@ See the Mulan PSL v2 for more details. */
 #include "common/seda/thread_pool.h"
 namespace common {
 
-
 /**
  * Notify the pool and kill the thread
  * @param[in] event Pointer to event that must be handled.

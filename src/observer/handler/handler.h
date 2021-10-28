@@ -62,7 +62,7 @@ typedef struct _Condition {
   //   and not a value
   RelAttr rhsAttr; // right-hand side attribute if bRhsIsAttr = TRUE 右边的属性
   Value rhsValue; // right-hand side value if bRhsIsAttr = FALSE
-}Condition;
+} Condition;
 
 // struct of select
 typedef struct {

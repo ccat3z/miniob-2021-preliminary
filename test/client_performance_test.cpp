@@ -25,9 +25,9 @@ See the Mulan PSL v2 for more details. */
 #include <unistd.h>
 
 #include "common/defs.h"
+#include "common/metrics/console_reporter.h"
 #include "common/metrics/metrics.h"
 #include "common/metrics/metrics_registry.h"
-#include "common/metrics/console_reporter.h"
 
 #define MAX_MEM_BUFFER_SIZE 8192
 #define PORT_DEFAULT 66789
@@ -35,8 +35,7 @@ See the Mulan PSL v2 for more details. */
 using namespace common;
 char *server_host = (char *)LOCAL_HOST;
 
-void *test_server(void *param)
-{
+void *test_server(void *param) {
   Meter *tps_meter = (Meter *)param;
 
   std::cout << "Begin to connect server. " << std::endl;
@@ -64,7 +63,8 @@ void *test_server(void *param)
   serv_addr.sin_addr = *((struct in_addr *)host->h_addr);
   bzero(&(serv_addr.sin_zero), 8);
 
-  if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(struct sockaddr)) == -1) {
+  if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(struct sockaddr)) ==
+      -1) {
     perror("Failed to connect \n");
     exit(1);
   }
@@ -93,8 +93,7 @@ void *test_server(void *param)
   return NULL;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 
   if (argc >= 2) {
     server_host = argv[1];

@@ -26,7 +26,6 @@ See the Mulan PSL v2 for more details. */
 #include "common/seda/thread_pool.h"
 namespace common {
 
-
 /**
  * Constructor
  * @param[in] tag     The label that identifies this stage.

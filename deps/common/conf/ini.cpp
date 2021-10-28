@@ -33,16 +33,15 @@ Ini::~Ini() {}
 
 void Ini::insert_session(const std::string &session_name) {
   std::map<std::string, std::string> session_map;
-  std::pair < std::string, std::map < std::string, std::string >> entry =
-                                                     std::pair < std::string, std::map < std::string, std::string
-    >> (session_name,
-      session_map);
+  std::pair<std::string, std::map<std::string, std::string>> entry =
+      std::pair<std::string, std::map<std::string, std::string>>(session_name,
+                                                                 session_map);
 
   sections_.insert(entry);
 }
 
-std::map<std::string, std::string> *Ini::switch_session(
-  const std::string &session_name) {
+std::map<std::string, std::string> *
+Ini::switch_session(const std::string &session_name) {
   SessionsMap::iterator it = sections_.find(session_name);
   if (it != sections_.end()) {
     return &it->second;
@@ -59,8 +58,7 @@ std::map<std::string, std::string> *Ini::switch_session(
   return nullptr;
 }
 
-const std::map<std::string, std::string> &Ini::get(
-  const std::string &section) {
+const std::map<std::string, std::string> &Ini::get(const std::string &section) {
   SessionsMap::iterator it = sections_.find(section);
   if (it == sections_.end()) {
     return empty_map_;
@@ -91,7 +89,7 @@ int Ini::put(const std::string &key, const std::string &value,
 }
 
 int Ini::insert_entry(std::map<std::string, std::string> *session_map,
-                     const std::string &line) {
+                      const std::string &line) {
   if (session_map == nullptr) {
     std::cerr << __FILE__ << __FUNCTION__ << " session map is null"
               << std::endl;
@@ -123,7 +121,7 @@ int Ini::load(const std::string &file_name) {
     bool continue_last_line = false;
 
     std::map<std::string, std::string> *current_session =
-      switch_session(DEFAULT_SECTION);
+        switch_session(DEFAULT_SECTION);
 
     char line[MAX_CFG_LINE_LEN];
 
@@ -149,7 +147,7 @@ int Ini::load(const std::string &file_name) {
       }
 
       if (read_buf[0] == CFG_SESSION_START_TAG &&
-        read_buf[strlen(read_buf) - 1] == CFG_SESSION_END_TAG) {
+          read_buf[strlen(read_buf) - 1] == CFG_SESSION_END_TAG) {
 
         read_buf[strlen(read_buf) - 1] = '\0';
         std::string session_name = std::string(read_buf + 1);
@@ -171,7 +169,7 @@ int Ini::load(const std::string &file_name) {
         continue_last_line = true;
 
         // remove the last character
-        line_entry = line_entry.substr(0, line_entry.size() -1);
+        line_entry = line_entry.substr(0, line_entry.size() - 1);
         continue;
       } else {
         continue_last_line = false;
@@ -209,7 +207,7 @@ void Ini::to_string(std::string &output_str) {
     std::map<std::string, std::string> &section_map = it->second;
 
     for (std::map<std::string, std::string>::iterator sub_it =
-      section_map.begin();
+             section_map.begin();
          sub_it != section_map.end(); sub_it++) {
       output_str += sub_it->first;
       output_str += "=";

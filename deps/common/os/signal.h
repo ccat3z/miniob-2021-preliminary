@@ -30,7 +30,6 @@ void blockDefaultSignals(sigset_t *signal_set, sigset_t *old_set);
  */
 void unBlockDefaultSignals(sigset_t *signal_set, sigset_t *old_set);
 
-
 void *waitForSignals(sigset_t *signal_set);
 void startWaitForSignals(sigset_t *signal_set);
 

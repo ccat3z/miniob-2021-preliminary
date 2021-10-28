@@ -31,7 +31,7 @@ namespace common {
 #define MUTEX_LOG LOG_DEBUG
 
 class LockTrace {
- public:
+public:
   static void check(pthread_mutex_t *mutex, const long long threadId,
                     const char *file, const int line);
   static void lock(pthread_mutex_t *mutex, const long long threadId,
@@ -44,9 +44,9 @@ class LockTrace {
   static void toString(std::string &result);
 
   class LockID {
-   public:
+  public:
     LockID(const long long threadId, const char *file, const int line)
-      : mFile(file), mThreadId(threadId), mLine(line) {}
+        : mFile(file), mThreadId(threadId), mLine(line) {}
     LockID() : mFile(), mThreadId(0), mLine(0) {}
 
     std::string toString() {
@@ -58,7 +58,7 @@ class LockTrace {
       return oss.str();
     }
 
-   public:
+  public:
     std::string mFile;
     const long long mThreadId;
     int mLine;
@@ -82,10 +82,10 @@ class LockTrace {
 
   static void setMaxBlockThreads(int blockNum) { mMaxBlockTids = blockNum; }
 
- public:
+public:
   static std::set<pthread_mutex_t *> mEnableRecurisives;
 
- protected:
+protected:
   static std::map<pthread_mutex_t *, LockID> mLocks;
   static std::map<pthread_mutex_t *, int> mWaitTimes;
   static std::map<long long, pthread_mutex_t *> mWaitLocks;
@@ -114,7 +114,6 @@ class LockTrace {
 #define COND_BRAODCAST(cond) pthread_cond_broadcast(cond)
 
 #else // DEBUG_LOCK
-
 
 #define MUTEX_STATIC_INIT()                                                    \
   PTHREAD_MUTEX_INITIALIZER;                                                   \

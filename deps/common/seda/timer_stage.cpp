@@ -55,7 +55,7 @@ struct timeval add_timeval(const struct timeval *t1, const struct timeval *t2) {
 }
 
 void realtime_to_monotonic(const struct timeval *time_RT,
-                         struct timeval *time_Mono) {
+                           struct timeval *time_Mono) {
 
   struct timeval time_now;
   gettimeofday(&time_now, NULL);
@@ -135,7 +135,7 @@ std::string TimerToken::to_string() const {
 }
 
 TimerRegisterEvent::TimerRegisterEvent(StageEvent *cb, u64_t time_relative_usec)
-  : TimerEvent(), timer_cb_(cb), token_() {
+    : TimerEvent(), timer_cb_(cb), token_() {
   struct timespec timer_spec;
   clock_gettime(CLOCK_MONOTONIC, &timer_spec);
 
@@ -153,7 +153,7 @@ TimerRegisterEvent::TimerRegisterEvent(StageEvent *cb, u64_t time_relative_usec)
 
 TimerRegisterEvent::TimerRegisterEvent(StageEvent *cb,
                                        struct timeval &time_absolute)
-  : TimerEvent(), timer_cb_(cb), token_() {
+    : TimerEvent(), timer_cb_(cb), token_() {
   realtime_to_monotonic(&time_absolute, &timer_when_);
   return;
 }
@@ -182,7 +182,7 @@ std::unique_ptr<const TimerToken> TimerRegisterEvent::get_cancel_token() {
 }
 
 TimerCancelEvent::TimerCancelEvent(const TimerToken &cancel_token)
-  : TimerEvent(), token_(cancel_token), cancelled_(false) {
+    : TimerEvent(), token_(cancel_token), cancelled_(false) {
   return;
 }
 
@@ -198,8 +198,8 @@ void TimerCancelEvent::set_success(bool s) {
 bool TimerCancelEvent::get_success() { return cancelled_; }
 
 TimerStage::TimerStage(const char *tag)
-  : Stage(tag), timer_queue_(&TimerStage::timer_token_less_than), shutdown_(false),
-    num_events_(0), timer_thread_id_(0) {
+    : Stage(tag), timer_queue_(&TimerStage::timer_token_less_than),
+      shutdown_(false), num_events_(0), timer_thread_id_(0) {
   pthread_mutex_init(&timer_mutex_, NULL);
   pthread_condattr_t condattr;
   pthread_condattr_init(&condattr);
@@ -212,8 +212,8 @@ TimerStage::TimerStage(const char *tag)
 }
 
 TimerStage::~TimerStage() {
-  for (timer_queue_t::iterator i = timer_queue_.begin(); i != timer_queue_.end();
-       ++i) {
+  for (timer_queue_t::iterator i = timer_queue_.begin();
+       i != timer_queue_.end(); ++i) {
     delete i->second;
   }
 
@@ -248,7 +248,7 @@ bool TimerStage::initialize() {
 
   // Start the thread to maintain the timer
   const pthread_attr_t *thread_attrs = NULL;
-  void *thread_args = (void *) this;
+  void *thread_args = (void *)this;
   int status = pthread_create(&timer_thread_id_, thread_attrs,
                               &TimerStage::start_timer_thread, thread_args);
   if (status != 0)
@@ -311,7 +311,7 @@ void TimerStage::register_timer(TimerRegisterEvent &reg_ev) {
   // add the event to the timer queue
   StageEvent *timer_cb = reg_ev.adopt_callback_event();
   std::pair<timer_queue_t::iterator, bool> result =
-    timer_queue_.insert(std::make_pair(tt, timer_cb));
+      timer_queue_.insert(std::make_pair(tt, timer_cb));
   ASSERT(result.second,
          "Internal error--"
          "failed to register timer because token is not unique.");
@@ -348,7 +348,7 @@ void TimerStage::cancel_timer(TimerCancelEvent &cancel_ev) {
   pthread_mutex_unlock(&timer_mutex_);
 
   LOG_DEBUG("cancelling event: token=%s, success=%d\n",
-            cancel_ev.get_token().to_string().c_str(), (int) success);
+            cancel_ev.get_token().to_string().c_str(), (int)success);
 
   cancel_ev.set_success(success);
   cancel_ev.done();
@@ -389,7 +389,7 @@ void TimerStage::check_timer() {
     // Trigger all events for which the trigger time has already passed.
     timer_queue_t::iterator first = timer_queue_.begin();
     timer_queue_t::iterator last;
-    std::list < StageEvent * > done_events;
+    std::list<StageEvent *> done_events;
     for (last = first; last != timer_queue_.end(); ++last) {
       if (TIMEVAL_LESS_THAN(now, last->first.get_time()))
         break;
@@ -445,7 +445,7 @@ void TimerStage::check_timer() {
 }
 
 bool TimerStage::timer_token_less_than(const TimerToken &tt1,
-                                    const TimerToken &tt2) {
+                                       const TimerToken &tt2) {
   return (tt1 < tt2);
 }
 

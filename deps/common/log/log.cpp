@@ -25,7 +25,8 @@ Log *g_log = nullptr;
 
 Log::Log(const std::string &log_file_name, const LOG_LEVEL log_level,
          const LOG_LEVEL console_level)
-    : log_name_(log_file_name), log_level_(log_level), console_level_(console_level) {
+    : log_name_(log_file_name), log_level_(log_level),
+      console_level_(console_level) {
   prefix_map_[LOG_LEVEL_PANIC] = "PANIC:";
   prefix_map_[LOG_LEVEL_ERR] = "ERROR:";
   prefix_map_[LOG_LEVEL_WARN] = "WARNNING:";
@@ -71,7 +72,8 @@ bool Log::check_output(const LOG_LEVEL level, const char *module) {
     return true;
   }
   // in order to improve speed
-  if (default_set_.empty() == false && default_set_.find(module) != default_set_.end()) {
+  if (default_set_.empty() == false &&
+      default_set_.find(module) != default_set_.end()) {
     return true;
   }
   return false;
@@ -314,8 +316,9 @@ int LoggerFactory::init(const std::string &log_file, Log **logger,
   return 0;
 }
 
-int LoggerFactory::init_default(const std::string &log_file, LOG_LEVEL log_level,
-                               LOG_LEVEL console_level, LOG_ROTATE rotate_type) {
+int LoggerFactory::init_default(const std::string &log_file,
+                                LOG_LEVEL log_level, LOG_LEVEL console_level,
+                                LOG_ROTATE rotate_type) {
   if (g_log != nullptr) {
     LOG_WARN("Default logger has been initialized");
     return 0;

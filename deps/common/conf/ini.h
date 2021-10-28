@@ -31,7 +31,7 @@ namespace common {
 // VARNAME=VALUE
 
 class Ini {
- public:
+public:
   /**
    * To simplify the logic, no lock's when loading configuration
    * So don't modify the data parallel
@@ -92,7 +92,7 @@ class Ini {
   static const char CFG_SESSION_START_TAG = '[';
   static const char CFG_SESSION_END_TAG = ']';
 
- protected:
+protected:
   /**
    * insert one empty session to sections_
    */
@@ -111,12 +111,11 @@ class Ini {
    *
    */
   int insert_entry(std::map<std::string, std::string> *session_map,
-                  const std::string &line);
+                   const std::string &line);
 
-  typedef std::map<std::string, std::map<std::string, std::string>>
-    SessionsMap;
+  typedef std::map<std::string, std::map<std::string, std::string>> SessionsMap;
 
- private:
+private:
   static const std::map<std::string, std::string> empty_map_;
 
   std::set<std::string> file_names_;
@@ -129,5 +128,5 @@ class Ini {
 Ini *&get_properties();
 //********************************************************************
 
-}// namespace common
+} // namespace common
 #endif //__COMMON_CONF_INI_H__

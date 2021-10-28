@@ -118,11 +118,11 @@ void SessionStage::callback_event(StageEvent *event, CallbackContext *context) {
     len = strlen(response) + 1;
   }
   Server::send(sev->get_client(), response, len);
-	if ('\0' != response[len - 1]) {
-		// 这里强制性的给发送一个消息终结符，如果需要发送多条消息，需要调整
-		char end = 0;
-		Server::send(sev->get_client(), &end, 1);
-	}
+  if ('\0' != response[len - 1]) {
+    // 这里强制性的给发送一个消息终结符，如果需要发送多条消息，需要调整
+    char end = 0;
+    Server::send(sev->get_client(), &end, 1);
+  }
 
   // sev->done();
   LOG_TRACE("Exit\n");
@@ -141,7 +141,7 @@ void SessionStage::handle_request(StageEvent *event) {
   if (nullptr == sev->get_request_buf()) {
     LOG_ERROR("Invalid request buffer.");
     sev->done_immediate();
-    return ;
+    return;
   }
 
   std::string sql = sev->get_request_buf();

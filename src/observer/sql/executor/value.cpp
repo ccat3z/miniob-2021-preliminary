@@ -10,10 +10,8 @@ See the Mulan PSL v2 for more details. */
 
 #include "value.h"
 
-void DateValue::to_string(std::ostream &os) const {
-    os << date.format();
-}
+void DateValue::to_string(std::ostream &os) const { os << date.format(); }
 int DateValue::compare(const TupleValue &other) const {
-    const DateValue & date_other = (const DateValue &)other;
-    return date.julian() - date_other.date.julian();
+  const DateValue &date_other = (const DateValue &)other;
+  return date.julian() - date_other.date.julian();
 }

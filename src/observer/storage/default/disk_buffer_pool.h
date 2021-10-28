@@ -22,9 +22,9 @@ See the Mulan PSL v2 for more details. */
 #include <sys/stat.h>
 #include <time.h>
 
-#include <vector>
 #include <limits>
 #include <stdexcept>
+#include <vector>
 
 #include "rc.h"
 
@@ -62,11 +62,9 @@ typedef struct {
   Frame *frame;
 } BPPageHandle;
 
-class BPFileHandle{
+class BPFileHandle {
 public:
-  BPFileHandle() {
-    memset(this, 0, sizeof(*this));
-  }
+  BPFileHandle() { memset(this, 0, sizeof(*this)); }
 
 public:
   bool bopen;
@@ -76,7 +74,7 @@ public:
   Page *hdr_page;
   char *bitmap;
   BPFileSubHeader *file_sub_header;
-} ;
+};
 
 class BPManager {
 public:
@@ -124,12 +122,11 @@ public:
 
   Frame *get(int file_desc, PageNum page_num) {
     for (int i = 0; i < this->size; i++) {
-      if (!this->allocated[i]) continue;
+      if (!this->allocated[i])
+        continue;
 
-      if (
-        this->frame[i].file_desc == file_desc &&
-        this->frame[i].page.page_num == page_num
-      ) {
+      if (this->frame[i].file_desc == file_desc &&
+          this->frame[i].page.page_num == page_num) {
         this->frame[i].acc_time = this->current_time();
         return this->frame + i;
       }
@@ -144,7 +141,7 @@ public:
 
 public:
   int size;
-  Frame * frame = nullptr;
+  Frame *frame = nullptr;
   bool *allocated = nullptr;
 
 private:

@@ -15,9 +15,9 @@ See the Mulan PSL v2 for more details. */
 #ifndef __OBSERVER_SESSION_SESSIONSTAGE_H__
 #define __OBSERVER_SESSION_SESSIONSTAGE_H__
 
+#include "common/metrics/metrics.h"
 #include "common/seda/stage.h"
 #include "net/connection_context.h"
-#include "common/metrics/metrics.h"
 
 /**
  * seda::stage使用说明：
@@ -40,11 +40,10 @@ protected:
   void cleanup() override;
   void handle_event(common::StageEvent *event) override;
   void callback_event(common::StageEvent *event,
-                     common::CallbackContext *context) override;
+                      common::CallbackContext *context) override;
 
 protected:
   void handle_input(common::StageEvent *event);
-
 
   void handle_request(common::StageEvent *event);
 
@@ -52,7 +51,6 @@ private:
   Stage *resolve_stage_;
   common::SimpleTimer *sql_metric_;
   static const std::string SQL_METRIC_TAG;
-
 };
 
 #endif //__OBSERVER_SESSION_SESSIONSTAGE_H__

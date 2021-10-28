@@ -24,9 +24,8 @@ public:
   StorageEvent(ExecutionPlanEvent *exe_event);
   virtual ~StorageEvent();
 
-  ExecutionPlanEvent * exe_event() const {
-    return exe_event_;
-  }
+  ExecutionPlanEvent *exe_event() const { return exe_event_; }
+
 private:
   ExecutionPlanEvent *exe_event_;
 };

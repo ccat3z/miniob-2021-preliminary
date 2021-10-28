@@ -40,8 +40,8 @@ RC deleteEntry(IndexHandle *indexHandle, void *data, const RID *rid) {
   return RC::SUCCESS;
 }
 
-RC openIndexScan(IndexScan *indexScan, IndexHandle *indexHandle,
-                 CompOp compOp, char *value) {
+RC openIndexScan(IndexScan *indexScan, IndexHandle *indexHandle, CompOp compOp,
+                 char *value) {
   //TODO
   return RC::SUCCESS;
 }

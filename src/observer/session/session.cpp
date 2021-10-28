@@ -20,17 +20,14 @@ Session &Session::default_session() {
   return session;
 }
 
-Session::Session(const Session &other) : current_db_(other.current_db_){
-}
+Session::Session(const Session &other) : current_db_(other.current_db_) {}
 
 Session::~Session() {
   delete trx_;
   trx_ = nullptr;
 }
 
-const std::string &Session::get_current_db() const {
-  return current_db_;
-}
+const std::string &Session::get_current_db() const { return current_db_; }
 void Session::set_current_db(const std::string &dbname) {
   current_db_ = dbname;
 }

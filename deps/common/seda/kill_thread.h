@@ -21,7 +21,6 @@ See the Mulan PSL v2 for more details. */
 #include "common/seda/stage.h"
 namespace common {
 
-
 /**
  *  @file
  *  @author Longda

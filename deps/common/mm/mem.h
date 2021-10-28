@@ -31,8 +31,6 @@ namespace common {
 
 #else
 
-
-
 typedef struct MemID_t {
 public:
   const static int MEM_FILENAME_LEN = 32;

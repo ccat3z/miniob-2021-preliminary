@@ -30,7 +30,6 @@ using namespace std::chrono_literals;
 std::string conf_path = "../etc/observer.ini";
 std::string observer_binary = "./bin/observer";
 
-
 int init_unix_sock(const char *unix_sock_path) {
   int sockfd = socket(PF_UNIX, SOCK_STREAM, 0);
   if (sockfd < 0) {
@@ -41,8 +40,7 @@ int init_unix_sock(const char *unix_sock_path) {
   struct sockaddr_un sockaddr;
   memset(&sockaddr, 0, sizeof(sockaddr));
   sockaddr.sun_family = PF_UNIX;
-  snprintf(sockaddr.sun_path, sizeof(sockaddr.sun_path), "%s",
-           unix_sock_path);
+  snprintf(sockaddr.sun_path, sizeof(sockaddr.sun_path), "%s", unix_sock_path);
 
   if (connect(sockfd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) < 0) {
     fprintf(stderr,
@@ -109,83 +107,88 @@ Server *init_server(std::string socket_path, std::string storage_dir) {
 
 // TestServer is observer for test
 class TestServer {
-  public:
-    virtual ~TestServer() { };
-    virtual void start(std::string data_dir, std::string socket_path) { };
-    virtual void stop() { };
+public:
+  virtual ~TestServer(){};
+  virtual void start(std::string data_dir, std::string socket_path){};
+  virtual void stop(){};
 };
 
 class ThreadTestServer : public TestServer {
-  public:
-    ~ThreadTestServer() { };
-    static void *start_server_func(void *server) {
-      ((Server *)server)->serve();
-      return nullptr;
-    }
-    void start(std::string data_dir, std::string socket_path) {
-      server = init_server(socket_path, data_dir);
-      pthread_create(&pid, nullptr, ThreadTestServer::start_server_func, server);
-      std::this_thread::sleep_for(SERVER_START_STOP_TIMEOUT);
-    }
-    void stop() {
-      server->shutdown();
-      delete server;
-      std::this_thread::sleep_for(SERVER_START_STOP_TIMEOUT);
-    }
-  private:
-    Server *server;
-    pthread_t pid;
+public:
+  ~ThreadTestServer(){};
+  static void *start_server_func(void *server) {
+    ((Server *)server)->serve();
+    return nullptr;
+  }
+  void start(std::string data_dir, std::string socket_path) {
+    server = init_server(socket_path, data_dir);
+    pthread_create(&pid, nullptr, ThreadTestServer::start_server_func, server);
+    std::this_thread::sleep_for(SERVER_START_STOP_TIMEOUT);
+  }
+  void stop() {
+    server->shutdown();
+    delete server;
+    std::this_thread::sleep_for(SERVER_START_STOP_TIMEOUT);
+  }
+
+private:
+  Server *server;
+  pthread_t pid;
 };
 
 class ForkTestServer : public TestServer {
-  public:
-    ~ForkTestServer() { };
-    void start(std::string data_dir, std::string socket_path) {
-      pid = fork();
-      if (pid == 0) {
-        fs::current_path(data_dir);
-        Server *server = init_server(socket_path, data_dir);
-        server->serve();
-        exit(0);
-      }
-      std::this_thread::sleep_for(SERVER_START_STOP_TIMEOUT);
+public:
+  ~ForkTestServer(){};
+  void start(std::string data_dir, std::string socket_path) {
+    pid = fork();
+    if (pid == 0) {
+      fs::current_path(data_dir);
+      Server *server = init_server(socket_path, data_dir);
+      server->serve();
+      exit(0);
     }
-    void stop() {
-      kill(pid, SIGTERM);
-      waitpid(pid, nullptr, 0);
-    }
-  private:
-    pid_t pid;
+    std::this_thread::sleep_for(SERVER_START_STOP_TIMEOUT);
+  }
+  void stop() {
+    kill(pid, SIGTERM);
+    waitpid(pid, nullptr, 0);
+  }
+
+private:
+  pid_t pid;
 };
 
 class ExecTestServer : public TestServer {
-  public:
-    ~ExecTestServer() { };
-    void start(std::string data_dir, std::string socket_path) {
-      pid = fork();
-      if (pid == 0) {
-        fs::current_path(data_dir);
-        if (execl(observer_binary.c_str(), "observer", "-s", socket_path.c_str(), "-f", conf_path.c_str(), NULL) != 0) {
-          std::cerr << "Failed to start observer" << std::endl;
-        }
-        exit(0);
+public:
+  ~ExecTestServer(){};
+  void start(std::string data_dir, std::string socket_path) {
+    pid = fork();
+    if (pid == 0) {
+      fs::current_path(data_dir);
+      if (execl(observer_binary.c_str(), "observer", "-s", socket_path.c_str(),
+                "-f", conf_path.c_str(), NULL) != 0) {
+        std::cerr << "Failed to start observer" << std::endl;
       }
-      std::this_thread::sleep_for(SERVER_START_STOP_TIMEOUT);
+      exit(0);
     }
-    void stop() {
-      kill(pid, SIGTERM);
-      std::this_thread::sleep_for(.5s);
-      kill(pid, SIGTERM);
-      waitpid(pid, nullptr, 0);
-    }
-  private:
-    pid_t pid;
+    std::this_thread::sleep_for(SERVER_START_STOP_TIMEOUT);
+  }
+  void stop() {
+    kill(pid, SIGTERM);
+    std::this_thread::sleep_for(.5s);
+    kill(pid, SIGTERM);
+    waitpid(pid, nullptr, 0);
+  }
+
+private:
+  pid_t pid;
 };
 
 class SQLTest : public ::testing::Test {
 public:
   SQLTest() {
-    const char *test_server_workaround = std::getenv("SQL_TEST_SERVER_WORKAROUND");
+    const char *test_server_workaround =
+        std::getenv("SQL_TEST_SERVER_WORKAROUND");
     if (test_server_workaround == nullptr) {
       server = new ThreadTestServer();
     } else if (strcmp(test_server_workaround, "fork") == 0) {
@@ -197,12 +200,11 @@ public:
     }
   }
 
-  ~SQLTest() {
-    delete server;
-  }
+  ~SQLTest() { delete server; }
 
   void SetUp() override {
-    data_dir = fs::temp_directory_path() / ("miniob-sql-test-" + common::random_string(6));
+    data_dir = fs::temp_directory_path() /
+               ("miniob-sql-test-" + common::random_string(6));
     fs::path socket_path = data_dir / ".sock";
 
     fs::create_directory(data_dir);
@@ -255,13 +257,13 @@ private:
   char recv_buf[MAX_MEM_BUFFER_SIZE];
 };
 
-// ########     ###     ######  ####  ######  
-// ##     ##   ## ##   ##    ##  ##  ##    ## 
-// ##     ##  ##   ##  ##        ##  ##       
-// ########  ##     ##  ######   ##  ##       
-// ##     ## #########       ##  ##  ##       
-// ##     ## ##     ## ##    ##  ##  ##    ## 
-// ########  ##     ##  ######  ####  ######  
+// ########     ###     ######  ####  ######
+// ##     ##   ## ##   ##    ##  ##  ##    ##
+// ##     ##  ##   ##  ##        ##  ##
+// ########  ##     ##  ######   ##  ##
+// ##     ## #########       ##  ##  ##
+// ##     ## ##     ## ##    ##  ##  ##    ##
+// ########  ##     ##  ######  ####  ######
 
 TEST_F(SQLTest, BasicCreateTableShouldWork) {
   ASSERT_EQ(exec_sql("show tables;"), "No table\n");
@@ -324,21 +326,21 @@ TEST_F(SQLTest, BasicSelectWithIndexEqualToMinValue) {
   ASSERT_EQ(exec_sql("select * from t where a = -1;"), "a | b\n");
 }
 
-//  ######  ######## ##       ########  ######  ######## 
-// ##    ## ##       ##       ##       ##    ##    ##    
-// ##       ##       ##       ##       ##          ##    
-//  ######  ######   ##       ######   ##          ##    
-//       ## ##       ##       ##       ##          ##    
-// ##    ## ##       ##       ##       ##    ##    ##    
-//  ######  ######## ######## ########  ######     ##    
+//  ######  ######## ##       ########  ######  ########
+// ##    ## ##       ##       ##       ##    ##    ##
+// ##       ##       ##       ##       ##          ##
+//  ######  ######   ##       ######   ##          ##
+//       ## ##       ##       ##       ##          ##
+// ##    ## ##       ##       ##       ##    ##    ##
+//  ######  ######## ######## ########  ######     ##
 
-// ##     ## ######## ########    ###    
-// ###   ### ##          ##      ## ##   
-// #### #### ##          ##     ##   ##  
-// ## ### ## ######      ##    ##     ## 
-// ##     ## ##          ##    ######### 
-// ##     ## ##          ##    ##     ## 
-// ##     ## ########    ##    ##     ## 
+// ##     ## ######## ########    ###
+// ###   ### ##          ##      ## ##
+// #### #### ##          ##     ##   ##
+// ## ### ## ######      ##    ##     ##
+// ##     ## ##          ##    #########
+// ##     ## ##          ##    ##     ##
+// ##     ## ########    ##    ##     ##
 
 TEST_F(SQLTest, SelectMetaShouldResponseHeadWhenNoData) {
   ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
@@ -371,7 +373,8 @@ TEST_F(SQLTest, SelectMetaSelectInvalidColumnInMultiTablesShouldFailure) {
   ASSERT_EQ(exec_sql("select t.b from t, t2;"), "FAILURE\n");
 }
 
-TEST_F(SQLTest, SelectMetaSelectIndeterminableColumnInMultiTablesShouldFailure) {
+TEST_F(SQLTest,
+       SelectMetaSelectIndeterminableColumnInMultiTablesShouldFailure) {
   ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("create table t2(a int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("select a from t, t2;"), "FAILURE\n");
@@ -400,7 +403,9 @@ TEST_F(SQLTest, SelectMetaSelectValidConditionInMultiTablesShouldSuccess) {
   ASSERT_EQ(exec_sql("create table t2(b int);"), "SUCCESS\n");
   ASSERT_NE(exec_sql("select * from t, t2 where a > b;"), "FAILURE\n");
   ASSERT_NE(exec_sql("select * from t, t2 where t.a > t2.b;"), "FAILURE\n");
-  ASSERT_NE(exec_sql("select * from t, t2 where a > 1 and b > 1 and t.a > t2.b;"), "FAILURE\n");
+  ASSERT_NE(
+      exec_sql("select * from t, t2 where a > 1 and b > 1 and t.a > t2.b;"),
+      "FAILURE\n");
 }
 
 TEST_F(SQLTest, SelectMetaSelectInvalidConditionInMultiTablesShouldFailure) {
@@ -408,33 +413,36 @@ TEST_F(SQLTest, SelectMetaSelectInvalidConditionInMultiTablesShouldFailure) {
   ASSERT_EQ(exec_sql("create table t2(b int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("select * from t, t2 where a > c;"), "FAILURE\n");
   ASSERT_EQ(exec_sql("select * from t, t2 where t.a > t3.b;"), "FAILURE\n");
-  ASSERT_EQ(exec_sql("select * from t, t2 where a > 1 and b > 1 and t.a > t3.b;"), "FAILURE\n");
+  ASSERT_EQ(
+      exec_sql("select * from t, t2 where a > 1 and b > 1 and t.a > t3.b;"),
+      "FAILURE\n");
 
   ASSERT_EQ(exec_sql("create table t3(c float);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("select * from t, t3 where a > c;"), "FAILURE\n");
 }
 
-TEST_F(SQLTest, SelectMetaSelectIndeterminableConditionInMultiTablesShouldFailure) {
+TEST_F(SQLTest,
+       SelectMetaSelectIndeterminableConditionInMultiTablesShouldFailure) {
   ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("create table t2(a int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("select * from t, t2 where a > 0;"), "FAILURE\n");
 }
 
-// ########  ########   #######  ########  
-// ##     ## ##     ## ##     ## ##     ## 
-// ##     ## ##     ## ##     ## ##     ## 
-// ##     ## ########  ##     ## ########  
-// ##     ## ##   ##   ##     ## ##        
-// ##     ## ##    ##  ##     ## ##        
-// ########  ##     ##  #######  ##        
+// ########  ########   #######  ########
+// ##     ## ##     ## ##     ## ##     ##
+// ##     ## ##     ## ##     ## ##     ##
+// ##     ## ########  ##     ## ########
+// ##     ## ##   ##   ##     ## ##
+// ##     ## ##    ##  ##     ## ##
+// ########  ##     ##  #######  ##
 
-// ########    ###    ########  ##       ######## 
-//    ##      ## ##   ##     ## ##       ##       
-//    ##     ##   ##  ##     ## ##       ##       
-//    ##    ##     ## ########  ##       ######   
-//    ##    ######### ##     ## ##       ##       
-//    ##    ##     ## ##     ## ##       ##       
-//    ##    ##     ## ########  ######## ######## 
+// ########    ###    ########  ##       ########
+//    ##      ## ##   ##     ## ##       ##
+//    ##     ##   ##  ##     ## ##       ##
+//    ##    ##     ## ########  ##       ######
+//    ##    ######### ##     ## ##       ##
+//    ##    ##     ## ##     ## ##       ##
+//    ##    ##     ## ########  ######## ########
 
 TEST_F(SQLTest, DropTableShouldWork) {
   ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
@@ -490,13 +498,13 @@ TEST_F(SQLTest, DropTableWithIndexCreateAgain) {
   ASSERT_EQ(exec_sql("show tables;"), "t\n\n");
 }
 
-// ##     ## ########  ########     ###    ######## ######## 
-// ##     ## ##     ## ##     ##   ## ##      ##    ##       
-// ##     ## ##     ## ##     ##  ##   ##     ##    ##       
-// ##     ## ########  ##     ## ##     ##    ##    ######   
-// ##     ## ##        ##     ## #########    ##    ##       
-// ##     ## ##        ##     ## ##     ##    ##    ##       
-//  #######  ##        ########  ##     ##    ##    ######## 
+// ##     ## ########  ########     ###    ######## ########
+// ##     ## ##     ## ##     ##   ## ##      ##    ##
+// ##     ## ##     ## ##     ##  ##   ##     ##    ##
+// ##     ## ########  ##     ## ##     ##    ##    ######
+// ##     ## ##        ##     ## #########    ##    ##
+// ##     ## ##        ##     ## ##     ##    ##    ##
+//  #######  ##        ########  ##     ##    ##    ########
 
 TEST_F(SQLTest, UpdateShouldWork) {
   ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
@@ -506,13 +514,11 @@ TEST_F(SQLTest, UpdateShouldWork) {
   ASSERT_EQ(exec_sql("insert into t values (2, 5);"), "SUCCESS\n");
 
   ASSERT_EQ(exec_sql("update t set a = 100;"), "SUCCESS\n");
-  ASSERT_EQ(exec_sql("select * from t;"),
-    "a | b\n"
-    "100 | 1\n"
-    "100 | 10\n"
-    "100 | 3\n"
-    "100 | 5\n"
-  );
+  ASSERT_EQ(exec_sql("select * from t;"), "a | b\n"
+                                          "100 | 1\n"
+                                          "100 | 10\n"
+                                          "100 | 3\n"
+                                          "100 | 5\n");
 }
 
 TEST_F(SQLTest, UpdateWithConditionsShouldWork) {
@@ -523,13 +529,11 @@ TEST_F(SQLTest, UpdateWithConditionsShouldWork) {
   ASSERT_EQ(exec_sql("insert into t values (2, 5);"), "SUCCESS\n");
 
   ASSERT_EQ(exec_sql("update t set a = 100 where a = 1;"), "SUCCESS\n");
-  ASSERT_EQ(exec_sql("select * from t;"),
-    "a | b\n"
-    "100 | 1\n"
-    "100 | 10\n"
-    "2 | 3\n"
-    "2 | 5\n"
-  );
+  ASSERT_EQ(exec_sql("select * from t;"), "a | b\n"
+                                          "100 | 1\n"
+                                          "100 | 10\n"
+                                          "2 | 3\n"
+                                          "2 | 5\n");
 }
 
 TEST_F(SQLTest, UpdateWithIndexShouldWork) {
@@ -540,28 +544,20 @@ TEST_F(SQLTest, UpdateWithIndexShouldWork) {
   ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (2, 5);"), "SUCCESS\n");
 
-  ASSERT_EQ(exec_sql("select * from t where a = 1;"),
-    "a | b\n"
-    "1 | 1\n"
-    "1 | 10\n"
-  );
+  ASSERT_EQ(exec_sql("select * from t where a = 1;"), "a | b\n"
+                                                      "1 | 1\n"
+                                                      "1 | 10\n");
 
   ASSERT_EQ(exec_sql("update t set a = 100 where a = 1;"), "SUCCESS\n");
-  ASSERT_EQ(exec_sql("select * from t;"),
-    "a | b\n"
-    "100 | 1\n"
-    "100 | 10\n"
-    "2 | 3\n"
-    "2 | 5\n"
-  );
-  ASSERT_EQ(exec_sql("select * from t where a = 1;"),
-    "a | b\n"
-  );
-  ASSERT_EQ(exec_sql("select * from t where a = 100;"),
-    "a | b\n"
-    "100 | 1\n"
-    "100 | 10\n"
-  );
+  ASSERT_EQ(exec_sql("select * from t;"), "a | b\n"
+                                          "100 | 1\n"
+                                          "100 | 10\n"
+                                          "2 | 3\n"
+                                          "2 | 5\n");
+  ASSERT_EQ(exec_sql("select * from t where a = 1;"), "a | b\n");
+  ASSERT_EQ(exec_sql("select * from t where a = 100;"), "a | b\n"
+                                                        "100 | 1\n"
+                                                        "100 | 10\n");
 }
 
 TEST_F(SQLTest, UpdateWithInvalidColumnShouldFailure) {
@@ -572,13 +568,11 @@ TEST_F(SQLTest, UpdateWithInvalidColumnShouldFailure) {
   ASSERT_EQ(exec_sql("insert into t values (2, 5);"), "SUCCESS\n");
 
   ASSERT_EQ(exec_sql("update t set c = 100 where a = 1;"), "FAILURE\n");
-  ASSERT_EQ(exec_sql("select * from t;"),
-    "a | b\n"
-    "1 | 1\n"
-    "1 | 10\n"
-    "2 | 3\n"
-    "2 | 5\n"
-  );
+  ASSERT_EQ(exec_sql("select * from t;"), "a | b\n"
+                                          "1 | 1\n"
+                                          "1 | 10\n"
+                                          "2 | 3\n"
+                                          "2 | 5\n");
 }
 
 TEST_F(SQLTest, UpdateWithInvalidConditionShouldFailure) {
@@ -589,13 +583,11 @@ TEST_F(SQLTest, UpdateWithInvalidConditionShouldFailure) {
   ASSERT_EQ(exec_sql("insert into t values (2, 5);"), "SUCCESS\n");
 
   ASSERT_EQ(exec_sql("update t set a = 100 where c = 1;"), "FAILURE\n");
-  ASSERT_EQ(exec_sql("select * from t;"),
-    "a | b\n"
-    "1 | 1\n"
-    "1 | 10\n"
-    "2 | 3\n"
-    "2 | 5\n"
-  );
+  ASSERT_EQ(exec_sql("select * from t;"), "a | b\n"
+                                          "1 | 1\n"
+                                          "1 | 10\n"
+                                          "2 | 3\n"
+                                          "2 | 5\n");
 }
 
 TEST_F(SQLTest, UpdateWithInvalidValueShouldFailure) {
@@ -606,32 +598,29 @@ TEST_F(SQLTest, UpdateWithInvalidValueShouldFailure) {
   ASSERT_EQ(exec_sql("insert into t values (2, 5);"), "SUCCESS\n");
 
   ASSERT_EQ(exec_sql("update t set a = 1.0 where a = 1;"), "FAILURE\n");
-  ASSERT_EQ(exec_sql("select * from t;"),
-    "a | b\n"
-    "1 | 1\n"
-    "1 | 10\n"
-    "2 | 3\n"
-    "2 | 5\n"
-  );
+  ASSERT_EQ(exec_sql("select * from t;"), "a | b\n"
+                                          "1 | 1\n"
+                                          "1 | 10\n"
+                                          "2 | 3\n"
+                                          "2 | 5\n");
 }
 
-// ########     ###    ######## ######## 
-// ##     ##   ## ##      ##    ##       
-// ##     ##  ##   ##     ##    ##       
-// ##     ## ##     ##    ##    ######   
-// ##     ## #########    ##    ##       
-// ##     ## ##     ##    ##    ##       
-// ########  ##     ##    ##    ######## 
+// ########     ###    ######## ########
+// ##     ##   ## ##      ##    ##
+// ##     ##  ##   ##     ##    ##
+// ##     ## ##     ##    ##    ######
+// ##     ## #########    ##    ##
+// ##     ## ##     ##    ##    ##
+// ########  ##     ##    ##    ########
 
 TEST_F(SQLTest, DateCanCreateTable) {
   ASSERT_EQ(exec_sql("create table t(a int, d date);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("desc t;"),
-    "t(\n"
-    "\tfield name=__trx, type=ints, len=4, visible=no\n"
-    "\tfield name=a, type=ints, len=4, visible=yes\n"
-    "\tfield name=d, type=date, len=4, visible=yes\n"
-    ")\n"
-  );
+            "t(\n"
+            "\tfield name=__trx, type=ints, len=4, visible=no\n"
+            "\tfield name=a, type=ints, len=4, visible=yes\n"
+            "\tfield name=d, type=date, len=4, visible=yes\n"
+            ")\n");
 }
 
 TEST_F(SQLTest, DateInsertShouldWork) {
@@ -646,7 +635,9 @@ TEST_F(SQLTest, DateSelectShouldWork) {
   ASSERT_EQ(exec_sql("insert into t values(1, '2020-10-10');"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values(1, '2020-1-1');"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values(1, '4000-1-1');"), "SUCCESS\n");
-  ASSERT_EQ(exec_sql("select * from t;"), "a | d\n1 | 0020-01-10\n1 | 2020-10-10\n1 | 2020-01-01\n1 | 4000-01-01\n");
+  ASSERT_EQ(exec_sql("select * from t;"),
+            "a | d\n1 | 0020-01-10\n1 | 2020-10-10\n1 | 2020-01-01\n1 | "
+            "4000-01-01\n");
 }
 
 TEST_F(SQLTest, DateSelectWhereShouldWork) {
@@ -654,10 +645,13 @@ TEST_F(SQLTest, DateSelectWhereShouldWork) {
   ASSERT_EQ(exec_sql("insert into t values(1, '2020-10-10');"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values(1, '2021-1-1');"), "SUCCESS\n");
 
-  ASSERT_EQ(exec_sql("select d from t where d > '2020-12-1';"), "d\n2021-01-01\n");
-  ASSERT_EQ(exec_sql("select d from t where d = '2021-1-1';"), "d\n2021-01-01\n");
+  ASSERT_EQ(exec_sql("select d from t where d > '2020-12-1';"),
+            "d\n2021-01-01\n");
+  ASSERT_EQ(exec_sql("select d from t where d = '2021-1-1';"),
+            "d\n2021-01-01\n");
   ASSERT_EQ(exec_sql("select d from t where d = '2020-1-21';"), "d\n");
-  ASSERT_EQ(exec_sql("select d from t where d < '2020-12-1';"), "d\n2020-10-10\n");
+  ASSERT_EQ(exec_sql("select d from t where d < '2020-12-1';"),
+            "d\n2020-10-10\n");
 }
 
 TEST_F(SQLTest, DateSelectWithIndexShouldWork) {
@@ -666,31 +660,33 @@ TEST_F(SQLTest, DateSelectWithIndexShouldWork) {
   ASSERT_EQ(exec_sql("insert into t values(1, '2020-10-10');"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values(1, '2021-1-1');"), "SUCCESS\n");
 
-  ASSERT_EQ(exec_sql("select d from t where d > '2020-12-1';"), "d\n2021-01-01\n");
-  ASSERT_EQ(exec_sql("select d from t where d = '2021-1-1';"), "d\n2021-01-01\n");
+  ASSERT_EQ(exec_sql("select d from t where d > '2020-12-1';"),
+            "d\n2021-01-01\n");
+  ASSERT_EQ(exec_sql("select d from t where d = '2021-1-1';"),
+            "d\n2021-01-01\n");
   ASSERT_EQ(exec_sql("select d from t where d = '2020-1-21';"), "d\n");
-  ASSERT_EQ(exec_sql("select d from t where d < '2020-12-1';"), "d\n2020-10-10\n");
+  ASSERT_EQ(exec_sql("select d from t where d < '2020-12-1';"),
+            "d\n2020-10-10\n");
 }
 
 TEST_F(SQLTest, DateCharsNotBeAffected) {
-  ASSERT_EQ(exec_sql("create table t(a int, b char(20), d date);"), "SUCCESS\n");
-  ASSERT_EQ(exec_sql("insert into t values(1, '2020-1-1', '2020-1-1');"), "SUCCESS\n");
-  ASSERT_EQ(exec_sql("select * from t;"),
-    "a | b | d\n"
-    "1 | 2020-1-1 | 2020-01-01\n"
-  );
+  ASSERT_EQ(exec_sql("create table t(a int, b char(20), d date);"),
+            "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values(1, '2020-1-1', '2020-1-1');"),
+            "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t;"), "a | b | d\n"
+                                          "1 | 2020-1-1 | 2020-01-01\n");
 }
 
 TEST_F(SQLTest, DateUpdateShouldWork) {
   ASSERT_EQ(exec_sql("create table t(a int, d date);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values(1, '2020-10-10');"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values(1, '2021-1-1');"), "SUCCESS\n");
-  ASSERT_EQ(exec_sql("update t set d='2022-2-22' where d < '2020-12-31';"), "SUCCESS\n");
-  ASSERT_EQ(exec_sql("select * from t;"),
-    "a | d\n"
-    "1 | 2022-02-22\n"
-    "1 | 2021-01-01\n"
-  );
+  ASSERT_EQ(exec_sql("update t set d='2022-2-22' where d < '2020-12-31';"),
+            "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t;"), "a | d\n"
+                                          "1 | 2022-02-22\n"
+                                          "1 | 2021-01-01\n");
 }
 
 TEST_F(SQLTest, DateUpdateWithIndexShouldWork) {
@@ -699,34 +695,35 @@ TEST_F(SQLTest, DateUpdateWithIndexShouldWork) {
   ASSERT_EQ(exec_sql("insert into t values(1, '2020-10-10');"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values(1, '2021-1-1');"), "SUCCESS\n");
 
-  ASSERT_EQ(exec_sql("update t set d='2022-2-22' where d < '2020-12-31';"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("update t set d='2022-2-22' where d < '2020-12-31';"),
+            "SUCCESS\n");
   ASSERT_EQ(exec_sql("select * from t where d='2022-2-22';"),
-    "a | d\n"
-    "1 | 2022-02-22\n"
-  );
+            "a | d\n"
+            "1 | 2022-02-22\n");
 }
 
 TEST_F(SQLTest, DateUpdateInvalidDateShouldFailure) {
   ASSERT_EQ(exec_sql("create table t(a int, d date);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values(1, '2020-10-10');"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values(1, '2021-1-1');"), "SUCCESS\n");
-  ASSERT_EQ(exec_sql("update t set d='2022-2-30' where d < '2020-12-31';"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("update t set d='2022-2-30' where d < '2020-12-31';"),
+            "FAILURE\n");
 }
 
 //  ######  ######## ##       ########  ######  ########
-// ##    ## ##       ##       ##       ##    ##    ##   
-// ##       ##       ##       ##       ##          ##   
-//  ######  ######   ##       ######   ##          ##   
-//       ## ##       ##       ##       ##          ##   
-// ##    ## ##       ##       ##       ##    ##    ##   
-//  ######  ######## ######## ########  ######     ##   
-// ########    ###    ########  ##       ########  ######  
-//    ##      ## ##   ##     ## ##       ##       ##    ## 
-//    ##     ##   ##  ##     ## ##       ##       ##       
-//    ##    ##     ## ########  ##       ######    ######  
-//    ##    ######### ##     ## ##       ##             ## 
-//    ##    ##     ## ##     ## ##       ##       ##    ## 
-//    ##    ##     ## ########  ######## ########  ######  
+// ##    ## ##       ##       ##       ##    ##    ##
+// ##       ##       ##       ##       ##          ##
+//  ######  ######   ##       ######   ##          ##
+//       ## ##       ##       ##       ##          ##
+// ##    ## ##       ##       ##       ##    ##    ##
+//  ######  ######## ######## ########  ######     ##
+// ########    ###    ########  ##       ########  ######
+//    ##      ## ##   ##     ## ##       ##       ##    ##
+//    ##     ##   ##  ##     ## ##       ##       ##
+//    ##    ##     ## ########  ##       ######    ######
+//    ##    ######### ##     ## ##       ##             ##
+//    ##    ##     ## ##     ## ##       ##       ##    ##
+//    ##    ##     ## ########  ######## ########  ######
 
 TEST_F(SQLTest, SelectTablesShouldWork) {
   ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
@@ -737,29 +734,26 @@ TEST_F(SQLTest, SelectTablesShouldWork) {
   ASSERT_EQ(exec_sql("insert into t2 values (100, 200);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t2 values (300, 500);"), "SUCCESS\n");
 
-  ASSERT_EQ(exec_sql("select * from t, t2;"),
-    "t.a | t.b | t2.b | t2.d\n"
-    "1 | 1 | 100 | 200\n"
-    "1 | 1 | 300 | 500\n"
-    "2 | 3 | 100 | 200\n"
-    "2 | 3 | 300 | 500\n"
-  );
+  ASSERT_EQ(exec_sql("select * from t, t2;"), "t.a | t.b | t2.b | t2.d\n"
+                                              "1 | 1 | 100 | 200\n"
+                                              "1 | 1 | 300 | 500\n"
+                                              "2 | 3 | 100 | 200\n"
+                                              "2 | 3 | 300 | 500\n");
 
   ASSERT_EQ(exec_sql("create table t3(o int, a int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t3 values (999, 888);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t3 values (777, 666);"), "SUCCESS\n");
 
   ASSERT_EQ(exec_sql("select * from t, t2, t3;"),
-    "t.a | t.b | t2.b | t2.d | t3.o | t3.a\n"
-    "1 | 1 | 100 | 200 | 999 | 888\n"
-    "1 | 1 | 100 | 200 | 777 | 666\n"
-    "1 | 1 | 300 | 500 | 999 | 888\n"
-    "1 | 1 | 300 | 500 | 777 | 666\n"
-    "2 | 3 | 100 | 200 | 999 | 888\n"
-    "2 | 3 | 100 | 200 | 777 | 666\n"
-    "2 | 3 | 300 | 500 | 999 | 888\n"
-    "2 | 3 | 300 | 500 | 777 | 666\n"
-  );
+            "t.a | t.b | t2.b | t2.d | t3.o | t3.a\n"
+            "1 | 1 | 100 | 200 | 999 | 888\n"
+            "1 | 1 | 100 | 200 | 777 | 666\n"
+            "1 | 1 | 300 | 500 | 999 | 888\n"
+            "1 | 1 | 300 | 500 | 777 | 666\n"
+            "2 | 3 | 100 | 200 | 999 | 888\n"
+            "2 | 3 | 100 | 200 | 777 | 666\n"
+            "2 | 3 | 300 | 500 | 999 | 888\n"
+            "2 | 3 | 300 | 500 | 777 | 666\n");
 }
 
 TEST_F(SQLTest, SelectTablesColumnsOrderShouldCorrect) {
@@ -776,16 +770,15 @@ TEST_F(SQLTest, SelectTablesColumnsOrderShouldCorrect) {
   ASSERT_EQ(exec_sql("insert into t3 values (777, 666);"), "SUCCESS\n");
 
   ASSERT_EQ(exec_sql("select o, t.a, t2.b from t, t2, t3;"),
-    "t3.o | t.a | t2.b\n"
-    "999 | 1 | 100\n"
-    "777 | 1 | 100\n"
-    "999 | 1 | 300\n"
-    "777 | 1 | 300\n"
-    "999 | 2 | 100\n"
-    "777 | 2 | 100\n"
-    "999 | 2 | 300\n"
-    "777 | 2 | 300\n"
-  );
+            "t3.o | t.a | t2.b\n"
+            "999 | 1 | 100\n"
+            "777 | 1 | 100\n"
+            "999 | 1 | 300\n"
+            "777 | 1 | 300\n"
+            "999 | 2 | 100\n"
+            "777 | 2 | 100\n"
+            "999 | 2 | 300\n"
+            "777 | 2 | 300\n");
 }
 
 TEST_F(SQLTest, SelectTablesSingleColumnShouldShowTableName) {
@@ -797,13 +790,11 @@ TEST_F(SQLTest, SelectTablesSingleColumnShouldShowTableName) {
   ASSERT_EQ(exec_sql("insert into t2 values (100, 200);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t2 values (300, 500);"), "SUCCESS\n");
 
-  ASSERT_EQ(exec_sql("select t.a from t, t2;"),
-    "t.a\n"
-    "1\n"
-    "1\n"
-    "2\n"
-    "2\n"
-  );
+  ASSERT_EQ(exec_sql("select t.a from t, t2;"), "t.a\n"
+                                                "1\n"
+                                                "1\n"
+                                                "2\n"
+                                                "2\n");
 }
 
 TEST_F(SQLTest, SelectTablesBothStarAndColumnsShouldWork) {
@@ -815,13 +806,11 @@ TEST_F(SQLTest, SelectTablesBothStarAndColumnsShouldWork) {
   ASSERT_EQ(exec_sql("insert into t2 values (100, 200);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t2 values (300, 500);"), "SUCCESS\n");
 
-  ASSERT_EQ(exec_sql("select t.*, t2.b from t, t2;"),
-    "t.a | t.b | t2.b\n"
-    "1 | 1 | 100\n"
-    "1 | 1 | 300\n"
-    "2 | 3 | 100\n"
-    "2 | 3 | 300\n"
-  );
+  ASSERT_EQ(exec_sql("select t.*, t2.b from t, t2;"), "t.a | t.b | t2.b\n"
+                                                      "1 | 1 | 100\n"
+                                                      "1 | 1 | 300\n"
+                                                      "2 | 3 | 100\n"
+                                                      "2 | 3 | 300\n");
 }
 
 TEST_F(SQLTest, SelectTablesWithConditionsShouldWork) {
@@ -839,18 +828,17 @@ TEST_F(SQLTest, SelectTablesWithConditionsShouldWork) {
   ASSERT_EQ(exec_sql("insert into t3 values (777, 0);"), "SUCCESS\n");
 
   ASSERT_EQ(exec_sql("select * from t, t2, t3 where o <= 777 and t.a >= 2;"),
-    "t.a | t.b | t2.b | t2.d | t3.o | t3.a\n"
-    "2 | 3 | 100 | 200 | 777 | 666\n"
-    "2 | 3 | 100 | 200 | 777 | 0\n"
-    "2 | 3 | 300 | 500 | 777 | 666\n"
-    "2 | 3 | 300 | 500 | 777 | 0\n"
-  );
+            "t.a | t.b | t2.b | t2.d | t3.o | t3.a\n"
+            "2 | 3 | 100 | 200 | 777 | 666\n"
+            "2 | 3 | 100 | 200 | 777 | 0\n"
+            "2 | 3 | 300 | 500 | 777 | 666\n"
+            "2 | 3 | 300 | 500 | 777 | 0\n");
 
-  ASSERT_EQ(exec_sql("select * from t, t2, t3 where o <= 777 and t.a >= 2 and t.a < t3.a;"),
-    "t.a | t.b | t2.b | t2.d | t3.o | t3.a\n"
-    "2 | 3 | 100 | 200 | 777 | 666\n"
-    "2 | 3 | 300 | 500 | 777 | 666\n"
-  );
+  ASSERT_EQ(exec_sql("select * from t, t2, t3 where o <= 777 and t.a >= 2 and "
+                     "t.a < t3.a;"),
+            "t.a | t.b | t2.b | t2.d | t3.o | t3.a\n"
+            "2 | 3 | 100 | 200 | 777 | 666\n"
+            "2 | 3 | 300 | 500 | 777 | 666\n");
 }
 
 int main(int argc, char **argv) {

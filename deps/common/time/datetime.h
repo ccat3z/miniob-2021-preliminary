@@ -27,7 +27,6 @@ See the Mulan PSL v2 for more details. */
 
 namespace common {
 
-
 /*
  *  \brief Date and time are represented as integer for ease of
  *   calculation and comparison.

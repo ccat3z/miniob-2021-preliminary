@@ -21,4 +21,3 @@ See the Mulan PSL v2 for more details. */
 RC parse(const char *st, Query *sqln);
 
 #endif //__OBSERVER_SQL_PARSER_PARSE_H__
-

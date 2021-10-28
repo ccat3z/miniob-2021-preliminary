@@ -15,9 +15,9 @@ See the Mulan PSL v2 for more details. */
 #ifndef __COMMON_SEDA_TIMER_STAGE_H__
 #define __COMMON_SEDA_TIMER_STAGE_H__
 
+#include <memory>
 #include <pthread.h>
 #include <sys/time.h>
-#include <memory>
 
 #include "common/log/log.h"
 #include "common/seda/callback.h"
@@ -41,7 +41,7 @@ namespace common {
  *  TimerStage.
  */
 class TimerToken {
- public:
+public:
   TimerToken();
   TimerToken(const struct timeval &t);
   TimerToken(const TimerToken &tt);
@@ -51,9 +51,10 @@ class TimerToken {
   TimerToken &operator=(const TimerToken &src);
   std::string to_string() const;
 
-  friend bool timer_token_less_than(const TimerToken &tt1, const TimerToken &tt2);
+  friend bool timer_token_less_than(const TimerToken &tt1,
+                                    const TimerToken &tt2);
 
- private:
+private:
   void set(const struct timeval &t, u64_t n);
   static u64_t next_nonce();
 
@@ -68,7 +69,7 @@ class TimerToken {
  *  \brief An abstract base class for all timer-related events.
  */
 class TimerEvent : public StageEvent {
- public:
+public:
   TimerEvent() : StageEvent() { return; }
   virtual ~TimerEvent() { return; }
 };
@@ -88,7 +89,7 @@ class TimerEvent : public StageEvent {
  *  the requested time.
  */
 class TimerRegisterEvent : public TimerEvent {
- public:
+public:
   /**
    *  \brief Create an event to request the registration of a timer
    *  callback using relative time.
@@ -177,7 +178,7 @@ class TimerRegisterEvent : public TimerEvent {
    */
   void set_cancel_token(const TimerToken &t);
 
- private:
+private:
   StageEvent *timer_cb_;
   struct timeval timer_when_;
   TimerToken token_;
@@ -196,7 +197,7 @@ class TimerRegisterEvent : public TimerEvent {
  *  the associated callback event.
  */
 class TimerCancelEvent : public TimerEvent {
- public:
+public:
   /**
    *  \brief Create an event to request the cancellation of a timer
    *  callback that was previously set.
@@ -237,7 +238,7 @@ class TimerCancelEvent : public TimerEvent {
    */
   const TimerToken &get_token();
 
- private:
+private:
   TimerToken token_;
   bool cancelled_;
 };
@@ -273,7 +274,7 @@ class TimerCancelEvent : public TimerEvent {
  *  to maintain the timer.
  */
 class TimerStage : public Stage {
- public:
+public:
   ~TimerStage();
   static Stage *make_stage(const std::string &tag);
 
@@ -283,7 +284,7 @@ class TimerStage : public Stage {
    */
   u32_t get_num_events();
 
- protected:
+protected:
   TimerStage(const char *tag);
   bool set_properties();
   bool initialize();
@@ -292,9 +293,10 @@ class TimerStage : public Stage {
   void disconnect_prepare();
 
   // For ordering the keys in the timer_queue_.
-  static bool timer_token_less_than(const TimerToken &tt1, const TimerToken &tt2);
+  static bool timer_token_less_than(const TimerToken &tt1,
+                                    const TimerToken &tt2);
 
- private:
+private:
   void register_timer(TimerRegisterEvent &reg_ev);
   void cancel_timer(TimerCancelEvent &cancel_ev);
   bool timeval_less_than(const struct timeval &t1, const struct timeval &t2);
@@ -305,7 +307,7 @@ class TimerStage : public Stage {
 
   typedef std::map<TimerToken, StageEvent *,
                    bool (*)(const TimerToken &, const TimerToken &)>
-    timer_queue_t;
+      timer_queue_t;
   timer_queue_t timer_queue_;
 
   pthread_mutex_t timer_mutex_;

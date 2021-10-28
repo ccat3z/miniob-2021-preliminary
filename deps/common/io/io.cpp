@@ -27,7 +27,6 @@ See the Mulan PSL v2 for more details. */
 
 namespace common {
 
-
 int readFromFile(const std::string &fileName, char *&outputData,
                  size_t &fileSize) {
   FILE *file = fopen(fileName.c_str(), "rb");
@@ -321,8 +320,8 @@ int getDirList(std::vector<std::string> &dirList, const std::string &path,
 }
 
 int touch(const std::string &path) {
-  // CWE367: A check occurs on a file's attributes before 
-  // the file is used in a privileged operation, but things 
+  // CWE367: A check occurs on a file's attributes before
+  // the file is used in a privileged operation, but things
   // may have changed
 
   // struct stat fs;

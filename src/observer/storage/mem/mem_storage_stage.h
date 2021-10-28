@@ -15,8 +15,8 @@ See the Mulan PSL v2 for more details. */
 #ifndef __OBSERVER_STORAGE_MEM_STORAGE_STAGE_H__
 #define __OBSERVER_STORAGE_MEM_STORAGE_STAGE_H__
 
-#include "common/seda/stage.h"
 #include "common/metrics/metrics.h"
+#include "common/seda/stage.h"
 
 class MemStorageStage : public common::Stage {
 public:
@@ -32,11 +32,12 @@ protected:
   void cleanup();
   void handle_event(common::StageEvent *event);
   void callback_event(common::StageEvent *event,
-                     common::CallbackContext *context);
+                      common::CallbackContext *context);
 
 protected:
   common::SimpleTimer *queryMetric = nullptr;
   static const std::string QUERY_METRIC_TAG;
+
 private:
 };
 

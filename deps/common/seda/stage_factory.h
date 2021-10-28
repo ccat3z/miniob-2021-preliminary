@@ -19,7 +19,6 @@ See the Mulan PSL v2 for more details. */
 #include "common/seda/stage.h"
 namespace common {
 
-
 class Stage;
 
 typedef ClassFactory<Stage> StageFactory;

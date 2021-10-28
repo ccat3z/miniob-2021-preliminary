@@ -121,8 +121,8 @@ RC deleteEntry(IndexHandle *indexHandle, void *data, const RID *rid);
  * @param value
  * @return
  */
-RC openIndexScan(IndexScan *indexScan, IndexHandle *indexHandle,
-                 CompOp compOp, char *value);
+RC openIndexScan(IndexScan *indexScan, IndexHandle *indexHandle, CompOp compOp,
+                 char *value);
 
 /**
  * 用于继续IndexScan句柄对应的索引扫描，获得下一个满足条件的索引项，

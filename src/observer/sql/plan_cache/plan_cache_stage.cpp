@@ -96,7 +96,7 @@ void PlanCacheStage::handle_event(StageEvent *event) {
 }
 
 void PlanCacheStage::callback_event(StageEvent *event,
-                                   CallbackContext *context) {
+                                    CallbackContext *context) {
   LOG_TRACE("Enter\n");
 
   // update execute plan here

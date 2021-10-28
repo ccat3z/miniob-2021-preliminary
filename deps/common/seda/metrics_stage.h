@@ -38,7 +38,7 @@ protected:
 private:
   Stage *timer_stage_ = nullptr;
   //report metrics every @metric_report_interval_ seconds
-  int  metric_report_interval_ = 10;
+  int metric_report_interval_ = 10;
 };
 } // namespace common
 #endif //__COMMON_SEDA_METRICS_STAGE_H__

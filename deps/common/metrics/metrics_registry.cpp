@@ -12,21 +12,19 @@ See the Mulan PSL v2 for more details. */
 // Created by Longda on 2021/4/20.
 //
 
-
-
 #include "common/metrics/metrics_registry.h"
 #include "common/log/log.h"
 
 namespace common {
 
-MetricsRegistry& get_metrics_registry() {
+MetricsRegistry &get_metrics_registry() {
   static MetricsRegistry instance;
 
   return instance;
 }
 
 void MetricsRegistry::register_metric(const std::string &tag, Metric *metric) {
-  std::map<std::string, Metric*>::iterator it = metrics.find(tag);
+  std::map<std::string, Metric *>::iterator it = metrics.find(tag);
   if (it != metrics.end()) {
     LOG_WARN("%s has been registered!", tag.c_str());
     return;
@@ -47,7 +45,7 @@ void MetricsRegistry::unregister(const std::string &tag) {
 }
 
 void MetricsRegistry::snapshot() {
-  std::map<std::string, Metric*>::iterator it = metrics.begin();
+  std::map<std::string, Metric *>::iterator it = metrics.begin();
   for (; it != metrics.end(); it++) {
     it->second->snapshot();
   }
@@ -56,7 +54,7 @@ void MetricsRegistry::snapshot() {
 void MetricsRegistry::report() {
   for (std::list<Reporter *>::iterator reporterIt = reporters.begin();
        reporterIt != reporters.end(); reporterIt++) {
-    for (std::map<std::string, Metric*>::iterator it = metrics.begin();
+    for (std::map<std::string, Metric *>::iterator it = metrics.begin();
          it != metrics.end(); it++) {
 
       (*reporterIt)->report(it->first, it->second);

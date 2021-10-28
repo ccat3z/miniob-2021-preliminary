@@ -43,7 +43,7 @@ void Meter::snapshot() {
   long now_tick = now.tv_sec * 1000000 + now.tv_usec;
 
   double temp_value =
-      ((double)value_.exchange(0l)) / ((now_tick - snapshot_tick_ ) / 1000000);
+      ((double)value_.exchange(0l)) / ((now_tick - snapshot_tick_) / 1000000);
   snapshot_tick_ = now_tick;
 
   if (snapshot_value_ == NULL) {
@@ -81,7 +81,7 @@ void SimpleTimer::snapshot() {
   double mean = 0;
 
   if (times_snapshot > 0) {
-    tps = ((double)times_snapshot )/ ((now_tick - snapshot_tick_) / 1000000);
+    tps = ((double)times_snapshot) / ((now_tick - snapshot_tick_) / 1000000);
     mean = ((double)value_snapshot) / times_snapshot;
   }
 
@@ -98,16 +98,11 @@ Histogram::Histogram(RandomGenerator &random) : UniformReservoir(random) {}
 Histogram::Histogram(RandomGenerator &random, size_t size)
     : UniformReservoir(random, size) {}
 
-Histogram::~Histogram() {
+Histogram::~Histogram() {}
 
-}
+void Histogram::snapshot() { UniformReservoir::snapshot(); }
 
-void Histogram::snapshot() {
-  UniformReservoir::snapshot();
-}
-
-Timer::Timer(RandomGenerator &random)
-    : UniformReservoir(random){
+Timer::Timer(RandomGenerator &random) : UniformReservoir(random) {
   struct timeval start_time;
   gettimeofday(&start_time, NULL);
 
@@ -116,7 +111,7 @@ Timer::Timer(RandomGenerator &random)
 }
 
 Timer::Timer(RandomGenerator &random, size_t size)
-    : UniformReservoir(random, size){
+    : UniformReservoir(random, size) {
   struct timeval start_time;
   gettimeofday(&start_time, NULL);
 
@@ -148,7 +143,7 @@ void Timer::snapshot() {
   long now_tick = now.tv_sec * 1000000 + now.tv_usec;
 
   double tps =
-      ((double)value_.exchange(0l) )/ ((now_tick - snapshot_tick_  ) / 1000000);
+      ((double)value_.exchange(0l)) / ((now_tick - snapshot_tick_) / 1000000);
   snapshot_tick_ = now_tick;
 
   MUTEX_LOCK(&mutex);

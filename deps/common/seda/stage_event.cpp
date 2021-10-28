@@ -27,8 +27,8 @@ namespace common {
 
 // Constructor
 StageEvent::StageEvent()
-  : comp_cb_(NULL), ud_(NULL), cb_flag_(false), history_(NULL), stage_hops_(0),
-    tm_info_(NULL) {}
+    : comp_cb_(NULL), ud_(NULL), cb_flag_(false), history_(NULL),
+      stage_hops_(0), tm_info_(NULL) {}
 
 // Destructor
 StageEvent::~StageEvent() {

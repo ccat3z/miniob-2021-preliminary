@@ -19,8 +19,8 @@ See the Mulan PSL v2 for more details. */
 #include <vector>
 
 #include "rc.h"
-#include "storage/common/index_meta.h"
 #include "storage/common/field_meta.h"
+#include "storage/common/index_meta.h"
 #include "storage/common/record_manager.h"
 
 class IndexDataOperator {
@@ -38,9 +38,7 @@ public:
   Index() = default;
   virtual ~Index() = default;
 
-  const IndexMeta &index_meta() const {
-    return index_meta_;
-  }
+  const IndexMeta &index_meta() const { return index_meta_; }
 
   virtual RC insert_entry(const char *record, const RID *rid) = 0;
   virtual RC delete_entry(const char *record, const RID *rid) = 0;
@@ -53,8 +51,8 @@ protected:
   RC init(const IndexMeta &index_meta, const FieldMeta &field_meta);
 
 protected:
-  IndexMeta   index_meta_;
-  FieldMeta   field_meta_;    /// 当前实现仅考虑一个字段的索引
+  IndexMeta index_meta_;
+  FieldMeta field_meta_; /// 当前实现仅考虑一个字段的索引
 };
 
 class IndexScanner {
@@ -66,4 +64,4 @@ public:
   virtual RC destroy() = 0;
 };
 
-#endif  // __OBSERVER_STORAGE_COMMON_INDEX_H_
+#endif // __OBSERVER_STORAGE_COMMON_INDEX_H_

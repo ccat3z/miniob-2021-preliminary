@@ -23,9 +23,8 @@ namespace common {
 
 #define CLMPOOL_DEFAULT_ADDSIZE 16
 
-template<class T>
-class MemPool {
- public:
+template <class T> class MemPool {
+public:
   MemPool() : mQueue(), mAddSize(CLMPOOL_DEFAULT_ADDSIZE) {
     MUTEX_INIT(&mLock, NULL);
   }
@@ -87,7 +86,7 @@ class MemPool {
     MUTEX_UNLOCK(&mLock);
   }
 
- private:
+private:
   std::queue<T *> mQueue;
   pthread_mutex_t mLock;
   int mAddSize;

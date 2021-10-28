@@ -21,13 +21,12 @@ See the Mulan PSL v2 for more details. */
 #include <string>
 #include <vector>
 
-#include "common/seda/thread_pool.h"
 #include "common/seda/seda_defs.h"
+#include "common/seda/thread_pool.h"
 
 namespace common {
 
 //keywords of sedaconfig
-
 
 /**
  *  A class to configure seda stages
@@ -45,7 +44,7 @@ namespace common {
 
 class SedaConfig {
 
- public:
+public:
   typedef enum { SUCCESS = 0, INITFAIL, PARSEFAIL } status_t;
 
   static SedaConfig *&get_instance();
@@ -157,7 +156,7 @@ class SedaConfig {
   std::map<std::string, Stage *>::iterator begin();
   std::map<std::string, Stage *>::iterator end();
 
- private:
+private:
   // Constructor
   SedaConfig();
 
@@ -192,7 +191,7 @@ class SedaConfig {
   void init_event_history();
 
   SedaConfig &operator=(const SedaConfig &cevtout);
-  
+
   static SedaConfig *instance_;
 
   // In old logic, SedaConfig will parse seda configure file
@@ -203,7 +202,6 @@ class SedaConfig {
   std::map<std::string, Threadpool *> thread_pools_;
   std::map<std::string, Stage *> stages_;
   std::vector<std::string> stage_names_;
-
 };
 
 inline std::map<std::string, Stage *>::iterator SedaConfig::begin() {

@@ -11,13 +11,13 @@
 #include "cartesian.h"
 
 CartesianSelectNode::CartesianSelectNode(
-  std::unique_ptr<ExecutionNode> left_node,
-  std::unique_ptr<ExecutionNode> right_node)
-  : left_node(std::move(left_node)), right_node(std::move(right_node)) {
+    std::unique_ptr<ExecutionNode> left_node,
+    std::unique_ptr<ExecutionNode> right_node)
+    : left_node(std::move(left_node)), right_node(std::move(right_node)) {
   tuple_schema_.append(this->left_node->schema());
   tuple_schema_.append(this->right_node->schema());
 };
-CartesianSelectNode::~CartesianSelectNode() { }
+CartesianSelectNode::~CartesianSelectNode() {}
 const TupleSchema &CartesianSelectNode::schema() { return tuple_schema_; };
 
 RC CartesianSelectNode::execute(TupleSet &tuple_set) {
@@ -51,22 +51,18 @@ RC CartesianSelectNode::execute(TupleSet &tuple_set) {
 };
 
 std::unique_ptr<CartesianSelectNode> CartesianSelectNode::create(
-  std::vector<std::unique_ptr<ExecutionNode>> &nodes
-) {
-  if (nodes.size() < 2) return nullptr;
+    std::vector<std::unique_ptr<ExecutionNode>> &nodes) {
+  if (nodes.size() < 2)
+    return nullptr;
 
-  std::unique_ptr<CartesianSelectNode> root(new CartesianSelectNode(
-    std::move(nodes[0]),
-    std::move(nodes[1])
-  ));
+  std::unique_ptr<CartesianSelectNode> root(
+      new CartesianSelectNode(std::move(nodes[0]), std::move(nodes[1])));
 
   auto it = nodes.begin();
   std::advance(it, 2);
   for (; it != nodes.end(); it++) {
-    root = std::unique_ptr<CartesianSelectNode>(new CartesianSelectNode(
-      std::move(root),
-      std::move(*it)
-    ));
+    root = std::unique_ptr<CartesianSelectNode>(
+        new CartesianSelectNode(std::move(root), std::move(*it)));
   }
 
   return root;

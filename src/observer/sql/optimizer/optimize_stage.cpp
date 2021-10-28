@@ -83,7 +83,8 @@ void OptimizeStage::handle_event(StageEvent *event) {
   return;
 }
 
-void OptimizeStage::callback_event(StageEvent *event, CallbackContext *context) {
+void OptimizeStage::callback_event(StageEvent *event,
+                                   CallbackContext *context) {
   LOG_TRACE("Enter\n");
 
   LOG_TRACE("Exit\n");

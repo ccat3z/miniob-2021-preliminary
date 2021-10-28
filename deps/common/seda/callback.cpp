@@ -33,8 +33,8 @@ extern bool &get_event_history_flag();
 
 // Constructor
 CompletionCallback::CompletionCallback(Stage *trgt, CallbackContext *ctx)
-  : target_stage_(trgt), context_(ctx), next_cb_(NULL),
-    ev_hist_flag_(get_event_history_flag()) {}
+    : target_stage_(trgt), context_(ctx), next_cb_(NULL),
+      ev_hist_flag_(get_event_history_flag()) {}
 
 // Destructor
 CompletionCallback::~CompletionCallback() {

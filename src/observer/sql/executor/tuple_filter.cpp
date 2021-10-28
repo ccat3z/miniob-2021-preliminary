@@ -27,7 +27,8 @@ bool DefaultTupleFilter::filter(const Tuple &tuple) const {
 }
 
 std::unique_ptr<DefaultTupleFilter>
-DefaultTupleFilter::create(const TupleSchema &schema, const Condition &condition) {
+DefaultTupleFilter::create(const TupleSchema &schema,
+                           const Condition &condition) {
   if (!condition.left_is_attr || !condition.right_is_attr) {
     LOG_ERROR("DefaultTupleFilter only support condition between attrs");
     return nullptr;

@@ -23,9 +23,9 @@ See the Mulan PSL v2 for more details. */
 #include "common/log/log.h"
 #include "common/metrics/metrics_registry.h"
 #include "common/seda/metrics_report_event.h"
+#include "common/seda/seda_defs.h"
 #include "common/seda/timer_stage.h"
 #include "common/time/datetime.h"
-#include "common/seda/seda_defs.h"
 
 using namespace common;
 

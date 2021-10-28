@@ -21,8 +21,8 @@ See the Mulan PSL v2 for more details. */
 #include "common/io/io.h"
 #include "common/lang/string.h"
 #include "common/log/log.h"
-#include "common/seda/timer_stage.h"
 #include "common/metrics/metrics_registry.h"
+#include "common/seda/timer_stage.h"
 
 using namespace common;
 
@@ -82,7 +82,7 @@ void MemStorageStage::handle_event(StageEvent *event) {
 }
 
 void MemStorageStage::callback_event(StageEvent *event,
-                                    CallbackContext *context) {
+                                     CallbackContext *context) {
   LOG_TRACE("Enter\n");
 
   LOG_TRACE("Exit\n");

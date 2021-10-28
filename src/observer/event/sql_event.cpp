@@ -15,9 +15,8 @@ See the Mulan PSL v2 for more details. */
 #include "event/sql_event.h"
 #include "event/session_event.h"
 
-SQLStageEvent::SQLStageEvent(SessionEvent *event, std::string &sql) : 
-    session_event_(event), sql_(sql) {
-}
+SQLStageEvent::SQLStageEvent(SessionEvent *event, std::string &sql)
+    : session_event_(event), sql_(sql) {}
 
 SQLStageEvent::~SQLStageEvent() noexcept {
   if (session_event_ != nullptr) {

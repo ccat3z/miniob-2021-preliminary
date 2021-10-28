@@ -68,7 +68,7 @@ void *waitForSignals(void *args) {
     errno = 0;
     int ret = sigwait(signal_set, &sig_number);
     LOG_INFO("sigwait return value: %d, %d \n", ret, sig_number);
-    if (ret != 0)  {
+    if (ret != 0) {
       char errstr[256];
       strerror_r(errno, errstr, sizeof(errstr));
       LOG_ERROR("error (%d) %s\n", errno, errstr);
@@ -86,6 +86,5 @@ void startWaitForSignals(sigset_t *signal_set) {
   pthread_attr_setdetachstate(&pThreadAttrs, PTHREAD_CREATE_DETACHED);
 
   pthread_create(&pThread, &pThreadAttrs, waitForSignals, (void *)signal_set);
-
 }
 } // namespace common

@@ -29,5 +29,5 @@ protected:
   Snapshot *snapshot_value_;
 };
 
-}//namespace common
+} //namespace common
 #endif //__COMMON_METRICS_METRIC_H__

@@ -17,9 +17,9 @@ See the Mulan PSL v2 for more details. */
 
 #include <string.h>
 
-#include <string>
-#include <ostream>
 #include "common/time/datetime.h"
+#include <ostream>
+#include <string>
 
 class TupleValue {
 public:
@@ -28,20 +28,18 @@ public:
 
   virtual void to_string(std::ostream &os) const = 0;
   virtual int compare(const TupleValue &other) const = 0;
+
 private:
 };
 
 class IntValue : public TupleValue {
 public:
-  explicit IntValue(int value) : value_(value) {
-  }
+  explicit IntValue(int value) : value_(value) {}
 
-  void to_string(std::ostream &os) const override {
-    os << value_;
-  }
+  void to_string(std::ostream &os) const override { os << value_; }
 
   int compare(const TupleValue &other) const override {
-    const IntValue & int_other = (const IntValue &)other;
+    const IntValue &int_other = (const IntValue &)other;
     return value_ - int_other.value_;
   }
 
@@ -51,15 +49,12 @@ private:
 
 class FloatValue : public TupleValue {
 public:
-  explicit FloatValue(float value) : value_(value) {
-  }
+  explicit FloatValue(float value) : value_(value) {}
 
-  void to_string(std::ostream &os) const override {
-    os << value_;
-  }
+  void to_string(std::ostream &os) const override { os << value_; }
 
   int compare(const TupleValue &other) const override {
-    const FloatValue & float_other = (const FloatValue &)other;
+    const FloatValue &float_other = (const FloatValue &)other;
     float result = value_ - float_other.value_;
     if (result > 0) { // 浮点数没有考虑精度问题
       return 1;
@@ -69,37 +64,35 @@ public:
     }
     return 0;
   }
+
 private:
   float value_;
 };
 
 class StringValue : public TupleValue {
 public:
-  StringValue(const char *value, int len) : value_(value, len){
-  }
-  explicit StringValue(const char *value) : value_(value) {
-  }
+  StringValue(const char *value, int len) : value_(value, len) {}
+  explicit StringValue(const char *value) : value_(value) {}
 
-  void to_string(std::ostream &os) const override {
-    os << value_;
-  }
+  void to_string(std::ostream &os) const override { os << value_; }
 
   int compare(const TupleValue &other) const override {
     const StringValue &string_other = (const StringValue &)other;
     return strcmp(value_.c_str(), string_other.value_.c_str());
   }
+
 private:
   std::string value_;
 };
 
 class DateValue : public TupleValue {
 public:
-  explicit DateValue(int julian) : date(julian) {};
+  explicit DateValue(int julian) : date(julian){};
   void to_string(std::ostream &os) const override;
   int compare(const TupleValue &other) const override;
+
 private:
   const common::Date date;
 };
-
 
 #endif //__OBSERVER_SQL_EXECUTOR_VALUE_H_

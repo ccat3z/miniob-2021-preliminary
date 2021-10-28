@@ -18,7 +18,7 @@ namespace common {
 
 // Constructor
 EventDispatcher::EventDispatcher(const char *tag)
-  : Stage(tag), event_store_(), next_stage_(NULL) {
+    : Stage(tag), event_store_(), next_stage_(NULL) {
   LOG_TRACE("enter\n");
 
   pthread_mutexattr_t attr;
@@ -86,7 +86,8 @@ void EventDispatcher::cleanup() {
   pthread_mutex_lock(&event_lock_);
 
   // for each hash chain...
-  for (EventHash::iterator i = event_store_.begin(); i != event_store_.end(); i++) {
+  for (EventHash::iterator i = event_store_.begin(); i != event_store_.end();
+       i++) {
 
     // for each event on the chain
     for (std::list<StoredEvent>::iterator j = i->second.begin();

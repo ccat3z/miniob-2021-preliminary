@@ -55,7 +55,7 @@ class EventDispatcher : public Stage {
 
   // public interface operations
 
- public:
+public:
   typedef enum { SEND_EVENT = 0, STORE_EVENT, FAIL_EVENT } status_t;
 
   /**
@@ -77,7 +77,7 @@ class EventDispatcher : public Stage {
 
   // Note, EventDispatcher is an abstract class and needs no make_stage()
 
- protected:
+protected:
   /**
    * Constructor
    * @param[in] tag     The label that identifies this stage.
@@ -120,7 +120,7 @@ class EventDispatcher : public Stage {
    *                    ctx is NULL
    */
   virtual status_t dispatch_event(StageEvent *ev, DispatchContext *&ctx,
-                                 std::string &hash) = 0;
+                                  std::string &hash) = 0;
 
   /**
    * Wake up a stored event
@@ -140,7 +140,7 @@ class EventDispatcher : public Stage {
   pthread_mutex_t event_lock_; // protects access to event_store_
   Stage *next_stage_;          // target for dispatched events
 
- protected:
+protected:
 };
 
 /**
@@ -148,7 +148,7 @@ class EventDispatcher : public Stage {
  * derive from this base class.
  */
 class DispatchContext {
- public:
+public:
   virtual ~DispatchContext() {}
 };
 
