@@ -12,6 +12,7 @@
 #define __OBSERVER_SQL_EXECUTOR_TUPLE_FILTER_H_
 
 #include "tuple.h"
+#include "value.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -25,14 +26,15 @@ public:
 
 class DefaultTupleFilter : public TupleFilter {
 public:
+  DefaultTupleFilter(const TupleSchema &schema, Condition &condition);
   virtual ~DefaultTupleFilter();
   bool filter(const Tuple &tuple) const;
-  static std::unique_ptr<DefaultTupleFilter> create(const TupleSchema &schema,
-                                                    const Condition &condition);
 
 private:
-  DefaultTupleFilter();
   int left_index = -1, right_index = -1;
+  const TupleValue &left(const Tuple &tuple) const;
+  const TupleValue &right(const Tuple &tuple) const;
+  std::unique_ptr<TupleValue> left_value, right_value;
   CompOp op;
 };
 

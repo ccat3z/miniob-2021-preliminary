@@ -1,11 +1,50 @@
 #include "tuple_filter.h"
 #include "common/log/log.h"
 
-DefaultTupleFilter::DefaultTupleFilter() {}
+DefaultTupleFilter::DefaultTupleFilter(const TupleSchema &schema,
+                                       Condition &condition) {
+  op = condition.comp;
+
+  AttrType ltype, rtype;
+
+  if (condition.left_is_attr) {
+    left_index = schema.index_of_field(condition.left_attr.relation_name,
+                                       condition.left_attr.attribute_name);
+    if (left_index < 0) {
+      throw std::invalid_argument("Cannot find left attr in schema");
+    }
+    ltype = schema.fields().at(left_index).type();
+  }
+
+  if (condition.right_is_attr) {
+    right_index = schema.index_of_field(condition.right_attr.relation_name,
+                                        condition.right_attr.attribute_name);
+    if (right_index < 0) {
+      throw std::invalid_argument("Cannot find right attr in schema");
+    }
+    rtype = schema.fields().at(right_index).type();
+  }
+
+  if (!condition.left_is_attr) {
+    left_value = std::unique_ptr<TupleValue>(
+        std::move(TupleValue::from_value(condition.left_value, rtype)));
+    ltype = condition.left_value.type;
+  }
+
+  if (!condition.right_is_attr) {
+    right_value = std::unique_ptr<TupleValue>(
+        std::move(TupleValue::from_value(condition.right_value, ltype)));
+    rtype = condition.right_value.type;
+  }
+
+  if (ltype != rtype) {
+    throw std::invalid_argument("Incompareble fields");
+  }
+}
 DefaultTupleFilter::~DefaultTupleFilter() {}
 
 bool DefaultTupleFilter::filter(const Tuple &tuple) const {
-  int cmp = tuple.get(left_index).compare(tuple.get(right_index));
+  int cmp = left(tuple).compare(right(tuple));
 
   switch (op) {
   case EQUAL_TO:
@@ -26,50 +65,26 @@ bool DefaultTupleFilter::filter(const Tuple &tuple) const {
   }
 }
 
-std::unique_ptr<DefaultTupleFilter>
-DefaultTupleFilter::create(const TupleSchema &schema,
-                           const Condition &condition) {
-  if (!condition.left_is_attr || !condition.right_is_attr) {
-    LOG_ERROR("DefaultTupleFilter only support condition between attrs");
-    return nullptr;
+const TupleValue &DefaultTupleFilter::left(const Tuple &tuple) const {
+  if (left_index >= 0) {
+    return tuple.get(left_index);
   }
 
-  assert(condition.left_attr.relation_name != nullptr);
-  assert(condition.left_attr.attribute_name != nullptr);
-  assert(condition.right_attr.relation_name != nullptr);
-  assert(condition.right_attr.attribute_name != nullptr);
-  auto &left_table = condition.left_attr.relation_name;
-  auto &left_attr = condition.left_attr.attribute_name;
-  auto &right_table = condition.right_attr.relation_name;
-  auto &right_attr = condition.right_attr.attribute_name;
-
-  auto filter = std::unique_ptr<DefaultTupleFilter>(new DefaultTupleFilter());
-  filter->op = condition.comp;
-
-  auto &fields = schema.fields();
-  for (size_t i = 0; i < fields.size(); i++) {
-    auto &field = fields[i];
-
-    if (strcmp(field.table_name(), left_table) == 0 &&
-        strcmp(field.field_name(), left_attr) == 0) {
-      filter->left_index = i;
-    }
-
-    if (strcmp(field.table_name(), right_table) == 0 &&
-        strcmp(field.field_name(), right_attr) == 0) {
-      filter->right_index = i;
-    }
+  if (left_value == nullptr) {
+    throw std::logic_error("unreachable code");
   }
 
-  if (filter->left_index == -1 || filter->right_index == -1) {
-    LOG_ERROR("Cannot find fields in schema");
-    return nullptr;
+  return *left_value;
+}
+
+const TupleValue &DefaultTupleFilter::right(const Tuple &tuple) const {
+  if (right_index >= 0) {
+    return tuple.get(right_index);
   }
 
-  if (fields[filter->left_index].type() != fields[filter->right_index].type()) {
-    LOG_ERROR("The type of the two fields does not match");
-    return nullptr;
+  if (right_value == nullptr) {
+    throw std::logic_error("unreachable code");
   }
 
-  return filter;
+  return *right_value;
 }

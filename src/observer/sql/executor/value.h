@@ -18,6 +18,7 @@ See the Mulan PSL v2 for more details. */
 #include <string.h>
 
 #include "common/time/datetime.h"
+#include "sql/parser/parse.h"
 #include <ostream>
 #include <string>
 
@@ -28,6 +29,7 @@ public:
 
   virtual void to_string(std::ostream &os) const = 0;
   virtual int compare(const TupleValue &other) const = 0;
+  static TupleValue *from_value(Value &value, AttrType type = UNDEFINED);
 
 private:
 };
