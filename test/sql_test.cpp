@@ -839,6 +839,14 @@ TEST_F(SQLTest, SelectTablesWithConditionsShouldWork) {
             "t.a | t.b | t2.b | t2.d | t3.o | t3.a\n"
             "2 | 3 | 100 | 200 | 777 | 666\n"
             "2 | 3 | 300 | 500 | 777 | 666\n");
+
+  ASSERT_EQ(
+      exec_sql("select * from t, t2, t3 where t.a < t2.b and t.a > t3.a;"),
+      "t.a | t.b | t2.b | t2.d | t3.o | t3.a\n"
+      "1 | 1 | 100 | 200 | 777 | 0\n"
+      "1 | 1 | 300 | 500 | 777 | 0\n"
+      "2 | 3 | 100 | 200 | 777 | 0\n"
+      "2 | 3 | 300 | 500 | 777 | 0\n");
 }
 
 int main(int argc, char **argv) {
