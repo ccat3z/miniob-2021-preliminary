@@ -23,6 +23,18 @@ See details [here](./docs/lectures/miniob-topics.md).
 - [ ] Colorful log
 - [ ] Memory leak of Value
 - [ ] Parallel sql test
+- [ ] Refactor exectuor
+  - [X] Impl tuple filter
+    - [X] Support attr op value
+    - [ ] Save *cond
+  - [X] Rm hardcode optimizer
+  - [X] Complete sql in parser
+    - [ ] Expand *
+  - [ ] Impl cond push down: c = [] -> new_node, unused_c
+  - [ ] Impl proj push down: want: schema -> new_node
+  - [ ] Record based exec node?
+  - [ ] (wait official test)
+  - [ ] Agg support
 
 ### 必做题
 
