@@ -303,6 +303,10 @@ TEST_F(SQLTest, BasicSelectWithConditionShouldWork) {
   ASSERT_EQ(exec_sql("select * from t where t.a = 1;"), "a | b\n1 | 2\n");
   ASSERT_EQ(exec_sql("select a from t where a = 1;"), "a\n1\n");
   ASSERT_EQ(exec_sql("select * from t where a < 2 and a > 1;"), "a | b\n");
+  ASSERT_EQ(exec_sql("select * from t where 1 = a;"), "a | b\n1 | 2\n");
+  ASSERT_EQ(exec_sql("select * from t where 1 = t.a;"), "a | b\n1 | 2\n");
+  ASSERT_EQ(exec_sql("select a from t where 1 = a;"), "a\n1\n");
+  ASSERT_EQ(exec_sql("select * from t where 2 > a and 1 < a;"), "a | b\n");
 }
 
 TEST_F(SQLTest, BasicSelectWithIndex) {
@@ -396,6 +400,8 @@ TEST_F(SQLTest, SelectMetaSelectInvalidConditionShouldFailure) {
 
   ASSERT_EQ(exec_sql("select * from t where a > '1';"), "FAILURE\n");
   ASSERT_EQ(exec_sql("select * from t where a = 1.1;"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("select * from t where 1 = 1.1;"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("select * from t where 1.1 > '10';"), "FAILURE\n");
 }
 
 TEST_F(SQLTest, SelectMetaSelectValidConditionInMultiTablesShouldSuccess) {
