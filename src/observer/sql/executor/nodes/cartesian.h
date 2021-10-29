@@ -10,7 +10,6 @@
 
 #ifndef __OBSERVER_SQL_EXECUTOR_NODES_CARTESIAN_H_
 #define __OBSERVER_SQL_EXECUTOR_NODES_CARTESIAN_H_
-#include "../tuple_filter.h"
 #include "base.h"
 #include <memory>
 
@@ -18,8 +17,7 @@ class CartesianSelectNode : public ExecutionNode {
 public:
   virtual ~CartesianSelectNode();
   static std::unique_ptr<CartesianSelectNode>
-  create(std::vector<std::unique_ptr<ExecutionNode>> &nodes,
-         std::vector<Condition *> &conditions);
+  create(std::vector<std::unique_ptr<ExecutionNode>> &nodes);
 
   const TupleSchema &schema() override;
   RC execute(TupleSet &tuple_set) override;
@@ -27,10 +25,8 @@ public:
 private:
   CartesianSelectNode(std::unique_ptr<ExecutionNode> left_node,
                       std::unique_ptr<ExecutionNode> right_node);
-  void extract_bridge_conditions(std::vector<Condition *> &conditions);
   TupleSchema tuple_schema_;
   std::unique_ptr<ExecutionNode> left_node;
   std::unique_ptr<ExecutionNode> right_node;
-  std::vector<std::unique_ptr<TupleFilter>> filters;
 };
 #endif // __OBSERVER_SQL_EXECUTOR_NODES_CARTESIAN_H_

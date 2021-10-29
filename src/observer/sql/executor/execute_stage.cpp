@@ -364,7 +364,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql,
       nodes.push_back(std::move(it.second));
     }
 
-    exec_node = CartesianSelectNode::create(nodes, unused_conditions);
+    exec_node = CartesianSelectNode::create(nodes);
     if (exec_node == nullptr) {
       return RC::SQL_SYNTAX;
     }
