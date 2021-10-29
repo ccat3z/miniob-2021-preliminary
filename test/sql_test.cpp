@@ -362,7 +362,7 @@ TEST_F(SQLTest, SelectMetaInvalidTableShouldFailureInMultiTables) {
 
 TEST_F(SQLTest, SelectMetaSameTableShouldWork) {
   ASSERT_EQ(exec_sql("create table t(a int);"), "SUCCESS\n");
-  ASSERT_EQ(exec_sql("select * from t, t;"), "t.a\n");
+  ASSERT_EQ(exec_sql("select * from t, t;"), "t.a | t.a\n");
 }
 
 TEST_F(SQLTest, SelectMetaSelectInvalidColumnShouldFailure) {

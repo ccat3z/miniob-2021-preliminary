@@ -25,7 +25,10 @@ See the Mulan PSL v2 for more details. */
 #include "event/execution_plan_event.h"
 #include "event/session_event.h"
 #include "event/sql_event.h"
+#include "session/session.h"
 #include "sql/parser/parse.h"
+#include "storage/common/table.h"
+#include "storage/default/default_handler.h"
 
 using namespace common;
 
@@ -109,6 +112,8 @@ void ParseStage::callback_event(StageEvent *event, CallbackContext *context) {
   return;
 }
 
+RC complete_sql(SQLStageEvent *event, Selects &selects);
+
 StageEvent *ParseStage::handle_request(StageEvent *event) {
   SQLStageEvent *sql_event = static_cast<SQLStageEvent *>(event);
   const std::string &sql = sql_event->get_sql();
@@ -132,5 +137,110 @@ StageEvent *ParseStage::handle_request(StageEvent *event) {
     return nullptr;
   }
 
+  switch (result->flag) {
+  case SCF_SELECT:
+    ret = complete_sql(sql_event, result->sstr.selection);
+    if (ret != RC::SUCCESS) {
+      sql_event->session_event()->set_response("FAILURE\n");
+      query_destroy(result);
+      return nullptr;
+    }
+    break;
+  default:
+    break;
+  }
+
   return new ExecutionPlanEvent(sql_event, result);
+}
+
+bool ensure_and_complete_relattr(std::map<std::string, Table *> &tables,
+                                 RelAttr &attr) {
+  // If relation is specified
+  if (attr.relation_name != nullptr) {
+    auto node = tables.find(attr.relation_name);
+    if (node == tables.end()) {
+      LOG_ERROR("Table %s not exists", attr.relation_name);
+      return false;
+    }
+
+    return node->second->table_meta().field(attr.attribute_name) != nullptr;
+  }
+
+  // If relation is not specified
+  char *matched_relation_name = nullptr;
+  for (auto &it : tables) {
+    if (it.second->table_meta().field(attr.attribute_name) != nullptr) {
+      if (matched_relation_name != nullptr) {
+        LOG_ERROR("Ambiguous column: %s", attr.attribute_name);
+        return false;
+      }
+
+      matched_relation_name = strdup(it.first.c_str());
+    }
+  }
+
+  if (matched_relation_name == nullptr) {
+    LOG_ERROR("Column %s not exist in any table", attr.attribute_name);
+    return false;
+  }
+
+  attr.relation_name = matched_relation_name;
+  return true;
+}
+
+RC complete_sql(SQLStageEvent *event, Selects &selects) {
+  const char *db =
+      event->session_event()->get_client()->session->get_current_db().c_str();
+
+  // Retrive tables
+  std::map<std::string, Table *> tables;
+  for (size_t i = 0; i < selects.relation_num; i++) {
+    const char *table_name = selects.relations[i];
+    Table *table = DefaultHandler::get_default().find_table(db, table_name);
+    if (table == nullptr) {
+      LOG_ERROR("Invalid table %s", table);
+      return RC::SQL_SYNTAX;
+    }
+    if (!tables.insert({table_name, table}).second) {
+      LOG_WARN("Duplicate table is ignored");
+    }
+  }
+
+  if (tables.empty()) {
+    LOG_ERROR("No table given");
+    return RC::SQL_SYNTAX;
+  }
+
+  // Complete attributes
+  for (int i = selects.attr_num - 1; i >= 0; i--) {
+    RelAttr &attr = selects.attributes[i];
+
+    if (strcmp(attr.attribute_name, "*") == 0) {
+      if (attr.relation_name == nullptr) {
+        attr.relation_name = strdup("*");
+      }
+      continue;
+    }
+
+    if (!ensure_and_complete_relattr(tables, attr)) {
+      return RC::SQL_SYNTAX;
+    }
+  }
+
+  // Complete attributes
+  for (size_t i = 0; i < selects.condition_num; i++) {
+    Condition &condition = selects.conditions[i];
+
+    // Fill relation name in condition
+    if (condition.left_is_attr &&
+        !ensure_and_complete_relattr(tables, condition.left_attr)) {
+      return RC::SQL_SYNTAX;
+    }
+    if (condition.right_is_attr &&
+        !ensure_and_complete_relattr(tables, condition.right_attr)) {
+      return RC::SQL_SYNTAX;
+    }
+  }
+
+  return RC::SUCCESS;
 }
