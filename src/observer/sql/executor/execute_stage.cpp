@@ -265,6 +265,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql,
     }
 
     auto table_scanner = std::make_unique<TableScaner>(trx, table);
+    table_scanner->select_all_fields();
     if (!table_scaners.insert({table_name, std::move(table_scanner)}).second) {
       LOG_WARN("Duplicate table is ignored");
     }
@@ -277,24 +278,13 @@ RC ExecuteStage::do_select(const char *db, Query *sql,
     return RC::SQL_SYNTAX;
   }
 
-  // Check and apply attrs to table scanners
+  // Complete attributes
   for (int i = selects.attr_num - 1; i >= 0; i--) {
     RelAttr &attr = selects.attributes[i];
 
     if (strcmp(attr.attribute_name, "*") == 0) {
       if (attr.relation_name == nullptr) {
         attr.relation_name = strdup("*");
-        for (auto &it : table_scaners) {
-          it.second->select_all_fields();
-        }
-      } else {
-        auto node = table_scaners.find(attr.relation_name);
-        if (node == table_scaners.end()) {
-          LOG_ERROR("Invalid relation: %s", attr.relation_name);
-          return RC::SQL_SYNTAX;
-        }
-
-        node->second->select_all_fields();
       }
       continue;
     }
@@ -302,28 +292,12 @@ RC ExecuteStage::do_select(const char *db, Query *sql,
     if (!ensure_and_complete_relattr(table_scaners, attr)) {
       return RC::SQL_SYNTAX;
     }
-    rc = table_scaners[attr.relation_name]->select_field(attr.attribute_name);
-    if (rc != RC::SUCCESS) {
-      LOG_ERROR("Invalid attribute: %s.%s", attr.relation_name,
-                attr.attribute_name);
-      return rc;
-    }
   }
 
-  // Check and apply conditions to table scaners
-  std::vector<Condition *> unused_conditions;
+  // Complete attributes
+  std::vector<Condition *> conditions;
   for (size_t i = 0; i < selects.condition_num; i++) {
     Condition &condition = selects.conditions[i];
-
-    // Apply static condition to all nodes
-    if (!condition.left_is_attr && !condition.right_is_attr) {
-      for (auto &it : table_scaners) {
-        if (!it.second->add_filter(condition)) {
-          return RC::SQL_SYNTAX;
-        }
-      }
-      continue;
-    }
 
     // Fill relation name in condition
     if (condition.left_is_attr &&
@@ -335,23 +309,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql,
       return RC::SQL_SYNTAX;
     }
 
-    // Apply conditions in specific node
-    const char *rel_name = nullptr;
-    if (condition.left_is_attr && !condition.right_is_attr) {
-      rel_name = condition.left_attr.relation_name;
-    } else if (!condition.left_is_attr && condition.right_is_attr) {
-      rel_name = condition.right_attr.relation_name;
-    } else if (strcmp(condition.left_attr.relation_name,
-                      condition.right_attr.relation_name) == 0) {
-      rel_name = condition.left_attr.relation_name;
-    }
-    if (rel_name != nullptr &&
-        !table_scaners[rel_name]->add_filter(condition)) {
-      return RC::SQL_SYNTAX;
-    }
-    if (rel_name == nullptr) {
-      unused_conditions.push_back(&condition);
-    }
+    conditions.push_back(&condition);
   }
 
   // Build root execution node
@@ -368,19 +326,19 @@ RC ExecuteStage::do_select(const char *db, Query *sql,
     if (exec_node == nullptr) {
       return RC::SQL_SYNTAX;
     }
+  }
 
-    if (unused_conditions.size() > 0) {
-      exec_node = FilterNode::create(std::move(exec_node), unused_conditions);
-      if (exec_node == nullptr) {
-        return RC::SQL_SYNTAX;
-      }
-    }
-
-    exec_node = ProjectionNode::create(std::move(exec_node), selects.attributes,
-                                       selects.attr_num);
+  if (conditions.size() > 0) {
+    exec_node = FilterNode::create(std::move(exec_node), conditions);
     if (exec_node == nullptr) {
       return RC::SQL_SYNTAX;
     }
+  }
+
+  exec_node = ProjectionNode::create(std::move(exec_node), selects.attributes,
+                                     selects.attr_num);
+  if (exec_node == nullptr) {
+    return RC::SQL_SYNTAX;
   }
 
   // Execute node
