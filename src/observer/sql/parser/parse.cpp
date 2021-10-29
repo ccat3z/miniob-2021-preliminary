@@ -14,6 +14,7 @@ See the Mulan PSL v2 for more details. */
 
 #include "sql/parser/parse.h"
 #include "common/log/log.h"
+#include "common/time/datetime.h"
 #include "rc.h"
 #include <mutex>
 
@@ -52,6 +53,27 @@ void value_init_float(Value *value, float v) {
 void value_init_string(Value *value, const char *v) {
   value->type = CHARS;
   value->data = strdup(v);
+}
+bool value_cast(Value *value, AttrType type) {
+  if (value->type == type)
+    return true;
+
+  if (value->type == CHARS && type == DATE) {
+    common::Date date;
+    if (!date.parse((char *)value->data)) {
+      return false;
+    }
+
+    free(value->data);
+
+    value->type = DATE;
+    value->data = malloc(sizeof(int));
+    int julian = date.julian();
+    memcpy(value->data, &julian, sizeof(int));
+    return true;
+  }
+
+  return false;
 }
 void value_destroy(Value *value) {
   value->type = UNDEFINED;

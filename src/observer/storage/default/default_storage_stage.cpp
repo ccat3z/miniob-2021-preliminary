@@ -29,10 +29,10 @@ See the Mulan PSL v2 for more details. */
 #include "event/storage_event.h"
 #include "rc.h"
 #include "session/session.h"
+#include "sql/parser/parse.h"
 #include "storage/common/condition_filter.h"
 #include "storage/common/table.h"
 #include "storage/common/table_meta.h"
-#include "storage/common/value.h"
 #include "storage/default/default_handler.h"
 #include "storage/trx/trx.h"
 

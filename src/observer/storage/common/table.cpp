@@ -20,6 +20,7 @@ See the Mulan PSL v2 for more details. */
 
 #include "common/lang/string.h"
 #include "common/log/log.h"
+#include "sql/parser/parse.h"
 #include "storage/common/bplus_tree_index.h"
 #include "storage/common/condition_filter.h"
 #include "storage/common/index.h"
@@ -27,7 +28,6 @@ See the Mulan PSL v2 for more details. */
 #include "storage/common/record_manager.h"
 #include "storage/common/table.h"
 #include "storage/common/table_meta.h"
-#include "storage/common/value.h"
 #include "storage/default/disk_buffer_pool.h"
 #include "storage/trx/trx.h"
 
