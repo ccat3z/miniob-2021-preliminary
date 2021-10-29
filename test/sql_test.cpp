@@ -849,6 +849,21 @@ TEST_F(SQLTest, SelectTablesWithConditionsShouldWork) {
       "2 | 3 | 300 | 500 | 777 | 0\n");
 }
 
+TEST_F(SQLTest, SelectTablesWithConditionsNotInProjectionShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create table t2(b int, d int);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t2 values (1, 200);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t2 values (3, 500);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select t.a, t.b from t, t2 where t.a < t2.b;"),
+            "t.a | t.b\n"
+            "1 | 1\n"
+            "2 | 3\n");
+}
+
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
   testing::InitGoogleTest(&argc, argv);
