@@ -13,7 +13,7 @@
 #include "base.h"
 #include <memory>
 
-class ProjectionNode : public ExecutionNode {
+class ProjectionNode : public SetExecutionNode {
 public:
   static std::unique_ptr<ProjectionNode>
   create(std::unique_ptr<ExecutionNode> child, RelAttr *attrs, int attr_num);

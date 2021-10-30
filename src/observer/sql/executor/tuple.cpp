@@ -22,6 +22,13 @@ Tuple::Tuple(const Tuple &other) {
     add(v);
   }
 }
+Tuple &Tuple::operator=(const Tuple &other) {
+  values_.clear();
+  for (auto &v : other.values()) {
+    add(v);
+  }
+  return *this;
+}
 
 Tuple::Tuple(Tuple &&other) noexcept : values_(std::move(other.values_)) {}
 

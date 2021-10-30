@@ -16,7 +16,7 @@
 class Trx;
 class Table;
 
-class TableScaner : public ExecutionNode {
+class TableScaner : public SetExecutionNode {
 public:
   TableScaner(Trx *trx, Table *table);
   virtual ~TableScaner();

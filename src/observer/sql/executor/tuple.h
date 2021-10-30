@@ -28,6 +28,7 @@ public:
   Tuple() = default;
 
   Tuple(const Tuple &other);
+  Tuple &operator=(const Tuple &other);
 
   ~Tuple();
 

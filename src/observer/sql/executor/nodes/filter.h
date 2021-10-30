@@ -14,7 +14,7 @@
 #include "base.h"
 #include <memory>
 
-class FilterNode : public ExecutionNode {
+class FilterNode : public SetExecutionNode {
 public:
   virtual ~FilterNode();
   static std::unique_ptr<FilterNode>

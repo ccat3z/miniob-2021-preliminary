@@ -17,7 +17,32 @@ public:
   ExecutionNode() = default;
   virtual ~ExecutionNode() = default;
 
+  // Set model
   virtual const TupleSchema &schema() = 0;
   virtual RC execute(TupleSet &tuple_set) = 0;
+
+  // Volcano model
+  virtual RC next(Tuple &tuple) = 0;
+  virtual void reset() = 0;
+};
+
+class SetExecutionNode : public ExecutionNode {
+public:
+  virtual ~SetExecutionNode() = default;
+
+  virtual RC next(Tuple &tuple);
+  virtual void reset();
+
+private:
+  int next_record_idx = -1;
+  TupleSet tuple_set_buf;
+};
+
+class VolcanoExecutionNode : public ExecutionNode {
+public:
+  virtual ~VolcanoExecutionNode() = default;
+
+  // Set model
+  virtual RC execute(TupleSet &tuple_set);
 };
 #endif // __OBSERVER_SQL_EXECUTOR_NODES_EXECUTION_NODE_H_

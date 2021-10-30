@@ -13,7 +13,7 @@
 #include "base.h"
 #include <memory>
 
-class CartesianSelectNode : public ExecutionNode {
+class CartesianSelectNode : public SetExecutionNode {
 public:
   virtual ~CartesianSelectNode();
   static std::unique_ptr<CartesianSelectNode>
