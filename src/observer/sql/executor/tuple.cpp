@@ -240,3 +240,5 @@ void TupleRecordConverter::add_record(const char *record) {
 
   tuple_set_.add(std::move(tuple));
 }
+
+void Tuple::clear() { values_.clear(); }

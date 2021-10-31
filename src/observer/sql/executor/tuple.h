@@ -53,6 +53,8 @@ public:
     return values_[index];
   }
 
+  void clear();
+
 private:
   std::vector<std::shared_ptr<TupleValue>> values_;
 };

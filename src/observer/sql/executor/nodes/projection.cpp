@@ -52,27 +52,6 @@ ProjectionNode::ProjectionNode(std::unique_ptr<ExecutionNode> child,
 ProjectionNode::~ProjectionNode() {}
 const TupleSchema &ProjectionNode::schema() { return tuple_schema_; }
 
-RC ProjectionNode::execute(TupleSet &tuple_set) {
-  tuple_set.clear();
-  tuple_set.set_schema(tuple_schema_);
-
-  TupleSet buf;
-  RC rc = child->execute(buf);
-  if (rc != RC::SUCCESS) {
-    return rc;
-  }
-
-  for (auto &v : buf.tuples()) {
-    Tuple tuple;
-    for (auto &i : fields_map) {
-      tuple.add(v.values()[i]);
-    }
-    tuple_set.add(std::move(tuple));
-  }
-
-  return RC::SUCCESS;
-}
-
 std::unique_ptr<ExecutionNode>
 ProjectionNode::push_down_predicate(std::list<Condition *> &predicate) {
   auto new_child = child->push_down_predicate(predicate);
@@ -85,3 +64,19 @@ ProjectionNode::push_down_predicate(std::list<Condition *> &predicate) {
   }
   return nullptr;
 }
+
+RC ProjectionNode::next(Tuple &tuple) {
+  Tuple child_tuple;
+  RC rc = child->next(child_tuple);
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+
+  tuple.clear();
+  for (auto &i : fields_map) {
+    tuple.add(child_tuple.values()[i]);
+  }
+
+  return RC::SUCCESS;
+}
+void ProjectionNode::reset() { child->reset(); }

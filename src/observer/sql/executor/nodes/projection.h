@@ -13,13 +13,14 @@
 #include "base.h"
 #include <memory>
 
-class ProjectionNode : public SetExecutionNode {
+class ProjectionNode : public VolcanoExecutionNode {
 public:
   ProjectionNode(std::unique_ptr<ExecutionNode> child, RelAttr *attrs,
                  int attr_num);
   virtual ~ProjectionNode();
   const TupleSchema &schema() override;
-  RC execute(TupleSet &tuple_set) override;
+  RC next(Tuple &tuple) override;
+  void reset() override;
   std::unique_ptr<ExecutionNode>
   push_down_predicate(std::list<Condition *> &predicate) override;
 
