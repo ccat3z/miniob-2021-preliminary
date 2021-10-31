@@ -241,12 +241,12 @@ RC ExecuteStage::do_select(const char *db, Query *sql,
   }
 
   if (selects.condition_num > 0) {
-    std::vector<Condition *> conditions(selects.condition_num);
-    for (int i = 0; i < selects.condition_num; i++) {
-      conditions[i] = selects.conditions + i;
-    }
-    exec_node = FilterNode::create(std::move(exec_node), conditions);
-    if (exec_node == nullptr) {
+    try {
+      exec_node = std::unique_ptr<FilterNode>(
+          new FilterNode(std::move(exec_node), selects.conditions + 0,
+                         selects.conditions + selects.condition_num));
+    } catch (const std::exception &e) {
+      LOG_ERROR(e.what());
       return RC::SQL_SYNTAX;
     }
   }

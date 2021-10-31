@@ -11,11 +11,6 @@
 #include "filter.h"
 #include "common/log/log.h"
 
-FilterNode::FilterNode(std::unique_ptr<ExecutionNode> child,
-                       std::vector<std::unique_ptr<TupleFilter>> &&filters)
-    : child(std::move(child)), filters(std::move(filters)) {
-  tuple_schema_.append(this->child->schema());
-}
 FilterNode::~FilterNode() {}
 const TupleSchema &FilterNode::schema() { return tuple_schema_; };
 
@@ -40,21 +35,10 @@ RC FilterNode::next(Tuple &tuple) {
   return rc;
 }
 
-std::unique_ptr<FilterNode>
-FilterNode::create(std::unique_ptr<ExecutionNode> child,
-                   std::vector<Condition *> &conditions) {
-  std::vector<std::unique_ptr<TupleFilter>> filters;
+void FilterNode::build_filters() {
+  filters.clear();
   for (auto &cond : conditions) {
-    try {
-      auto filter =
-          std::make_unique<DefaultTupleFilter>(child->schema(), *cond);
-      filters.push_back(std::move(filter));
-    } catch (const std::exception &e) {
-      LOG_ERROR(e.what());
-      return nullptr;
-    }
+    auto filter = std::make_unique<DefaultTupleFilter>(child->schema(), *cond);
+    filters.push_back(std::move(filter));
   }
-
-  return std::unique_ptr<FilterNode>(
-      new FilterNode(std::move(child), std::move(filters)));
 }
