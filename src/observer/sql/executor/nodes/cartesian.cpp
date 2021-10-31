@@ -52,8 +52,9 @@ RC CartesianSelectNode::execute(TupleSet &tuple_set) {
 
 std::unique_ptr<CartesianSelectNode> CartesianSelectNode::create(
     std::vector<std::unique_ptr<ExecutionNode>> &nodes) {
-  if (nodes.size() < 2)
-    return nullptr;
+  if (nodes.size() < 2) {
+    throw std::invalid_argument("At least 2 nodes");
+  }
 
   std::unique_ptr<CartesianSelectNode> root(
       new CartesianSelectNode(std::move(nodes[0]), std::move(nodes[1])));

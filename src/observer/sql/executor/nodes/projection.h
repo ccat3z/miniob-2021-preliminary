@@ -15,15 +15,13 @@
 
 class ProjectionNode : public SetExecutionNode {
 public:
-  static std::unique_ptr<ProjectionNode>
-  create(std::unique_ptr<ExecutionNode> child, RelAttr *attrs, int attr_num);
+  ProjectionNode(std::unique_ptr<ExecutionNode> child, RelAttr *attrs,
+                 int attr_num);
   virtual ~ProjectionNode();
   const TupleSchema &schema() override;
   RC execute(TupleSet &tuple_set) override;
 
 private:
-  ProjectionNode(std::unique_ptr<ExecutionNode> child)
-      : child(std::move(child)){};
   TupleSchema tuple_schema_;
   std::unique_ptr<ExecutionNode> child;
   std::vector<int> fields_map;

@@ -211,13 +211,8 @@ void end_trx_if_need(Session *session, Trx *trx, bool all_right) {
   }
 }
 
-RC ExecuteStage::do_select(const char *db, Query *sql,
-                           SessionEvent *session_event) {
-  RC rc = RC::SUCCESS;
-  Session *session = session_event->get_client()->session;
-  Trx *trx = session->current_trx();
-  Selects &selects = sql->sstr.selection;
-
+std::unique_ptr<ExecutionNode>
+build_select_executor_node(const char *db, Trx *trx, Selects &selects) {
   // Build table scanners
   std::vector<std::unique_ptr<ExecutionNode>> table_scaners;
   for (int i = selects.relation_num - 1; i >= 0; i--) {
@@ -226,7 +221,6 @@ RC ExecuteStage::do_select(const char *db, Query *sql,
     auto table_scaner = std::make_unique<TableScaner>(trx, table);
     table_scaner->select_all_fields();
     table_scaners.push_back(std::move(table_scaner));
-    end_trx_if_need(session, trx, false);
   }
 
   // Build root execution node
@@ -235,25 +229,32 @@ RC ExecuteStage::do_select(const char *db, Query *sql,
     exec_node = std::move(*table_scaners.begin());
   } else {
     exec_node = CartesianSelectNode::create(table_scaners);
-    if (exec_node == nullptr) {
-      return RC::SQL_SYNTAX;
-    }
   }
 
   if (selects.condition_num > 0) {
-    try {
-      exec_node = std::unique_ptr<FilterNode>(
-          new FilterNode(std::move(exec_node), selects.conditions + 0,
-                         selects.conditions + selects.condition_num));
-    } catch (const std::exception &e) {
-      LOG_ERROR(e.what());
-      return RC::SQL_SYNTAX;
-    }
+    exec_node = std::make_unique<FilterNode>(
+        std::move(exec_node), selects.conditions + 0,
+        selects.conditions + selects.condition_num);
   }
 
-  exec_node = ProjectionNode::create(std::move(exec_node), selects.attributes,
-                                     selects.attr_num);
-  if (exec_node == nullptr) {
+  exec_node = std::make_unique<ProjectionNode>(
+      std::move(exec_node), selects.attributes, selects.attr_num);
+
+  return exec_node;
+}
+
+RC ExecuteStage::do_select(const char *db, Query *sql,
+                           SessionEvent *session_event) {
+  RC rc = RC::SUCCESS;
+  Session *session = session_event->get_client()->session;
+  Trx *trx = session->current_trx();
+  Selects &selects = sql->sstr.selection;
+
+  std::unique_ptr<ExecutionNode> exec_node;
+  try {
+    exec_node = build_select_executor_node(db, trx, selects);
+  } catch (const std::exception &e) {
+    LOG_ERROR(e.what());
     return RC::SQL_SYNTAX;
   }
 

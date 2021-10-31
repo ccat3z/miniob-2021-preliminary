@@ -11,14 +11,12 @@
 #include "projection.h"
 #include "common/log/log.h"
 
-std::unique_ptr<ProjectionNode>
-ProjectionNode::create(std::unique_ptr<ExecutionNode> child, RelAttr *attrs,
-                       int attr_num) {
-  auto proj =
-      std::unique_ptr<ProjectionNode>(new ProjectionNode(std::move(child)));
-  proj->fields_map.reserve(attr_num);
+ProjectionNode::ProjectionNode(std::unique_ptr<ExecutionNode> child,
+                               RelAttr *attrs, int attr_num)
+    : child(std::move(child)) {
+  this->fields_map.reserve(attr_num);
 
-  auto &child_fields = proj->child->schema().fields();
+  auto &child_fields = this->child->schema().fields();
 
   for (int i = attr_num - 1; i >= 0; i--) {
     auto &attr = attrs[i];
@@ -32,8 +30,8 @@ ProjectionNode::create(std::unique_ptr<ExecutionNode> child, RelAttr *attrs,
           (any_table ||
            strcmp(attr.relation_name, child_field.table_name()) == 0)) {
         matched = true;
-        proj->fields_map.push_back(j);
-        proj->tuple_schema_.add(child_field.type(), child_field.table_name(),
+        this->fields_map.push_back(j);
+        this->tuple_schema_.add(child_field.type(), child_field.table_name(),
                                 child_field.field_name());
 
         if (!(any_table || any_attr)) {
@@ -42,13 +40,12 @@ ProjectionNode::create(std::unique_ptr<ExecutionNode> child, RelAttr *attrs,
       }
     }
     if (!matched) {
-      LOG_ERROR("Failed to find field %s.%s in child node", attr.relation_name,
-                attr.attribute_name);
-      return nullptr;
+      std::stringstream ss;
+      ss << "Failed to find field " << attr.relation_name << '.'
+         << attr.attribute_name;
+      throw std::invalid_argument(ss.str());
     }
   }
-
-  return proj;
 }
 
 ProjectionNode::~ProjectionNode() {}
