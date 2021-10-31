@@ -21,35 +21,41 @@ CartesianSelectNode::CartesianSelectNode(
 CartesianSelectNode::~CartesianSelectNode() {}
 const TupleSchema &CartesianSelectNode::schema() { return tuple_schema_; };
 
-RC CartesianSelectNode::execute(TupleSet &tuple_set) {
-  TupleSet tuple_left, tuple_right;
-
-  RC rc;
-  if ((rc = left_node->execute(tuple_left)) != RC::SUCCESS) {
-    return rc;
-  }
-  if ((rc = right_node->execute(tuple_right)) != RC::SUCCESS) {
-    return rc;
-  }
-
-  tuple_set.clear();
-  tuple_set.set_schema(tuple_schema_);
-  for (auto &tuple_left : tuple_left.tuples()) {
-    for (auto &tuple_right : tuple_right.tuples()) {
-      Tuple tuple;
-      for (auto &v : tuple_left.values()) {
-        tuple.add(v);
-      }
-      for (auto &v : tuple_right.values()) {
-        tuple.add(v);
-      }
-
-      tuple_set.add(std::move(tuple));
+RC CartesianSelectNode::next(Tuple &tuple) {
+  if (require_next_left) {
+    RC rc = left_node->next(tuple_left);
+    if (rc != RC::SUCCESS) {
+      return rc;
     }
+    require_next_left = false;
+  }
+
+  Tuple tuple_right;
+  RC rc = right_node->next(tuple_right);
+  if (rc == RC::RECORD_EOF) {
+    require_next_left = true;
+    right_node->reset();
+    return next(tuple);
+  } else if (rc != RC::SUCCESS) {
+    return rc;
+  }
+
+  tuple.clear();
+  for (auto &v : tuple_left.values()) {
+    tuple.add(v);
+  }
+  for (auto &v : tuple_right.values()) {
+    tuple.add(v);
   }
 
   return RC::SUCCESS;
-};
+}
+
+void CartesianSelectNode::reset() {
+  require_next_left = true;
+  left_node->reset();
+  right_node->reset();
+}
 
 std::unique_ptr<CartesianSelectNode> CartesianSelectNode::create(
     std::vector<std::unique_ptr<ExecutionNode>> &nodes) {

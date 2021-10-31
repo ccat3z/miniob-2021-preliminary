@@ -13,14 +13,15 @@
 #include "base.h"
 #include <memory>
 
-class CartesianSelectNode : public SetExecutionNode {
+class CartesianSelectNode : public VolcanoExecutionNode {
 public:
   virtual ~CartesianSelectNode();
   static std::unique_ptr<CartesianSelectNode>
   create(std::vector<std::unique_ptr<ExecutionNode>> &nodes);
 
   const TupleSchema &schema() override;
-  RC execute(TupleSet &tuple_set) override;
+  RC next(Tuple &tuple) override;
+  void reset() override;
   std::unique_ptr<ExecutionNode>
   push_down_predicate(std::list<Condition *> &predicate) override;
 
@@ -30,5 +31,8 @@ private:
   TupleSchema tuple_schema_;
   std::unique_ptr<ExecutionNode> left_node;
   std::unique_ptr<ExecutionNode> right_node;
+
+  Tuple tuple_left;
+  bool require_next_left = true;
 };
 #endif // __OBSERVER_SQL_EXECUTOR_NODES_CARTESIAN_H_
