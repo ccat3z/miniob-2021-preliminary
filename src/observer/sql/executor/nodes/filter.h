@@ -14,14 +14,15 @@
 #include "base.h"
 #include <memory>
 
-class FilterNode : public SetExecutionNode {
+class FilterNode : public VolcanoExecutionNode {
 public:
   virtual ~FilterNode();
   static std::unique_ptr<FilterNode>
   create(std::unique_ptr<ExecutionNode> child,
          std::vector<Condition *> &conditions);
   const TupleSchema &schema() override;
-  RC execute(TupleSet &tuple_set) override;
+  virtual RC next(Tuple &tuple);
+  virtual void reset();
 
 private:
   FilterNode(std::unique_ptr<ExecutionNode> child,

@@ -18,17 +18,12 @@ FilterNode::FilterNode(std::unique_ptr<ExecutionNode> child,
 }
 FilterNode::~FilterNode() {}
 const TupleSchema &FilterNode::schema() { return tuple_schema_; };
-RC FilterNode::execute(TupleSet &tuple_set) {
-  tuple_set.clear();
-  tuple_set.set_schema(tuple_schema_);
 
-  TupleSet buf;
-  RC rc = child->execute(buf);
-  if (rc != RC::SUCCESS) {
-    return rc;
-  }
+void FilterNode::reset() { child->reset(); }
 
-  for (auto &tuple : buf.tuples()) {
+RC FilterNode::next(Tuple &tuple) {
+  RC rc;
+  while ((rc = child->next(tuple)) == RC::SUCCESS) {
     bool add = true;
     for (auto &filter : filters) {
       if (!filter->filter(tuple)) {
@@ -38,12 +33,11 @@ RC FilterNode::execute(TupleSet &tuple_set) {
     }
 
     if (add) {
-      Tuple t(tuple);
-      tuple_set.add(std::move(t));
+      return RC::SUCCESS;
     }
   }
 
-  return RC::SUCCESS;
+  return rc;
 }
 
 std::unique_ptr<FilterNode>
