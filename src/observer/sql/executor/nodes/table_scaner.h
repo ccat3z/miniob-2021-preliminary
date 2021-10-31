@@ -29,6 +29,8 @@ public:
   bool add_filter(Condition &condition);
   bool can_filter_by(RelAttr &attr);
   const Table *table();
+  std::unique_ptr<ExecutionNode>
+  push_down_predicate(std::list<Condition *> &predicate) override;
 
 private:
   Trx *trx_ = nullptr;

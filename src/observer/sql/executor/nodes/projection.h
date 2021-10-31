@@ -20,6 +20,8 @@ public:
   virtual ~ProjectionNode();
   const TupleSchema &schema() override;
   RC execute(TupleSet &tuple_set) override;
+  std::unique_ptr<ExecutionNode>
+  push_down_predicate(std::list<Condition *> &predicate) override;
 
 private:
   TupleSchema tuple_schema_;

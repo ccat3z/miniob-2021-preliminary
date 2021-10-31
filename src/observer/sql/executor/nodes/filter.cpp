@@ -42,3 +42,18 @@ void FilterNode::build_filters() {
     filters.push_back(std::move(filter));
   }
 }
+
+std::unique_ptr<ExecutionNode>
+FilterNode::push_down_predicate(std::list<Condition *> &predicate) {
+  conditions.splice(conditions.end(), predicate);
+  auto new_child = child->push_down_predicate(conditions);
+  if (new_child != nullptr) {
+    child = std::move(new_child);
+  }
+
+  if (conditions.size() == 0)
+    return std::move(child);
+
+  build_filters();
+  return nullptr;
+}

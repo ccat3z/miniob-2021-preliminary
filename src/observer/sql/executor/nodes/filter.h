@@ -41,6 +41,8 @@ public:
   const TupleSchema &schema() override;
   virtual RC next(Tuple &tuple);
   virtual void reset();
+  std::unique_ptr<ExecutionNode>
+  push_down_predicate(std::list<Condition *> &predicate) override;
 
 private:
   TupleSchema tuple_schema_;

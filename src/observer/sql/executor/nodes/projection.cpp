@@ -10,6 +10,7 @@
 
 #include "projection.h"
 #include "common/log/log.h"
+#include "filter.h"
 
 ProjectionNode::ProjectionNode(std::unique_ptr<ExecutionNode> child,
                                RelAttr *attrs, int attr_num)
@@ -70,4 +71,17 @@ RC ProjectionNode::execute(TupleSet &tuple_set) {
   }
 
   return RC::SUCCESS;
+}
+
+std::unique_ptr<ExecutionNode>
+ProjectionNode::push_down_predicate(std::list<Condition *> &predicate) {
+  auto new_child = child->push_down_predicate(predicate);
+  if (new_child != nullptr) {
+    child = std::move(new_child);
+  }
+  if (predicate.size() == 0) {
+    child = std::make_unique<FilterNode>(std::move(child), predicate.begin(),
+                                         predicate.end());
+  }
+  return nullptr;
 }

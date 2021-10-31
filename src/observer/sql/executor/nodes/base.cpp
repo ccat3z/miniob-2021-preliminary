@@ -47,3 +47,13 @@ RC VolcanoExecutionNode::execute(TupleSet &tuple_set) {
 
   return RC::SUCCESS;
 }
+
+std::unique_ptr<ExecutionNode> ExecutionNode::push_down_predicate() {
+  std::list<Condition *> v;
+  return push_down_predicate(v);
+}
+
+std::unique_ptr<ExecutionNode>
+ExecutionNode::push_down_predicate(std::list<Condition *> &candidate) {
+  return nullptr;
+}

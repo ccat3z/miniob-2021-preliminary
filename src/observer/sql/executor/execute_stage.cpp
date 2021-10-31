@@ -240,6 +240,12 @@ build_select_executor_node(const char *db, Trx *trx, Selects &selects) {
   exec_node = std::make_unique<ProjectionNode>(
       std::move(exec_node), selects.attributes, selects.attr_num);
 
+  // Simple rule-based optimizer
+  auto new_node = exec_node->push_down_predicate();
+  if (new_node != nullptr) {
+    exec_node = std::move(new_node);
+  }
+
   return exec_node;
 }
 

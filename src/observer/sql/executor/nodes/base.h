@@ -11,6 +11,7 @@
 #ifndef __OBSERVER_SQL_EXECUTOR_NODES_EXECUTION_NODE_H_
 #define __OBSERVER_SQL_EXECUTOR_NODES_EXECUTION_NODE_H_
 #include "../tuple.h"
+#include <list>
 
 class ExecutionNode {
 public:
@@ -24,6 +25,11 @@ public:
   // Volcano model
   virtual RC next(Tuple &tuple) = 0;
   virtual void reset() = 0;
+
+  // Optimizer
+  std::unique_ptr<ExecutionNode> push_down_predicate();
+  virtual std::unique_ptr<ExecutionNode>
+  push_down_predicate(std::list<Condition *> &predicate);
 };
 
 class SetExecutionNode : public ExecutionNode {

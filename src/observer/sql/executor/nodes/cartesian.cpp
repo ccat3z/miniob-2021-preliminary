@@ -9,6 +9,7 @@
 // Mulan PSL v2 for more details.
 
 #include "cartesian.h"
+#include "filter.h"
 
 CartesianSelectNode::CartesianSelectNode(
     std::unique_ptr<ExecutionNode> left_node,
@@ -67,4 +68,80 @@ std::unique_ptr<CartesianSelectNode> CartesianSelectNode::create(
   }
 
   return root;
+}
+
+void extract_condition(Condition &condition, std::list<Condition *> &both,
+                       const TupleSchema &lschema,
+                       std::list<Condition *> &left_only,
+                       const TupleSchema &rschema,
+                       std::list<Condition *> &right_only) {
+  bool lschema_involved = false, rschema_involved = false;
+  if (condition.left_is_attr) {
+    lschema_involved =
+        lschema_involved ||
+        lschema.index_of_field(condition.left_attr.relation_name,
+                               condition.left_attr.attribute_name) >= 0;
+    rschema_involved =
+        rschema_involved ||
+        rschema.index_of_field(condition.left_attr.relation_name,
+                               condition.left_attr.attribute_name) >= 0;
+  }
+
+  if (condition.right_is_attr) {
+    lschema_involved =
+        lschema_involved ||
+        lschema.index_of_field(condition.right_attr.relation_name,
+                               condition.right_attr.attribute_name) >= 0;
+    rschema_involved =
+        rschema_involved ||
+        rschema.index_of_field(condition.right_attr.relation_name,
+                               condition.right_attr.attribute_name) >= 0;
+  }
+
+  if (!lschema_involved && !rschema_involved) {
+    left_only.push_back(&condition);
+    right_only.push_back(&condition);
+  } else if (lschema_involved && !rschema_involved) {
+    left_only.push_back(&condition);
+  } else if (!lschema_involved && rschema_involved) {
+    right_only.push_back(&condition);
+  } else {
+    both.push_back(&condition);
+  }
+}
+
+std::unique_ptr<ExecutionNode>
+CartesianSelectNode::push_down_predicate(std::list<Condition *> &predicate) {
+  std::list<Condition *> both, left, right;
+
+  for (auto &condition : predicate) {
+    extract_condition(*condition, both, left_node->schema(), left,
+                      right_node->schema(), right);
+  }
+  predicate.clear();
+
+  if (left.size() > 0) {
+    auto new_left = left_node->push_down_predicate(left);
+    if (new_left != nullptr) {
+      left_node = std::move(new_left);
+    }
+    if (left.size() > 0) {
+      left_node = std::make_unique<FilterNode>(std::move(left_node),
+                                               left.begin(), left.end());
+    }
+  }
+
+  if (right.size() > 0) {
+    auto new_right = right_node->push_down_predicate(right);
+    if (new_right != nullptr) {
+      right_node = std::move(new_right);
+    }
+    if (right.size() > 0) {
+      right_node = std::make_unique<FilterNode>(std::move(right_node),
+                                                right.begin(), right.end());
+    }
+  }
+
+  predicate.splice(predicate.end(), both);
+  return nullptr;
 }

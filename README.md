@@ -30,7 +30,8 @@ See details [here](./docs/lectures/miniob-topics.md).
   - [X] Rm hardcode optimizer
   - [X] Complete sql in parser
     - [ ] Expand *
-  - [ ] Impl cond push down: c = [] -> new_node, unused_c
+  - [X] Impl cond push down: c = [] -> new_node, unused_c
+    - [ ] Unit test?
   - [ ] Impl proj push down: want: schema -> new_node
   - [ ] Record based exec node?
   - [ ] (wait official test)

@@ -83,3 +83,15 @@ RC TableScaner::execute(TupleSet &tuple_set) {
   return table_->scan_record(trx_, &condition_filter, -1, (void *)&converter,
                              record_reader);
 }
+
+std::unique_ptr<ExecutionNode>
+TableScaner::push_down_predicate(std::list<Condition *> &predicate) {
+  for (auto it = predicate.begin(); it != predicate.end();) {
+    if (add_filter(**it)) {
+      it = predicate.erase(it);
+    } else {
+      it++;
+    }
+  }
+  return nullptr;
+}
