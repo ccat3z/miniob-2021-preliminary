@@ -34,6 +34,7 @@ void SetExecutionNode::reset() {
 }
 
 RC VolcanoExecutionNode::execute(TupleSet &tuple_set) {
+  tuple_set.set_schema(schema());
   Tuple tuple;
   RC rc;
 
