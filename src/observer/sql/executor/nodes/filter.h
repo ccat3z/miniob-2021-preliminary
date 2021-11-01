@@ -39,8 +39,8 @@ public:
   }
   virtual ~FilterNode();
   const TupleSchema &schema() override;
-  virtual RC next(Tuple &tuple);
-  virtual void reset();
+  RC next(Tuple &tuple) override;
+  void reset() override;
   std::unique_ptr<ExecutionNode>
   push_down_predicate(std::list<Condition *> &predicate) override;
 
