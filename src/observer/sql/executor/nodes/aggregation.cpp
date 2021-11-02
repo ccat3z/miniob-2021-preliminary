@@ -8,8 +8,6 @@
 // NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE. See the
 // Mulan PSL v2 for more details.
 
-#ifndef __OBSERVER_SQL_EXECUTOR_NODES_AGGREGATION_CPP_
-#define __OBSERVER_SQL_EXECUTOR_NODES_AGGREGATION_CPP_
 #include "aggregation.h"
 #include "common/log/log.h"
 
@@ -122,5 +120,3 @@ void CountAggregator::add(std::shared_ptr<TupleValue> v) { count++; }
 std::shared_ptr<TupleValue> CountAggregator::value() {
   return std::make_shared<IntValue>(count);
 }
-
-#endif // __OBSERVER_SQL_EXECUTOR_NODES_AGGREGATION_CPP_
