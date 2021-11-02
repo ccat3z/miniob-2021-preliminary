@@ -21,7 +21,7 @@ public:
   void set_input_type(AttrType t) { in_type = t; }
   virtual AttrType out_type() { return in_type; }
   virtual void add(std::shared_ptr<TupleValue> v) = 0;
-  virtual TupleValue *value() = 0;
+  virtual std::shared_ptr<TupleValue> value() = 0;
   virtual bool support_any_column() { return false; };
 
 protected:
@@ -32,7 +32,7 @@ class CountAggregator : public Aggregator {
 public:
   AttrType out_type() override;
   void add(std::shared_ptr<TupleValue> v) override;
-  TupleValue *value() override;
+  std::shared_ptr<TupleValue> value() override;
   bool support_any_column() { return true; };
 
 private:

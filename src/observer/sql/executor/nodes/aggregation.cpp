@@ -119,6 +119,8 @@ Aggregator &AggregationNode::add_aggregator(const char *func) {
 
 AttrType CountAggregator::out_type() { return INTS; }
 void CountAggregator::add(std::shared_ptr<TupleValue> v) { count++; }
-TupleValue *CountAggregator::value() { return new IntValue(count); }
+std::shared_ptr<TupleValue> CountAggregator::value() {
+  return std::make_shared<IntValue>(count);
+}
 
 #endif // __OBSERVER_SQL_EXECUTOR_NODES_AGGREGATION_CPP_
