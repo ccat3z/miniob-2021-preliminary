@@ -66,6 +66,7 @@ typedef struct {
   char *agg_func;
   Value *value;
   RelAttr *attr;
+  char *name;
 } AggExpr;
 
 typedef struct {

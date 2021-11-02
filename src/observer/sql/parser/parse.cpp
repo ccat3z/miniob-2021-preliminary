@@ -129,6 +129,24 @@ void agg_expr_init_value(AggExpr *expr, const char *func, const Value *value) {
   expr->value = (Value *)malloc(sizeof(Value));
   *expr->value = *value;
   expr->attr = nullptr;
+
+  expr->name = (char *)malloc(sizeof(char) * 50);
+  switch (value->type) {
+  case INTS:
+    snprintf(expr->name, 50, "%s(%d)", func, *((int *)value->data));
+    break;
+  case FLOATS:
+    snprintf(expr->name, 50, "%s(%g)", func, *((float *)value->data));
+    break;
+  case CHARS:
+    snprintf(expr->name, 50, "%s('%s')", func, (char *)value->data);
+    break;
+  default:
+    std::stringstream ss;
+    ss << "Failed to generate agg name because unsupport value type: "
+       << value->type;
+    throw std::logic_error(ss.str());
+  }
 }
 
 void agg_expr_init_attr(AggExpr *expr, const char *func, const RelAttr *attr) {
@@ -137,6 +155,14 @@ void agg_expr_init_attr(AggExpr *expr, const char *func, const RelAttr *attr) {
   expr->value = nullptr;
   expr->attr = (RelAttr *)malloc(sizeof(RelAttr));
   *expr->attr = *attr;
+
+  expr->name = (char *)malloc(sizeof(char) * 50);
+  if (attr->relation_name == nullptr) {
+    snprintf(expr->name, 50, "%s(%s)", func, attr->attribute_name);
+  } else {
+    snprintf(expr->name, 50, "%s(%s.%s)", func, attr->relation_name,
+             attr->attribute_name);
+  }
 }
 
 void agg_expr_destroy(AggExpr *expr) {
@@ -148,6 +174,9 @@ void agg_expr_destroy(AggExpr *expr) {
   }
   if (expr->value != nullptr) {
     value_destroy(expr->value);
+  }
+  if (expr->name != nullptr) {
+    free(expr->name);
   }
 }
 
