@@ -24,6 +24,11 @@ ProjectionNode::ProjectionNode(std::unique_ptr<ExecutionNode> child,
 
     if (expr.attribute != nullptr) {
       add_field(expr.attribute);
+    } else if (expr.agg != nullptr) {
+      RelAttr attr;
+      attr.relation_name = strdup("");
+      attr.attribute_name = expr.agg->name;
+      add_field(&attr);
     }
   }
 }

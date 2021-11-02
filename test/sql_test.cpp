@@ -870,6 +870,61 @@ TEST_F(SQLTest, SelectTablesWithConditionsNotInProjectionShouldWork) {
             "2 | 3\n");
 }
 
+//    ###     ######    ######      ######## ##     ## ##    ##  ######
+//   ## ##   ##    ##  ##    ##     ##       ##     ## ###   ## ##    ##
+//  ##   ##  ##        ##           ##       ##     ## ####  ## ##
+// ##     ## ##   #### ##   ####    ######   ##     ## ## ## ## ##
+// ######### ##    ##  ##    ##     ##       ##     ## ##  #### ##
+// ##     ## ##    ##  ##    ##     ##       ##     ## ##   ### ##    ##
+// ##     ##  ######    ######      ##        #######  ##    ##  ######
+
+TEST_F(SQLTest, AggFuncCountShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select count(1) from t;"), "count(1)\n2\n");
+  ASSERT_EQ(exec_sql("select count(*) from t;"), "count(*)\n2\n");
+  ASSERT_EQ(exec_sql("select count(*), count(*) from t;"),
+            "count(*) | count(*)\n2 | 2\n");
+  ASSERT_EQ(exec_sql("select count(a), count(*) from t;"),
+            "count(a) | count(*)\n2 | 2\n");
+}
+
+TEST_F(SQLTest, AggFuncWithValueShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select count(1) from t;"), "count(1)\n2\n");
+  ASSERT_EQ(exec_sql("select count(1.1) from t;"), "count(1.1)\n2\n");
+  ASSERT_EQ(exec_sql("select count('a') from t;"), "count('a')\n2\n");
+}
+
+TEST_F(SQLTest, AggFuncUnsupportFuncShouldFailure) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select magic(1) from t;"), "FAILURE\n");
+}
+
+TEST_F(SQLTest, AggFuncInvalidCondiionShouldFailure) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select count(1) from t where a > 0;"), "FAILURE\n");
+}
+
+TEST_F(SQLTest, AggFuncInvalidArgumentShouldFailure) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select count(c) from t;"), "FAILURE\n");
+}
+
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
   testing::InitGoogleTest(&argc, argv);

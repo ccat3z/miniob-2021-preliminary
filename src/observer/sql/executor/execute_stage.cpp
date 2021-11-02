@@ -231,12 +231,28 @@ build_select_executor_node(const char *db, Trx *trx, Selects &selects) {
     exec_node = CartesianSelectNode::create(table_scaners);
   }
 
+  // Aggeration
+  bool need_agg = false;
+  for (size_t i = 0; i < selects.attr_num; i++) {
+    auto &expr = selects.attributes[i];
+    if (expr.agg != nullptr) {
+      need_agg = true;
+      break;
+    }
+  }
+  if (need_agg) {
+    exec_node = std::make_unique<AggregationNode>(
+        std::move(exec_node), selects.attributes, selects.attr_num);
+  }
+
+  // Filter
   if (selects.condition_num > 0) {
     exec_node = std::make_unique<FilterNode>(
         std::move(exec_node), selects.conditions + 0,
         selects.conditions + selects.condition_num);
   }
 
+  // Projection
   exec_node = std::make_unique<ProjectionNode>(
       std::move(exec_node), selects.attributes, selects.attr_num);
 
