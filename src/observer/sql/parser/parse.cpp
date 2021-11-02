@@ -123,6 +123,22 @@ void attr_info_destroy(AttrInfo *attr_info) {
   attr_info->name = nullptr;
 }
 
+void agg_expr_init_value(AggExpr *expr, const char *func, const Value *value) {
+  expr->agg_func = strdup(func);
+
+  expr->value = (Value *)malloc(sizeof(Value));
+  *expr->value = *value;
+  expr->attr = nullptr;
+}
+
+void agg_expr_init_attr(AggExpr *expr, const char *func, const RelAttr *attr) {
+  expr->agg_func = strdup(func);
+
+  expr->value = nullptr;
+  expr->attr = (RelAttr *)malloc(sizeof(RelAttr));
+  *expr->attr = *attr;
+}
+
 void agg_expr_destroy(AggExpr *expr) {
   if (expr == nullptr)
     return;

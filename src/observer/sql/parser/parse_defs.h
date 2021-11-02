@@ -200,6 +200,8 @@ void value_init_string(Value *value, const char *v);
 bool value_cast(Value *value, AttrType type);
 void value_destroy(Value *value);
 
+void agg_expr_init_value(AggExpr *expr, const char *func, const Value *value);
+void agg_expr_init_attr(AggExpr *expr, const char *func, const RelAttr *attr);
 void agg_expr_destroy(AggExpr *expr);
 void select_expr_destroy(SelectExpr *expr);
 
