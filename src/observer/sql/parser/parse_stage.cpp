@@ -188,6 +188,21 @@ bool ensure_and_complete_relattr(std::map<std::string, Table *> &tables,
   return true;
 }
 
+RC complete_attr(std::map<std::string, Table *> &tables, RelAttr &attr) {
+  if (strcmp(attr.attribute_name, "*") == 0) {
+    if (attr.relation_name == nullptr) {
+      attr.relation_name = strdup("*");
+    }
+    return RC::SUCCESS;
+  }
+
+  if (!ensure_and_complete_relattr(tables, attr)) {
+    return RC::SQL_SYNTAX;
+  }
+
+  return RC::SUCCESS;
+}
+
 RC complete_sql(SQLStageEvent *event, Selects &selects) {
   const char *db =
       event->session_event()->get_client()->session->get_current_db().c_str();
@@ -213,17 +228,16 @@ RC complete_sql(SQLStageEvent *event, Selects &selects) {
 
   // Complete attributes
   for (int i = selects.attr_num - 1; i >= 0; i--) {
-    RelAttr &attr = selects.attributes[i];
-
-    if (strcmp(attr.attribute_name, "*") == 0) {
-      if (attr.relation_name == nullptr) {
-        attr.relation_name = strdup("*");
-      }
-      continue;
+    auto &expr = selects.attributes[i];
+    RC rc;
+    if (expr.attribute != nullptr) {
+      rc = complete_attr(tables, *expr.attribute);
+    } else if (expr.agg != nullptr && expr.agg->attr != nullptr) {
+      rc = complete_attr(tables, *expr.agg->attr);
     }
 
-    if (!ensure_and_complete_relattr(tables, attr)) {
-      return RC::SQL_SYNTAX;
+    if (rc != RC::SUCCESS) {
+      return rc;
     }
   }
 

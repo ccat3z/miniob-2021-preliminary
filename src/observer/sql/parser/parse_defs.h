@@ -62,14 +62,25 @@ typedef struct _Condition {
   Value right_value; // right-hand side value if right_is_attr = FALSE
 } Condition;
 
+typedef struct {
+  char *agg_func;
+  Value *value;
+  RelAttr *attr;
+} AggExpr;
+
+typedef struct {
+  AggExpr *agg;
+  RelAttr *attribute;
+} SelectExpr;
+
 // struct of select
 typedef struct {
-  size_t attr_num;               // Length of attrs in Select clause
-  RelAttr attributes[MAX_NUM];   // attrs in Select clause
-  size_t relation_num;           // Length of relations in Fro clause
-  char *relations[MAX_NUM];      // relations in From clause
-  size_t condition_num;          // Length of conditions in Where clause
-  Condition conditions[MAX_NUM]; // conditions in Where clause
+  size_t attr_num;                // Length of attrs in Select clause
+  SelectExpr attributes[MAX_NUM]; // attrs in Select clause
+  size_t relation_num;            // Length of relations in Fro clause
+  char *relations[MAX_NUM];       // relations in From clause
+  size_t condition_num;           // Length of conditions in Where clause
+  Condition conditions[MAX_NUM];  // conditions in Where clause
 } Selects;
 
 // struct of insert
@@ -189,6 +200,9 @@ void value_init_string(Value *value, const char *v);
 bool value_cast(Value *value, AttrType type);
 void value_destroy(Value *value);
 
+void agg_expr_destroy(AggExpr *expr);
+void select_expr_destroy(SelectExpr *expr);
+
 void condition_init(Condition *condition, CompOp comp, int left_is_attr,
                     RelAttr *left_attr, Value *left_value, int right_is_attr,
                     RelAttr *right_attr, Value *right_value);
@@ -200,6 +214,7 @@ void attr_info_destroy(AttrInfo *attr_info);
 
 void selects_init(Selects *selects, ...);
 void selects_append_attribute(Selects *selects, RelAttr *rel_attr);
+void selects_append_agg_expr(Selects *selects, AggExpr *agg_expr);
 void selects_append_relation(Selects *selects, const char *relation_name);
 void selects_append_conditions(Selects *selects, Condition conditions[],
                                size_t condition_num);

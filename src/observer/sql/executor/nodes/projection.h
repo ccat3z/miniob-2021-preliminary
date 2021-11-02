@@ -15,7 +15,7 @@
 
 class ProjectionNode : public VolcanoExecutionNode {
 public:
-  ProjectionNode(std::unique_ptr<ExecutionNode> child, RelAttr *attrs,
+  ProjectionNode(std::unique_ptr<ExecutionNode> child, SelectExpr *attrs,
                  int attr_num);
   virtual ~ProjectionNode();
   const TupleSchema &schema() override;
@@ -25,6 +25,7 @@ public:
   push_down_predicate(std::list<Condition *> &predicate) override;
 
 private:
+  void add_field(const RelAttr *attr);
   TupleSchema tuple_schema_;
   std::unique_ptr<ExecutionNode> child;
   std::vector<int> fields_map;

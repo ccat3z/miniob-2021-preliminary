@@ -123,9 +123,35 @@ void attr_info_destroy(AttrInfo *attr_info) {
   attr_info->name = nullptr;
 }
 
+void agg_expr_destroy(AggExpr *expr) {
+  if (expr == nullptr)
+    return;
+  free(expr->agg_func);
+  if (expr->attr != nullptr) {
+    relation_attr_destroy(expr->attr);
+  }
+  if (expr->value != nullptr) {
+    value_destroy(expr->value);
+  }
+}
+
+void select_expr_destroy(SelectExpr *expr) {
+  if (expr == nullptr)
+    return;
+  if (expr->agg != nullptr) {
+    agg_expr_destroy(expr->agg);
+  }
+  if (expr->attribute != nullptr) {
+    relation_attr_destroy(expr->attribute);
+  }
+}
+
 void selects_init(Selects *selects, ...);
 void selects_append_attribute(Selects *selects, RelAttr *rel_attr) {
-  selects->attributes[selects->attr_num++] = *rel_attr;
+  selects->attributes[selects->attr_num++].attribute = rel_attr;
+}
+void selects_append_agg_expr(Selects *selects, AggExpr *agg_expr) {
+  selects->attributes[selects->attr_num++].agg = agg_expr;
 }
 void selects_append_relation(Selects *selects, const char *relation_name) {
   selects->relations[selects->relation_num++] = strdup(relation_name);
@@ -143,7 +169,7 @@ void selects_append_conditions(Selects *selects, Condition conditions[],
 
 void selects_destroy(Selects *selects) {
   for (size_t i = 0; i < selects->attr_num; i++) {
-    relation_attr_destroy(&selects->attributes[i]);
+    select_expr_destroy(&selects->attributes[i]);
   }
   selects->attr_num = 0;
 
