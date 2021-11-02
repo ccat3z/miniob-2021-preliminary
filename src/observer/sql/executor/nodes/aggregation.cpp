@@ -32,6 +32,11 @@ AggregationNode::AggregationNode(std::unique_ptr<ExecutionNode> child,
     } else if (agg->attr != nullptr) {
       int field_idx;
       if (strcmp(agg->attr->attribute_name, "*") == 0) {
+        if (!aggor.support_any_column()) {
+          std::stringstream ss;
+          ss << "* is not support in agg func: " << agg->agg_func;
+          throw std::invalid_argument(ss.str());
+        }
         field_idx = 0;
       } else {
         field_idx = child->schema().index_of_field(agg->attr->relation_name,

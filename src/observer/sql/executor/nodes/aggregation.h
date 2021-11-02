@@ -22,6 +22,7 @@ public:
   virtual AttrType out_type() { return in_type; }
   virtual void add(std::shared_ptr<TupleValue> v) = 0;
   virtual TupleValue *value() = 0;
+  virtual bool support_any_column() { return false; };
 
 protected:
   AttrType in_type;
@@ -32,6 +33,7 @@ public:
   AttrType out_type() override;
   void add(std::shared_ptr<TupleValue> v) override;
   TupleValue *value() override;
+  bool support_any_column() { return true; };
 
 private:
   int count = 0;
