@@ -15,4 +15,11 @@ jobs:
       - name: Build
         run: |
           docker build .
+      - name: Request online test
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          token: ${{ secrets.COMMENT_TOKEN }}
+          repository: hnwyllmm/miniob_test
+          issue-number: 1
+          body: test ${{github.repository_owner}}
     timeout-minutes: 10
