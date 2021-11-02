@@ -20,7 +20,7 @@ public:
   virtual ~Aggregator() = default;
   void set_input_type(AttrType t) { in_type = t; }
   virtual AttrType out_type() { return in_type; }
-  virtual void add(const TupleValue &v) = 0;
+  virtual void add(std::shared_ptr<TupleValue> v) = 0;
   virtual TupleValue *value() = 0;
 
 protected:
@@ -30,7 +30,7 @@ protected:
 class CountAggregator : public Aggregator {
 public:
   AttrType out_type() override;
-  void add(const TupleValue &v) override;
+  void add(std::shared_ptr<TupleValue> v) override;
   TupleValue *value() override;
 
 private:
@@ -54,7 +54,7 @@ private:
   std::unique_ptr<ExecutionNode> child;
 
   std::vector<int> fields_map;
-  std::vector<std::unique_ptr<TupleValue>> values;
+  std::vector<std::shared_ptr<TupleValue>> values;
 };
 
 #endif // __OBSERVER_SQL_EXECUTOR_NODES_AGGREGATION_H_

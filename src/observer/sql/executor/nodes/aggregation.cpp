@@ -73,9 +73,9 @@ RC AggregationNode::next(Tuple &tuple) {
       try {
         int idx = fields_map[i];
         if (idx < 0) {
-          aggregators[i]->add(*values[-idx - 1]);
+          aggregators[i]->add(values[-idx - 1]);
         } else {
-          aggregators[i]->add(buf.get(idx));
+          aggregators[i]->add(buf.get_pointer(idx));
         }
       } catch (const std::exception &e) {
         LOG_ERROR(e.what());
@@ -113,7 +113,7 @@ Aggregator &AggregationNode::add_aggregator(const char *func) {
 }
 
 AttrType CountAggregator::out_type() { return INTS; }
-void CountAggregator::add(const TupleValue &v) { count++; }
+void CountAggregator::add(std::shared_ptr<TupleValue> v) { count++; }
 TupleValue *CountAggregator::value() { return new IntValue(count); }
 
 #endif // __OBSERVER_SQL_EXECUTOR_NODES_AGGREGATION_CPP_
