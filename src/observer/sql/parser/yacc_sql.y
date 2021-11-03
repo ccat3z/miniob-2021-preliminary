@@ -356,7 +356,7 @@ update:			/*  update 语句的语法解析树*/
 		}
     ;
 select:				/*  select 语句的语法解析树*/
-    SELECT select_expr_list FROM ID rel_list join_list where ORDER BY order_by_attr_list SEMICOLON
+    SELECT select_expr_list FROM ID rel_list join_list where order_by SEMICOLON
 		{
 			// CONTEXT->ssql->sstr.selection.relations[CONTEXT->from_length++]=$4;
 			selects_append_relation(&CONTEXT->ssql->sstr.selection, $4);
@@ -597,6 +597,11 @@ comOp:
     | GE { CONTEXT->comp = GREAT_EQUAL; }
     | NE { CONTEXT->comp = NOT_EQUAL; }
     ;
+
+order_by:
+	/* empty */
+	| ORDER BY order_by_attr_list {}
+	;
 
 order_by_attr_list:
     order_attr order_dir {
