@@ -970,6 +970,8 @@ TEST_F(SQLTest, AggFuncInvalidArgumentShouldFailure) {
   ASSERT_EQ(exec_sql("select count(c) from t;"), "FAILURE\n");
   ASSERT_EQ(exec_sql("select max(*) from t;"), "FAILURE\n");
   ASSERT_EQ(exec_sql("select min(*) from t;"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("select min() from t;"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("select min(a,*) from t;"), "FAILURE\n");
 }
 
 int main(int argc, char **argv) {
