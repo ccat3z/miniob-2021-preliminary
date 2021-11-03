@@ -273,7 +273,13 @@ TEST_F(SQLTest, BasicCreateTableShouldWork) {
 TEST_F(SQLTest, BasicInsertShouldWork) {
   ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1, 2);"), "SUCCESS\n");
+}
+
+TEST_F(SQLTest, BasicInsertWithWrongValueShouldFailure) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1, \"A\");"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("insert into t values (1);"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("select * from t;"), "a | b\n");
 }
 
 TEST_F(SQLTest, BasicSelectShouldWork) {
