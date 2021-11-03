@@ -215,6 +215,13 @@ void selects_append_conditions(Selects *selects, Condition conditions[],
   selects->condition_num = condition_num;
 }
 
+void selects_append_order_attr(Selects *selects, RelAttr *rel_attr,
+                               OrderDir dir) {
+  auto &ob = selects->order_by[selects->order_by_num++];
+  ob.attr = rel_attr;
+  ob.dir = dir;
+}
+
 void selects_destroy(Selects *selects) {
   for (size_t i = 0; i < selects->attr_num; i++) {
     select_expr_destroy(&selects->attributes[i]);

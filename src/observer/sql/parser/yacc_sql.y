@@ -96,6 +96,9 @@ ParserContext *get_context(yyscan_t scanner)
 		JOIN
         WHERE
         AND
+		ORDER
+		BY
+		ASC
         SET
         ON
         LOAD
@@ -116,6 +119,8 @@ ParserContext *get_context(yyscan_t scanner)
   int number;
   float floats;
 	char *position;
+  int orderdir;
+  struct _RelAttr *rel_attr;
 }
 
 %token <number> NUMBER
@@ -131,6 +136,8 @@ ParserContext *get_context(yyscan_t scanner)
 %type <condition1> condition;
 %type <value1> value;
 %type <number> number;
+%type <orderdir> order_dir;
+%type <rel_attr> order_attr;
 
 %%
 
@@ -349,7 +356,7 @@ update:			/*  update 语句的语法解析树*/
 		}
     ;
 select:				/*  select 语句的语法解析树*/
-    SELECT select_expr_list FROM ID rel_list join_list where SEMICOLON
+    SELECT select_expr_list FROM ID rel_list join_list where ORDER BY order_by_attr_list SEMICOLON
 		{
 			// CONTEXT->ssql->sstr.selection.relations[CONTEXT->from_length++]=$4;
 			selects_append_relation(&CONTEXT->ssql->sstr.selection, $4);
@@ -590,6 +597,36 @@ comOp:
     | GE { CONTEXT->comp = GREAT_EQUAL; }
     | NE { CONTEXT->comp = NOT_EQUAL; }
     ;
+
+order_by_attr_list:
+    order_attr order_dir {
+			selects_append_order_attr(&CONTEXT->ssql->sstr.selection, $1, $2);
+      }
+    | order_attr order_dir COMMA order_by_attr_list {
+			selects_append_order_attr(&CONTEXT->ssql->sstr.selection, $1, $2);
+      }
+	;
+
+order_attr:
+    ID {
+			RelAttr *attr = malloc(sizeof(RelAttr));
+			relation_attr_init(attr, NULL, $1);
+			$$ = attr;
+      }
+    | ID DOT ID {
+			RelAttr *attr = malloc(sizeof(RelAttr));
+			relation_attr_init(attr, $1, $3);
+			$$ = attr;
+  	   }
+	;
+
+order_dir:
+	/* empty */
+	{ $$ = DIR_ASC; }
+	| ASC { $$ = DIR_ASC; }
+	| DESC { $$ = DIR_DESC; }
+	;
+
 
 load_data:
 		LOAD DATA INFILE SSS INTO TABLE ID SEMICOLON

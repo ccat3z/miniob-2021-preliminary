@@ -25,7 +25,7 @@ See the Mulan PSL v2 for more details. */
 #define MAX_DATA 50
 
 //属性结构体
-typedef struct {
+typedef struct _RelAttr {
   char *relation_name;  // relation name (may be NULL) 表名
   char *attribute_name; // attribute name              属性名
 } RelAttr;
@@ -74,6 +74,13 @@ typedef struct {
   RelAttr *attribute;
 } SelectExpr;
 
+typedef enum { DIR_ASC, DIR_DESC } OrderDir;
+
+typedef struct {
+  OrderDir dir;
+  RelAttr *attr;
+} OrderBy;
+
 // struct of select
 typedef struct {
   size_t attr_num;                // Length of attrs in Select clause
@@ -84,6 +91,8 @@ typedef struct {
   Condition conditions[MAX_NUM];  // conditions in Where clause
   size_t join_num;                // Length of relations in Join clause
   char *joins[MAX_NUM];           // relations in Join clause
+  size_t order_by_num;            // Length of order attribute
+  OrderBy order_by[MAX_NUM];      // order attribute
 } Selects;
 
 // struct of insert
@@ -225,6 +234,8 @@ void selects_append_relation(Selects *selects, const char *relation_name);
 void selects_append_join_relation(Selects *selects, const char *relation_name);
 void selects_append_conditions(Selects *selects, Condition conditions[],
                                size_t condition_num);
+void selects_append_order_attr(Selects *selects, RelAttr *rel_attr,
+                               OrderDir dir);
 void selects_destroy(Selects *selects);
 
 void inserts_init(Inserts *inserts, const char *relation_name, Value values[],

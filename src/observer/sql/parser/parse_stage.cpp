@@ -252,7 +252,7 @@ RC complete_sql(SQLStageEvent *event, Selects &selects) {
     }
   }
 
-  // Complete attributes
+  // Complete attributes in condition
   for (size_t i = 0; i < selects.condition_num; i++) {
     Condition &condition = selects.conditions[i];
 
@@ -263,6 +263,13 @@ RC complete_sql(SQLStageEvent *event, Selects &selects) {
     }
     if (condition.right_is_attr &&
         !ensure_and_complete_relattr(tables, condition.right_attr)) {
+      return RC::SQL_SYNTAX;
+    }
+  }
+
+  // Complete attributes in order by
+  for (size_t i = 0; i < selects.order_by_num; i++) {
+    if (!ensure_and_complete_relattr(tables, *selects.order_by[i].attr)) {
       return RC::SQL_SYNTAX;
     }
   }
