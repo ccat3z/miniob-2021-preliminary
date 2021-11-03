@@ -285,7 +285,7 @@ ID_get:
 
 	
 insert:				/*insert   语句的语法解析树*/
-    INSERT INTO ID VALUES LBRACE value value_list RBRACE SEMICOLON 
+    INSERT INTO ID VALUES value_lists SEMICOLON 
 		{
 			// CONTEXT->values[CONTEXT->value_length++] = *$6;
 
@@ -301,9 +301,17 @@ insert:				/*insert   语句的语法解析树*/
       CONTEXT->value_length=0;
     }
 
+value_lists:
+	LBRACE value_list RBRACE {
+		CONTEXT->ssql->sstr.insertion.tuple_num++;
+	}
+	| LBRACE value_list RBRACE COMMA value_lists {
+		CONTEXT->ssql->sstr.insertion.tuple_num++;
+	}
+	;
 value_list:
-    /* empty */
-    | COMMA value value_list  { 
+	value
+    | value COMMA value_list  { 
   		// CONTEXT->values[CONTEXT->value_length++] = *$2;
 	  }
     ;

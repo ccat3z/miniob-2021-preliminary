@@ -23,6 +23,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/common/condition_filter.h"
 #include "storage/common/record_manager.h"
 #include "storage/common/table.h"
+#include "storage/trx/trx.h"
 
 DefaultHandler &DefaultHandler::get_default() {
   static DefaultHandler handler;
@@ -148,14 +149,30 @@ RC DefaultHandler::drop_index(Trx *trx, const char *dbname,
 }
 
 RC DefaultHandler::insert_record(Trx *trx, const char *dbname,
-                                 const char *relation_name, int value_num,
-                                 Value *values) {
+                                 const char *relation_name, int tuple_num,
+                                 int value_num, Value *values) {
   Table *table = find_table(dbname, relation_name);
   if (nullptr == table) {
     return RC::SCHEMA_TABLE_NOT_EXIST;
   }
 
-  return table->insert_record(trx, value_num, values);
+  if (value_num % tuple_num != 0) {
+    LOG_ERROR("value_num % tuple_num != 0");
+    return RC::INVALID_ARGUMENT;
+  }
+  int value_num_per_tuple = value_num / tuple_num;
+
+  for (int i = 0; i < value_num; i += value_num_per_tuple) {
+    RC rc = table->insert_record(trx, value_num_per_tuple, values + i);
+    if (rc != RC::SUCCESS) {
+      if (trx->rollback() != RC::SUCCESS) {
+        LOG_ERROR("Failed to rollback, but ignored");
+      }
+      return rc;
+    }
+  }
+
+  return RC::SUCCESS;
 }
 RC DefaultHandler::delete_record(Trx *trx, const char *dbname,
                                  const char *relation_name, int condition_num,

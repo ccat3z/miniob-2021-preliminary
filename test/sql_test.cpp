@@ -1037,6 +1037,37 @@ TEST_F(SQLTest, JoinTablesShouldWork) {
             "2 | 3 | 300 | 500 | 777 | 0\n");
 }
 
+// #### ##    ##  ######  ######## ########  ########
+//  ##  ###   ## ##    ## ##       ##     ##    ##
+//  ##  ####  ## ##       ##       ##     ##    ##
+//  ##  ## ## ##  ######  ######   ########     ##
+//  ##  ##  ####       ## ##       ##   ##      ##
+//  ##  ##   ### ##    ## ##       ##    ##     ##
+// #### ##    ##  ######  ######## ##     ##    ##
+
+TEST_F(SQLTest, InsertMultiTupleShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1), (2, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t;"), "a | b\n"
+                                          "1 | 1\n"
+                                          "2 | 3\n");
+}
+
+TEST_F(SQLTest, InsertInvalidValuesShouldInsertNothing) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1), (2, 3.3);"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("select * from t;"), "a | b\n");
+}
+
+TEST_F(SQLTest, InsertInvalidTupleShouldInsertNothing) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1), (1), (2, 3);"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("select * from t;"), "a | b\n");
+  ASSERT_EQ(exec_sql("insert into t values (1), (1), (2, 3), (4);"),
+            "FAILURE\n");
+  ASSERT_EQ(exec_sql("select * from t;"), "a | b\n");
+}
+
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
   testing::InitGoogleTest(&argc, argv);
