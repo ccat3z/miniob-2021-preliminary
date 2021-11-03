@@ -18,7 +18,7 @@
 class Aggregator {
 public:
   virtual ~Aggregator() = default;
-  void set_input_type(AttrType t) { in_type = t; }
+  virtual void set_input_type(AttrType t) { in_type = t; }
   virtual AttrType out_type() { return in_type; }
   virtual void add(std::shared_ptr<TupleValue> v) = 0;
   virtual std::shared_ptr<TupleValue> value() = 0;
@@ -37,6 +37,37 @@ public:
 
 private:
   int count = 0;
+};
+
+class MaxAggregator : public Aggregator {
+public:
+  void add(std::shared_ptr<TupleValue> v) override;
+  std::shared_ptr<TupleValue> value() override;
+
+private:
+  std::shared_ptr<TupleValue> max;
+};
+
+class MinAggregator : public Aggregator {
+public:
+  void add(std::shared_ptr<TupleValue> v) override;
+  std::shared_ptr<TupleValue> value() override;
+
+private:
+  std::shared_ptr<TupleValue> min;
+};
+
+class AvgAggregator : public Aggregator {
+public:
+  void set_input_type(AttrType t) override;
+  AttrType out_type() override;
+
+  void add(std::shared_ptr<TupleValue> v) override;
+  std::shared_ptr<TupleValue> value() override;
+
+private:
+  uint32_t count = 0;
+  double avg;
 };
 
 class AggregationNode : public VolcanoExecutionNode {

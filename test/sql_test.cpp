@@ -891,6 +891,41 @@ TEST_F(SQLTest, AggFuncCountShouldWork) {
             "count(a) | count(*)\n2 | 2\n");
 }
 
+TEST_F(SQLTest, AggFuncMaxShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select max(1) from t;"), "max(1)\n1\n");
+  ASSERT_EQ(exec_sql("select max(a) from t;"), "max(a)\n2\n");
+  ASSERT_EQ(exec_sql("select max(t.b) from t;"), "max(t.b)\n3\n");
+}
+
+TEST_F(SQLTest, AggFuncMinShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select min(1) from t;"), "min(1)\n1\n");
+  ASSERT_EQ(exec_sql("select min(a) from t;"), "min(a)\n1\n");
+  ASSERT_EQ(exec_sql("select min(t.b) from t;"), "min(t.b)\n1\n");
+}
+
+TEST_F(SQLTest, AggFuncAvgShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b float, d date);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1.1, '2021-10-31');"),
+            "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3.0, '2021-11-1');"),
+            "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (3, 3.0, '2021-11-2');"),
+            "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select avg(1) from t;"), "avg(1)\n1\n");
+  ASSERT_EQ(exec_sql("select avg(a) from t;"), "avg(a)\n2\n");
+  ASSERT_EQ(exec_sql("select avg(t.b) from t;"), "avg(t.b)\n2.37\n");
+  ASSERT_EQ(exec_sql("select avg(d) from t;"), "avg(d)\n2021-11-01\n");
+}
+
 TEST_F(SQLTest, AggFuncWithValueShouldWork) {
   ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
@@ -923,6 +958,8 @@ TEST_F(SQLTest, AggFuncInvalidArgumentShouldFailure) {
   ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
 
   ASSERT_EQ(exec_sql("select count(c) from t;"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("select max(*) from t;"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("select min(*) from t;"), "FAILURE\n");
 }
 
 int main(int argc, char **argv) {

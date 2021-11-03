@@ -107,16 +107,103 @@ Aggregator &AggregationNode::add_aggregator(const char *func) {
 
   if (strcmp(name, "count") == 0) {
     aggregators.emplace_back(new CountAggregator());
-    return *aggregators.back();
+  } else if (strcmp(name, "max") == 0) {
+    aggregators.emplace_back(new MaxAggregator());
+  } else if (strcmp(name, "min") == 0) {
+    aggregators.emplace_back(new MinAggregator());
+  } else if (strcmp(name, "avg") == 0) {
+    aggregators.emplace_back(new AvgAggregator());
   } else {
     std::stringstream ss;
     ss << "Unsupport aggregation func: " << name;
     throw std::invalid_argument(ss.str());
   }
+
+  return *aggregators.back();
 }
 
 AttrType CountAggregator::out_type() { return INTS; }
 void CountAggregator::add(std::shared_ptr<TupleValue> v) { count++; }
 std::shared_ptr<TupleValue> CountAggregator::value() {
   return std::make_shared<IntValue>(count);
+}
+
+void MaxAggregator::add(std::shared_ptr<TupleValue> v) {
+  if (max == nullptr) {
+    max = v;
+    return;
+  }
+
+  if (max->compare(*v) < 0) {
+    max = v;
+  }
+}
+std::shared_ptr<TupleValue> MaxAggregator::value() { return max; };
+
+void MinAggregator::add(std::shared_ptr<TupleValue> v) {
+  if (min == nullptr) {
+    min = v;
+    return;
+  }
+
+  if (min->compare(*v) > 0) {
+    min = v;
+  }
+}
+std::shared_ptr<TupleValue> MinAggregator::value() { return min; };
+
+void AvgAggregator::set_input_type(AttrType t) {
+  if (!(t == INTS || t == FLOATS || t == DATE)) {
+    std::stringstream ss;
+    ss << "Unsupport type for avg: " << t;
+    throw std::invalid_argument(ss.str());
+  }
+
+  this->in_type = t;
+}
+AttrType AvgAggregator::out_type() {
+  if (in_type == INTS || in_type == FLOATS) {
+    return FLOATS;
+  } else if (in_type == DATE) {
+    return DATE;
+  }
+
+  throw std::logic_error("Unreachable code");
+}
+void AvgAggregator::add(std::shared_ptr<TupleValue> v) {
+  float value;
+  switch (this->in_type) {
+  case INTS: {
+    auto tv = (IntValue *)v.get();
+    value = tv->value();
+
+  } break;
+  case FLOATS: {
+    auto tv = (FloatValue *)v.get();
+    value = tv->value();
+  } break;
+  case DATE: {
+    auto tv = (DateValue *)v.get();
+    value = tv->julian();
+  } break;
+  default:
+    throw std::logic_error("Unreachable code");
+  }
+
+  this->avg = (this->avg * this->count + value) / (this->count + 1);
+  this->count++;
+}
+std::shared_ptr<TupleValue> AvgAggregator::value() {
+  switch (out_type()) {
+  case FLOATS: {
+    auto tv = std::make_shared<FloatValue>(avg);
+    return tv;
+  } break;
+  case DATE: {
+    auto tv = std::make_shared<DateValue>(avg);
+    return tv;
+  } break;
+  default:
+    throw std::logic_error("Unreachable code");
+  }
 }
