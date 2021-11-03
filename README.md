@@ -63,13 +63,13 @@ See details [here](./docs/lectures/miniob-topics.md).
 ### 选做题
 
 - [X] 多表join操作 (join-tables)
-- [ ] 一次插入多条数据 (insert)
-- [ ] 唯一索引 (insert)
+- [X] 一次插入多条数据 (insert)
+- [ ] 唯一索引 (unique)
 - [ ] 支持NULL类型 (null)
-- [ ] 简单子查询        
+- [ ] 简单子查询 (simple-sub-query)
 - [ ] 多列索引 (multi-index)
 - [ ] 超长字段 (insert)
-- [ ] 查询条件支持表达式
-- [ ] 复杂子查询        
+- [ ] 查询条件支持表达式 (simple-sub-query)
+- [ ] 复杂子查询 (complex-sub-query)
 - [ ] 排序 (order-by)
 - [ ] 分组 (group-by)
