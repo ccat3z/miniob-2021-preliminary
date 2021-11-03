@@ -12,6 +12,8 @@ please refer to docs/how_to_build.md
 
 [日测结果](https://open.oceanbase.com/answer)
 
+[测试请求](https://github.com/hnwyllmm/miniob_test/issues/1#issue-comment-box)
+
 [榜单](https://open.oceanbase.com/competition/index)
 
 ## TODO
@@ -68,8 +70,8 @@ See details [here](./docs/lectures/miniob-topics.md).
 - [ ] 支持NULL类型 (null)
 - [ ] 简单子查询 (simple-sub-query)
 - [ ] 多列索引 (multi-index)
-- [ ] 超长字段 (insert)
-- [ ] 查询条件支持表达式 (simple-sub-query)
+- [ ] 超长字段 (text)
+- [ ] 查询条件支持表达式 (expression)
 - [ ] 复杂子查询 (complex-sub-query)
-- [ ] 排序 (order-by)
+- [X] 排序 (order-by)
 - [ ] 分组 (group-by)
