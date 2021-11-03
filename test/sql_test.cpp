@@ -336,8 +336,9 @@ TEST_F(SQLTest, BasicExtractFloatFormat) {
   ASSERT_EQ(exec_sql("insert into t values (1.2);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1.23);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1.257);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (10.0);"), "SUCCESS\n");
 
-  ASSERT_EQ(exec_sql("select * from t;"), "a\n1\n1.2\n1.23\n1.26\n");
+  ASSERT_EQ(exec_sql("select * from t;"), "a\n1\n1.2\n1.23\n1.26\n10\n");
 }
 
 //  ######  ######## ##       ########  ######  ########

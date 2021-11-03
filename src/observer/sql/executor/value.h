@@ -59,7 +59,9 @@ public:
     char buf[100];
     char *end = buf + snprintf(buf, 100, "%.2f", value_) - 1;
 
-    while (*end == '0' || *end == '.')
+    while (*end == '0')
+      end--;
+    if (*end == '.')
       end--;
     *(end + 1) = 0;
     os << buf;
