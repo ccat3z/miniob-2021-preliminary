@@ -45,6 +45,8 @@ public:
     return value_ - int_other.value_;
   }
 
+  int value() { return value_; }
+
 private:
   int value_;
 };
@@ -66,6 +68,8 @@ public:
     }
     return 0;
   }
+
+  float value() { return value_; }
 
 private:
   float value_;
@@ -92,6 +96,8 @@ public:
   explicit DateValue(int julian) : date(julian){};
   void to_string(std::ostream &os) const override;
   int compare(const TupleValue &other) const override;
+
+  int julian() { return date.julian(); }
 
 private:
   const common::Date date;
