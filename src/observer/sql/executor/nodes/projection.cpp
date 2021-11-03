@@ -17,8 +17,6 @@ ProjectionNode::ProjectionNode(std::unique_ptr<ExecutionNode> child,
     : child(std::move(child)) {
   this->fields_map.reserve(attr_num);
 
-  auto &child_fields = this->child->schema().fields();
-
   for (int i = 0; i < attr_num; i++) {
     auto &expr = attrs[i];
 
