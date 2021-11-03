@@ -1068,6 +1068,62 @@ TEST_F(SQLTest, InsertInvalidTupleShouldInsertNothing) {
   ASSERT_EQ(exec_sql("select * from t;"), "a | b\n");
 }
 
+//  #######  ########  ########  ######## ########
+// ##     ## ##     ## ##     ## ##       ##     ##
+// ##     ## ##     ## ##     ## ##       ##     ##
+// ##     ## ########  ##     ## ######   ########
+// ##     ## ##   ##   ##     ## ##       ##   ##
+// ##     ## ##    ##  ##     ## ##       ##    ##
+//  #######  ##     ## ########  ######## ##     ##
+
+TEST_F(SQLTest, OrderBySingleAttrShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (100, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t order by a asc;"), "a | b\n"
+                                                         "1 | 1\n"
+                                                         "2 | 3\n"
+                                                         "100 | 3\n");
+  ASSERT_EQ(exec_sql("select * from t order by a;"), "a | b\n"
+                                                     "1 | 1\n"
+                                                     "2 | 3\n"
+                                                     "100 | 3\n");
+  ASSERT_EQ(exec_sql("select * from t order by a desc;"), "a | b\n"
+                                                          "100 | 3\n"
+                                                          "2 | 3\n"
+                                                          "1 | 1\n");
+}
+
+TEST_F(SQLTest, OrderByMultiAttrShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int, c int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 10, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 10, 2);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 1, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t order by a desc, b asc;"),
+            "a | b | c\n"
+            "2 | 1 | 3\n"
+            "2 | 10 | 1\n"
+            "1 | 10 | 2\n");
+  ASSERT_EQ(exec_sql("select * from t order by a, b;"), "a | b | c\n"
+                                                        "1 | 10 | 2\n"
+                                                        "2 | 1 | 3\n"
+                                                        "2 | 10 | 1\n");
+  ASSERT_EQ(exec_sql("select * from t order by b, a;"), "a | b | c\n"
+                                                        "2 | 1 | 3\n"
+                                                        "1 | 10 | 2\n"
+                                                        "2 | 10 | 1\n");
+}
+
+TEST_F(SQLTest, OrderByInvalidAttrShouldFailure) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (100, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t order by c asc;"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("select * from t order by a, c;"), "FAILURE\n");
+}
+
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
   testing::InitGoogleTest(&argc, argv);
