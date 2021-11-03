@@ -5,7 +5,7 @@ DefaultTupleFilter::DefaultTupleFilter(const TupleSchema &schema,
                                        Condition &condition) {
   op = condition.comp;
 
-  AttrType ltype, rtype;
+  AttrType ltype = UNDEFINED, rtype = UNDEFINED;
 
   if (condition.left_is_attr) {
     left_index = schema.index_of_field(condition.left_attr.relation_name,

@@ -299,6 +299,7 @@ TEST_F(SQLTest, BasicSelectWithConditionShouldWork) {
   ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1, 2);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t where 1 = 1;"), "a | b\n1 | 2\n2 | 3\n");
   ASSERT_EQ(exec_sql("select * from t where a = 1;"), "a | b\n1 | 2\n");
   ASSERT_EQ(exec_sql("select * from t where t.a = 1;"), "a | b\n1 | 2\n");
   ASSERT_EQ(exec_sql("select a from t where a = 1;"), "a\n1\n");
