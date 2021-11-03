@@ -23,7 +23,7 @@ See details [here](./docs/lectures/miniob-topics.md).
 - [ ] Colorful log
 - [ ] Memory leak of Value
 - [ ] Parallel sql test
-- [ ] Refactor exectuor
+- [X] Refactor exectuor
   - [X] Impl tuple filter
     - [X] Support attr op value
     - [ ] Save *cond
@@ -33,19 +33,19 @@ See details [here](./docs/lectures/miniob-topics.md).
   - [X] Impl cond push down: c = [] -> new_node, unused_c
     - [ ] Unit test?
   - [ ] Impl proj push down: want: schema -> new_node
-  - [ ] Record based exec node?
-  - [ ] (wait official test)
-  - [ ] Agg support
+  - [X] Record based exec node / Volcane Model
+  - [X] Agg support
 
 ### 必做题
 
+- [X] 基础功能 (basic)
 - [X] 优化buffer pool
-- [X] 查询元数据校验
-- [X] drop table
-- [X] 实现update功能
+- [X] 查询元数据校验 (select-meta)
+- [X] drop table (drop-table)
+- [X] 实现update功能 (update)
   - [ ] Support trx
   - [X] Check meta
-- [X] 增加date字段
+- [X] 增加date字段 (date)
   - [X] Parser
     - [X] Lex & Yacc
   - [X] Executor
@@ -57,19 +57,19 @@ See details [here](./docs/lectures/miniob-topics.md).
     - [X] Index (see `bplus_tree.cpp`)
       - [X] Test case
     - [X] Condition (see `condition.cpp`)
-- [X] 多表查询
-- [ ] 聚合运算
+- [X] 多表查询 (select-tables)
+- [X] 聚合运算 (aggregation-func)
 
 ### 选做题
 
-- [ ] 多表join操作      
-- [ ] 一次插入多条数据  
-- [ ] 唯一索引          
-- [ ] 支持NULL类型      
+- [X] 多表join操作 (join-tables)
+- [ ] 一次插入多条数据 (insert)
+- [ ] 唯一索引 (insert)
+- [ ] 支持NULL类型 (null)
 - [ ] 简单子查询        
-- [ ] 多列索引          
-- [ ] 超长字段          
+- [ ] 多列索引 (multi-index)
+- [ ] 超长字段 (insert)
 - [ ] 查询条件支持表达式
 - [ ] 复杂子查询        
-- [ ] 排序              
-- [ ] 分组              
+- [ ] 排序 (order-by)
+- [ ] 分组 (group-by)
