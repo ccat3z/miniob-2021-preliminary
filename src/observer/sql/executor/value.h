@@ -55,7 +55,15 @@ class FloatValue : public TupleValue {
 public:
   explicit FloatValue(float value) : value_(value) {}
 
-  void to_string(std::ostream &os) const override { os << value_; }
+  void to_string(std::ostream &os) const override {
+    char buf[100];
+    char *end = buf + snprintf(buf, 100, "%.2f", value_) - 1;
+
+    while (*end == '0' || *end == '.')
+      end--;
+    *(end + 1) = 0;
+    os << buf;
+  }
 
   int compare(const TupleValue &other) const override {
     const FloatValue &float_other = (const FloatValue &)other;
