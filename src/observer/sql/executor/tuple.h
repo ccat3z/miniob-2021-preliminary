@@ -15,6 +15,7 @@ See the Mulan PSL v2 for more details. */
 #ifndef __OBSERVER_SQL_EXECUTOR_TUPLE_H_
 #define __OBSERVER_SQL_EXECUTOR_TUPLE_H_
 
+#include <algorithm>
 #include <memory>
 #include <vector>
 
@@ -126,6 +127,9 @@ public:
   int size() const;
   const Tuple &get(int index) const;
   const std::vector<Tuple> &tuples() const;
+  template <class Compare> void sort(Compare comp) {
+    std::stable_sort(tuples_.begin(), tuples_.end(), comp);
+  }
 
   void print(std::ostream &os, bool show_table = false) const;
 

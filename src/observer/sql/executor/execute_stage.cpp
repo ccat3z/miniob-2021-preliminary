@@ -252,6 +252,12 @@ build_select_executor_node(const char *db, Trx *trx, Selects &selects) {
         selects.conditions + selects.condition_num);
   }
 
+  // Order
+  if (selects.order_by_num > 0) {
+    exec_node = std::make_unique<OrderNode>(
+        std::move(exec_node), selects.order_by, selects.order_by_num);
+  }
+
   // Projection
   exec_node = std::make_unique<ProjectionNode>(
       std::move(exec_node), selects.attributes, selects.attr_num);

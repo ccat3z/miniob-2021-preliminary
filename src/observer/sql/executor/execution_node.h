@@ -17,6 +17,7 @@ See the Mulan PSL v2 for more details. */
 #include "nodes/base.h"
 #include "nodes/cartesian.h"
 #include "nodes/filter.h"
+#include "nodes/order.h"
 #include "nodes/projection.h"
 #include "nodes/table_scaner.h"
 #endif //__OBSERVER_SQL_EXECUTOR_EXECUTION_NODE_H_
