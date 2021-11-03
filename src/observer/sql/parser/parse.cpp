@@ -201,6 +201,9 @@ void selects_append_agg_expr(Selects *selects, AggExpr *agg_expr) {
 void selects_append_relation(Selects *selects, const char *relation_name) {
   selects->relations[selects->relation_num++] = strdup(relation_name);
 }
+void selects_append_join_relation(Selects *selects, const char *relation_name) {
+  selects->joins[selects->join_num++] = strdup(relation_name);
+}
 
 void selects_append_conditions(Selects *selects, Condition conditions[],
                                size_t condition_num) {
@@ -223,6 +226,12 @@ void selects_destroy(Selects *selects) {
     selects->relations[i] = NULL;
   }
   selects->relation_num = 0;
+
+  for (size_t i = 0; i < selects->join_num; i++) {
+    free(selects->joins[i]);
+    selects->joins[i] = NULL;
+  }
+  selects->join_num = 0;
 
   for (size_t i = 0; i < selects->condition_num; i++) {
     condition_destroy(&selects->conditions[i]);

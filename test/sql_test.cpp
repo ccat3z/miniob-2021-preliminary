@@ -976,6 +976,61 @@ TEST_F(SQLTest, AggFuncInvalidArgumentShouldFailure) {
   ASSERT_EQ(exec_sql("select min(a,*) from t;"), "FAILURE\n");
 }
 
+//       ##  #######  #### ##    ##
+//       ## ##     ##  ##  ###   ##
+//       ## ##     ##  ##  ####  ##
+//       ## ##     ##  ##  ## ## ##
+// ##    ## ##     ##  ##  ##  ####
+// ##    ## ##     ##  ##  ##   ###
+//  ######   #######  #### ##    ##
+// ########    ###    ########  ##       ########  ######
+//    ##      ## ##   ##     ## ##       ##       ##    ##
+//    ##     ##   ##  ##     ## ##       ##       ##
+//    ##    ##     ## ########  ##       ######    ######
+//    ##    ######### ##     ## ##       ##             ##
+//    ##    ##     ## ##     ## ##       ##       ##    ##
+//    ##    ##     ## ########  ######## ########  ######
+
+TEST_F(SQLTest, JoinTablesShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create table t2(b int, d int);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t2 values (100, 200);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t2 values (300, 500);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("create table t3(o int, a int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t3 values (999, 888);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t3 values (777, 666);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t3 values (777, 0);"), "SUCCESS\n");
+
+  ASSERT_EQ(
+      exec_sql("select * from t, t2 inner join t3 on o <= 777 and t.a >= 2;"),
+      "t.a | t.b | t2.b | t2.d | t3.o | t3.a\n"
+      "2 | 3 | 100 | 200 | 777 | 666\n"
+      "2 | 3 | 100 | 200 | 777 | 0\n"
+      "2 | 3 | 300 | 500 | 777 | 666\n"
+      "2 | 3 | 300 | 500 | 777 | 0\n");
+
+  ASSERT_EQ(exec_sql("select * from t "
+                     "inner join t2 on 1 = 1 "
+                     "inner join t3 on 1 = 1 "
+                     "where o <= 777 and t.a >= 2 and t.a < t3.a;"),
+            "t.a | t.b | t2.b | t2.d | t3.o | t3.a\n"
+            "2 | 3 | 100 | 200 | 777 | 666\n"
+            "2 | 3 | 300 | 500 | 777 | 666\n");
+
+  ASSERT_EQ(exec_sql("select * from t "
+                     "inner join t2 on t.a < t2.b "
+                     "inner join t3 on t.a > t3.a;"),
+            "t.a | t.b | t2.b | t2.d | t3.o | t3.a\n"
+            "1 | 1 | 100 | 200 | 777 | 0\n"
+            "1 | 1 | 300 | 500 | 777 | 0\n"
+            "2 | 3 | 100 | 200 | 777 | 0\n"
+            "2 | 3 | 300 | 500 | 777 | 0\n");
+}
+
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
   testing::InitGoogleTest(&argc, argv);

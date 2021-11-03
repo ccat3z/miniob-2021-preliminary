@@ -205,6 +205,19 @@ RC complete_sql(SQLStageEvent *event, Selects &selects) {
   const char *db =
       event->session_event()->get_client()->session->get_current_db().c_str();
 
+  // Merge join list into relation list
+  if (selects.join_num > 0) {
+    for (int i = selects.relation_num - 1; i >= 0; i--) {
+      selects.relations[i + selects.join_num] = selects.relations[i];
+    }
+    for (size_t i = 0; i < selects.join_num; i++) {
+      selects.relations[i] = selects.joins[i];
+      selects.joins[i] = nullptr;
+    }
+    selects.relation_num += selects.join_num;
+    selects.join_num = 0;
+  }
+
   // Retrive tables
   std::map<std::string, Table *> tables;
   for (size_t i = 0; i < selects.relation_num; i++) {

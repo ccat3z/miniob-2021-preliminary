@@ -92,6 +92,8 @@ ParserContext *get_context(yyscan_t scanner)
         INTO
         VALUES
         FROM
+		INNER
+		JOIN
         WHERE
         AND
         SET
@@ -339,7 +341,7 @@ update:			/*  update 语句的语法解析树*/
 		}
     ;
 select:				/*  select 语句的语法解析树*/
-    SELECT select_expr_list FROM ID rel_list where SEMICOLON
+    SELECT select_expr_list FROM ID rel_list join_list where SEMICOLON
 		{
 			// CONTEXT->ssql->sstr.selection.relations[CONTEXT->from_length++]=$4;
 			selects_append_relation(&CONTEXT->ssql->sstr.selection, $4);
@@ -407,6 +409,12 @@ rel_list:
 				selects_append_relation(&CONTEXT->ssql->sstr.selection, $2);
 		  }
     ;
+join_list:
+	/* empty */
+	| INNER JOIN ID ON condition condition_list join_list {
+		selects_append_join_relation(&CONTEXT->ssql->sstr.selection, $3);
+	}
+	;
 where:
     /* empty */ 
     | WHERE condition condition_list {	
