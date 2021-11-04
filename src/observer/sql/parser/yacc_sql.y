@@ -116,7 +116,7 @@ ParserContext *get_context(yyscan_t scanner)
   OrderDir orderdir;
   RelAttr *rel_attr;
   List *list;
-  struct{List *rels; List *conds} join_list;
+  struct{List *rels; List *conds;} join_list;
   CompOp comp_op;
 }
 

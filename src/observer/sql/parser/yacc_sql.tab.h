@@ -133,7 +133,7 @@ union YYSTYPE
   OrderDir orderdir;
   RelAttr *rel_attr;
   List *list;
-  struct{List *rels; List *conds} join_list;
+  struct{List *rels; List *conds;} join_list;
   CompOp comp_op;
 
 #line 140 "yacc_sql.tab.h"
