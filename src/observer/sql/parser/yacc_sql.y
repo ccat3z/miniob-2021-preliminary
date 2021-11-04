@@ -119,6 +119,7 @@ ParserContext *get_context(yyscan_t scanner)
   struct{List *rels; List *conds;} join_list;
   CompOp comp_op;
   SelectExpr select_expr;
+  Selects *select_statement;
 }
 
 %token <number> NUMBER
@@ -146,6 +147,7 @@ ParserContext *get_context(yyscan_t scanner)
 %type <list> select_expr_list;
 %type <list> order_by_attr_list;
 %type <list> order_by;
+%type <select_statement> select_statement;
 
 %%
 
@@ -363,24 +365,35 @@ update:			/*  update 语句的语法解析树*/
 			list_free($7);
 		}
     ;
-select:				/*  select 语句的语法解析树*/
+select:
+	select_statement {
+		CONTEXT->ssql->flag=SCF_SELECT;//"select";
+		CONTEXT->ssql->sstr.selection = *$1;
+		free($1);
+	}
+	;
+
+select_statement:				/*  select 语句的语法解析树*/
     SELECT select_expr_list FROM ID rel_list join_list where order_by SEMICOLON
 		{
-			selects_append_exprs(&CONTEXT->ssql->sstr.selection, (SelectExpr *) $2->values, $2->len);
+			Selects *selects = (Selects *) malloc(sizeof(Selects));
+			memset(selects, 0, sizeof(*selects));
+
+			selects_append_exprs(selects, (SelectExpr *) $2->values, $2->len);
 			list_free($2);
 
-			selects_append_relations(&CONTEXT->ssql->sstr.selection, (const char **) $6.rels->values, $6.rels->len);
-			selects_append_relations(&CONTEXT->ssql->sstr.selection, (const char **) $5->values, $5->len);
-			selects_append_relation(&CONTEXT->ssql->sstr.selection, $4);
+			selects_append_relations(selects, (const char **) $6.rels->values, $6.rels->len);
+			selects_append_relations(selects, (const char **) $5->values, $5->len);
+			selects_append_relation(selects, $4);
 
-			selects_append_conditions(&CONTEXT->ssql->sstr.selection, (Condition *) $6.conds->values, $6.conds->len);
+			selects_append_conditions(selects, (Condition *) $6.conds->values, $6.conds->len);
 			list_free($6.rels);
 			list_free($6.conds);
-			selects_append_conditions(&CONTEXT->ssql->sstr.selection, (Condition *) $7->values, $7->len);
+			selects_append_conditions(selects, (Condition *) $7->values, $7->len);
 			list_free($7);
 
 			if ($8 != NULL) {
-				selects_append_order_attrs(&CONTEXT->ssql->sstr.selection, (OrderBy *) $8->values, $8->len);
+				selects_append_order_attrs(selects, (OrderBy *) $8->values, $8->len);
 				list_free($8);
 			}
 
@@ -388,6 +401,8 @@ select:				/*  select 语句的语法解析树*/
 
 			//临时变量清零
 			CONTEXT->value_length = 0;
+
+			$$ = selects;
 	}
 	;
 
