@@ -121,6 +121,7 @@ ParserContext *get_context(yyscan_t scanner)
   OrderDir orderdir;
   RelAttr *rel_attr;
   List *list;
+  struct{List *rels; List *conds} join_list;
 }
 
 %token <number> NUMBER
@@ -140,8 +141,9 @@ ParserContext *get_context(yyscan_t scanner)
 %type <rel_attr> order_attr;
 %type <rel_attr> select_attr;
 %type <list> where;
-%type <list> join_list;
+%type <join_list> join_list;
 %type <list> condition_list;
+%type <list> rel_list;
 
 %%
 
@@ -363,10 +365,14 @@ select:				/*  select 语句的语法解析树*/
     SELECT select_expr_list FROM ID rel_list join_list where order_by SEMICOLON
 		{
 			// CONTEXT->ssql->sstr.selection.relations[CONTEXT->from_length++]=$4;
+
+			selects_append_relations(&CONTEXT->ssql->sstr.selection, (const char **) $6.rels->values, $6.rels->len);
+			selects_append_relations(&CONTEXT->ssql->sstr.selection, (const char **) $5->values, $5->len);
 			selects_append_relation(&CONTEXT->ssql->sstr.selection, $4);
 
-			selects_append_conditions(&CONTEXT->ssql->sstr.selection, (Condition *) $6->values, $6->len);
-			list_free($6);
+			selects_append_conditions(&CONTEXT->ssql->sstr.selection, (Condition *) $6.conds->values, $6.conds->len);
+			list_free($6.rels);
+			list_free($6.conds);
 			selects_append_conditions(&CONTEXT->ssql->sstr.selection, (Condition *) $7->values, $7->len);
 			list_free($7);
 
@@ -425,22 +431,26 @@ select_attr:
   	;
 
 rel_list:
-    /* empty */
+    /* empty */ { $$ = list_create(sizeof(char *), MAX_NUM); }
     | COMMA ID rel_list {	
-				selects_append_relation(&CONTEXT->ssql->sstr.selection, $2);
-		  }
+		$$ = $3;
+		list_append($3, &$2);
+	}
     ;
 join_list:
-	/* empty */ { $$ = list_create(sizeof(Condition), 0); }
+	/* empty */ {
+		$$.rels = list_create(sizeof(char *), MAX_NUM);
+		$$.conds = list_create(sizeof(Condition), MAX_NUM);
+	}
 	| INNER JOIN ID ON condition_list join_list {
-		selects_append_join_relation(&CONTEXT->ssql->sstr.selection, $3);
-		$$ = $5;
-		list_append_list($$, $6);
-		free($6);
+		$$ = $6;
+		list_append($$.rels, &$3);
+		list_append_list($$.conds, $5);
+		list_free($5);
 	}
 	;
 where:
-    /* empty */ { $$ = list_create(sizeof(Condition), 0); } 
+    /* empty */ { $$ = list_create(sizeof(Condition), MAX_NUM); } 
     | WHERE condition_list {	
 		$$ = $2;
 	}

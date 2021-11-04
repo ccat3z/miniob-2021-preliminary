@@ -133,8 +133,9 @@ union YYSTYPE
   OrderDir orderdir;
   RelAttr *rel_attr;
   List *list;
+  struct{List *rels; List *conds} join_list;
 
-#line 138 "yacc_sql.tab.h"
+#line 139 "yacc_sql.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

@@ -201,6 +201,12 @@ void selects_append_agg_expr(Selects *selects, AggExpr *agg_expr) {
 void selects_append_relation(Selects *selects, const char *relation_name) {
   selects->relations[selects->relation_num++] = strdup(relation_name);
 }
+void selects_append_relations(Selects *selects, const char **relation_name,
+                              size_t len) {
+  for (size_t i = 0; i < len; i++) {
+    selects_append_relation(selects, relation_name[i]);
+  }
+}
 void selects_append_join_relation(Selects *selects, const char *relation_name) {
   selects->joins[selects->join_num++] = strdup(relation_name);
 }

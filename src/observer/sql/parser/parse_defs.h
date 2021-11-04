@@ -238,6 +238,8 @@ void selects_init(Selects *selects, ...);
 void selects_append_attribute(Selects *selects, RelAttr *rel_attr);
 void selects_append_agg_expr(Selects *selects, AggExpr *agg_expr);
 void selects_append_relation(Selects *selects, const char *relation_name);
+void selects_append_relations(Selects *selects, const char **relation_name,
+                              size_t len);
 void selects_append_join_relation(Selects *selects, const char *relation_name);
 void selects_append_conditions(Selects *selects, Condition conditions[],
                                size_t condition_num);
