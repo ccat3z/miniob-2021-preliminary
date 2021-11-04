@@ -135,8 +135,9 @@ union YYSTYPE
   List *list;
   struct{List *rels; List *conds;} join_list;
   CompOp comp_op;
+  SelectExpr select_expr;
 
-#line 140 "yacc_sql.tab.h"
+#line 141 "yacc_sql.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

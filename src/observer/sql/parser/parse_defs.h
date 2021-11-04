@@ -235,8 +235,7 @@ void attr_info_init(AttrInfo *attr_info, const char *name, AttrType type,
 void attr_info_destroy(AttrInfo *attr_info);
 
 void selects_init(Selects *selects, ...);
-void selects_append_attribute(Selects *selects, RelAttr *rel_attr);
-void selects_append_agg_expr(Selects *selects, AggExpr *agg_expr);
+void selects_append_exprs(Selects *selects, SelectExpr *expr, size_t len);
 void selects_append_relation(Selects *selects, const char *relation_name);
 void selects_append_relations(Selects *selects, const char **relation_name,
                               size_t len);

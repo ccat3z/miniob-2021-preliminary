@@ -192,11 +192,10 @@ void select_expr_destroy(SelectExpr *expr) {
 }
 
 void selects_init(Selects *selects, ...);
-void selects_append_attribute(Selects *selects, RelAttr *rel_attr) {
-  selects->attributes[selects->attr_num++].attribute = rel_attr;
-}
-void selects_append_agg_expr(Selects *selects, AggExpr *agg_expr) {
-  selects->attributes[selects->attr_num++].agg = agg_expr;
+void selects_append_exprs(Selects *selects, SelectExpr *expr, size_t len) {
+  for (size_t i = 0; i < len; i++) {
+    selects->attributes[selects->attr_num++] = expr[i];
+  }
 }
 void selects_append_relation(Selects *selects, const char *relation_name) {
   selects->relations[selects->relation_num++] = strdup(relation_name);

@@ -118,6 +118,7 @@ ParserContext *get_context(yyscan_t scanner)
   List *list;
   struct{List *rels; List *conds;} join_list;
   CompOp comp_op;
+  SelectExpr select_expr;
 }
 
 %token <number> NUMBER
@@ -141,6 +142,8 @@ ParserContext *get_context(yyscan_t scanner)
 %type <list> condition_list;
 %type <list> rel_list;
 %type <comp_op> comp_op;
+%type <select_expr> select_expr;
+%type <list> select_expr_list;
 
 %%
 
@@ -361,6 +364,9 @@ update:			/*  update 语句的语法解析树*/
 select:				/*  select 语句的语法解析树*/
     SELECT select_expr_list FROM ID rel_list join_list where order_by SEMICOLON
 		{
+			selects_append_exprs(&CONTEXT->ssql->sstr.selection, (SelectExpr *) $2->values, $2->len);
+			list_free($2);
+
 			selects_append_relations(&CONTEXT->ssql->sstr.selection, (const char **) $6.rels->values, $6.rels->len);
 			selects_append_relations(&CONTEXT->ssql->sstr.selection, (const char **) $5->values, $5->len);
 			selects_append_relation(&CONTEXT->ssql->sstr.selection, $4);
@@ -379,23 +385,32 @@ select:				/*  select 语句的语法解析树*/
 	;
 
 select_expr_list:
-	select_expr {}
-	| select_expr COMMA select_expr_list {}
+	select_expr {
+		$$ = list_create(sizeof(SelectExpr), MAX_NUM);
+		list_append($$, &$1);
+	}
+	| select_expr COMMA select_expr_list {
+		$$ = $3;
+		list_append($$, &$1);
+	}
     ;
 
 select_expr:
 	select_attr {
-		selects_append_attribute(&CONTEXT->ssql->sstr.selection, $1);
+		$$.attribute = $1;
+		$$.agg = NULL;
 	}
 	| ID LBRACE select_attr RBRACE {
 		AggExpr *expr = (AggExpr *) malloc(sizeof(AggExpr));
 		agg_expr_init_attr(expr, $1, $3);
-		selects_append_agg_expr(&CONTEXT->ssql->sstr.selection, expr);
+		$$.agg = expr;
+		$$.attribute = NULL;
 	}
 	| ID LBRACE value RBRACE {
 		AggExpr *expr = (AggExpr *) malloc(sizeof(AggExpr));
 		agg_expr_init_value(expr, $1, &CONTEXT->values[CONTEXT->value_length - 1]);
-		selects_append_agg_expr(&CONTEXT->ssql->sstr.selection, expr);
+		$$.agg = expr;
+		$$.attribute = NULL;
 	}
 	;
 
