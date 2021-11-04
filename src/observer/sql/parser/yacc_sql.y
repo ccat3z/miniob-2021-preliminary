@@ -16,8 +16,6 @@
 
 typedef struct ParserContext {
   Query * ssql;
-  size_t select_length;
-  size_t from_length;
   size_t value_length;
   Value values[MAX_NUM];
   CompOp comp;
@@ -41,8 +39,6 @@ void yyerror(yyscan_t scanner, const char *str)
   ParserContext *context = (ParserContext *)(yyget_extra(scanner));
   query_reset(context->ssql);
   context->ssql->flag = SCF_ERROR;
-  context->from_length = 0;
-  context->select_length = 0;
   context->value_length = 0;
   context->ssql->sstr.insertion.value_num = 0;
   context->ssql->sstr.errors = strdup(str);
@@ -364,8 +360,6 @@ update:			/*  update 语句的语法解析树*/
 select:				/*  select 语句的语法解析树*/
     SELECT select_expr_list FROM ID rel_list join_list where order_by SEMICOLON
 		{
-			// CONTEXT->ssql->sstr.selection.relations[CONTEXT->from_length++]=$4;
-
 			selects_append_relations(&CONTEXT->ssql->sstr.selection, (const char **) $6.rels->values, $6.rels->len);
 			selects_append_relations(&CONTEXT->ssql->sstr.selection, (const char **) $5->values, $5->len);
 			selects_append_relation(&CONTEXT->ssql->sstr.selection, $4);
@@ -377,11 +371,8 @@ select:				/*  select 语句的语法解析树*/
 			list_free($7);
 
 			CONTEXT->ssql->flag=SCF_SELECT;//"select";
-			// CONTEXT->ssql->sstr.selection.attr_num = CONTEXT->select_length;
 
 			//临时变量清零
-			CONTEXT->from_length=0;
-			CONTEXT->select_length=0;
 			CONTEXT->value_length = 0;
 	}
 	;
