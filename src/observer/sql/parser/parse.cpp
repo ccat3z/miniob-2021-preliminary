@@ -469,7 +469,7 @@ void query_destroy(Query *query) {
 
 List *list_create(size_t size, size_t max) {
   List *l = (List *)malloc(sizeof(List));
-  l->values = malloc(size * max);
+  l->values = (uint8_t *)malloc(size * max);
   l->size = size;
   l->len = 0;
   return l;

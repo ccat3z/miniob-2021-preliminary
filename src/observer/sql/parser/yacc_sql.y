@@ -345,7 +345,7 @@ delete:		/*  delete 语句的语法解析树*/
 			CONTEXT->ssql->flag = SCF_DELETE;//"delete";
 			deletes_init_relation(&CONTEXT->ssql->sstr.deletion, $3);
 			deletes_set_conditions(&CONTEXT->ssql->sstr.deletion, 
-					$4->values, $4->len);
+					(Condition *) $4->values, $4->len);
 			list_free($4);
     }
     ;
@@ -355,7 +355,7 @@ update:			/*  update 语句的语法解析树*/
 			CONTEXT->ssql->flag = SCF_UPDATE;//"update";
 			Value *value = &CONTEXT->values[0];
 			updates_init(&CONTEXT->ssql->sstr.update, $2, $4, value, 
-					$7->values, $7->len);
+					(Condition *) $7->values, $7->len);
 			list_free($7);
 		}
     ;
@@ -365,9 +365,9 @@ select:				/*  select 语句的语法解析树*/
 			// CONTEXT->ssql->sstr.selection.relations[CONTEXT->from_length++]=$4;
 			selects_append_relation(&CONTEXT->ssql->sstr.selection, $4);
 
-			selects_append_conditions(&CONTEXT->ssql->sstr.selection, $6->values, $6->len);
+			selects_append_conditions(&CONTEXT->ssql->sstr.selection, (Condition *) $6->values, $6->len);
 			list_free($6);
-			selects_append_conditions(&CONTEXT->ssql->sstr.selection, $7->values, $7->len);
+			selects_append_conditions(&CONTEXT->ssql->sstr.selection, (Condition *) $7->values, $7->len);
 			list_free($7);
 
 			CONTEXT->ssql->flag=SCF_SELECT;//"select";

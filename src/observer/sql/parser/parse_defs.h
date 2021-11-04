@@ -17,6 +17,7 @@ See the Mulan PSL v2 for more details. */
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #define MAX_NUM 20
 #define MAX_REL_NAME 20
@@ -200,7 +201,7 @@ typedef struct Query {
 } Query;
 
 typedef struct {
-  void *values;
+  uint8_t *values;
   size_t size;
   size_t len;
 } List;

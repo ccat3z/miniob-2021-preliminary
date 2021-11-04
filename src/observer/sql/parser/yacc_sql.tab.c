@@ -1594,7 +1594,7 @@ yyreduce:
 			CONTEXT->ssql->flag = SCF_DELETE;//"delete";
 			deletes_init_relation(&CONTEXT->ssql->sstr.deletion, (yyvsp[-2].string));
 			deletes_set_conditions(&CONTEXT->ssql->sstr.deletion, 
-					(yyvsp[-1].list)->values, (yyvsp[-1].list)->len);
+					(Condition *) (yyvsp[-1].list)->values, (yyvsp[-1].list)->len);
 			list_free((yyvsp[-1].list));
     }
 #line 1601 "yacc_sql.tab.c"
@@ -1606,7 +1606,7 @@ yyreduce:
 			CONTEXT->ssql->flag = SCF_UPDATE;//"update";
 			Value *value = &CONTEXT->values[0];
 			updates_init(&CONTEXT->ssql->sstr.update, (yyvsp[-6].string), (yyvsp[-4].string), value, 
-					(yyvsp[-1].list)->values, (yyvsp[-1].list)->len);
+					(Condition *) (yyvsp[-1].list)->values, (yyvsp[-1].list)->len);
 			list_free((yyvsp[-1].list));
 		}
 #line 1613 "yacc_sql.tab.c"
@@ -1618,9 +1618,9 @@ yyreduce:
 			// CONTEXT->ssql->sstr.selection.relations[CONTEXT->from_length++]=$4;
 			selects_append_relation(&CONTEXT->ssql->sstr.selection, (yyvsp[-5].string));
 
-			selects_append_conditions(&CONTEXT->ssql->sstr.selection, (yyvsp[-3].list)->values, (yyvsp[-3].list)->len);
+			selects_append_conditions(&CONTEXT->ssql->sstr.selection, (Condition *) (yyvsp[-3].list)->values, (yyvsp[-3].list)->len);
 			list_free((yyvsp[-3].list));
-			selects_append_conditions(&CONTEXT->ssql->sstr.selection, (yyvsp[-2].list)->values, (yyvsp[-2].list)->len);
+			selects_append_conditions(&CONTEXT->ssql->sstr.selection, (Condition *) (yyvsp[-2].list)->values, (yyvsp[-2].list)->len);
 			list_free((yyvsp[-2].list));
 
 			CONTEXT->ssql->flag=SCF_SELECT;//"select";
