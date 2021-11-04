@@ -207,12 +207,12 @@ void selects_append_join_relation(Selects *selects, const char *relation_name) {
 
 void selects_append_conditions(Selects *selects, Condition conditions[],
                                size_t condition_num) {
-  assert(condition_num <=
+  assert(selects->condition_num + condition_num <=
          sizeof(selects->conditions) / sizeof(selects->conditions[0]));
   for (size_t i = 0; i < condition_num; i++) {
-    selects->conditions[i] = conditions[i];
+    selects->conditions[selects->condition_num + i] = conditions[i];
   }
-  selects->condition_num = condition_num;
+  selects->condition_num += condition_num;
 }
 
 void selects_append_order_attr(Selects *selects, RelAttr *rel_attr,
@@ -466,6 +466,29 @@ void query_destroy(Query *query) {
   query_reset(query);
   free(query);
 }
+
+List *list_create(size_t size, size_t max) {
+  List *l = (List *)malloc(sizeof(List));
+  l->values = malloc(size * max);
+  l->size = size;
+  l->len = 0;
+  return l;
+}
+
+void list_append(List *list, void *value) {
+  memcpy(list->values + (list->size * list->len++), value, list->size);
+}
+
+void list_append_list(List *list, List *append) {
+  memcpy(list->values + (list->size * list->len++), append->values,
+         append->size * append->len);
+}
+
+void list_free(List *list) {
+  free(list->values);
+  free(list);
+}
+
 #ifdef __cplusplus
 } // extern "C"
 #endif // __cplusplus

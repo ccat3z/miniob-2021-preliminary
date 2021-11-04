@@ -122,7 +122,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 117 "yacc_sql.y"
+#line 114 "yacc_sql.y"
 
   Condition *condition;
   Value *value;
@@ -132,8 +132,9 @@ union YYSTYPE
   char *position;
   OrderDir orderdir;
   RelAttr *rel_attr;
+  List *list;
 
-#line 137 "yacc_sql.tab.h"
+#line 138 "yacc_sql.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

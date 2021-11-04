@@ -199,6 +199,12 @@ typedef struct Query {
   union Queries sstr;
 } Query;
 
+typedef struct {
+  void *values;
+  size_t size;
+  size_t len;
+} List;
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -279,6 +285,11 @@ void query_init(Query *query);
 Query *query_create(); // create and init
 void query_reset(Query *query);
 void query_destroy(Query *query); // reset and delete
+
+List *list_create(size_t size, size_t max);
+void list_append(List *list, void *value);
+void list_append_list(List *list, List *append);
+void list_free(List *list);
 
 #ifdef __cplusplus
 }
