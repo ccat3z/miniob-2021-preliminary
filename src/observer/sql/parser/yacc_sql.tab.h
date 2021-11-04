@@ -44,6 +44,12 @@
 #if YYDEBUG
 extern int yydebug;
 #endif
+/* "%code requires" blocks.  */
+#line 2 "yacc_sql.y"
+
+#include "sql/parser/parse_defs.h"
+
+#line 53 "yacc_sql.tab.h"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -116,19 +122,18 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 114 "yacc_sql.y"
+#line 118 "yacc_sql.y"
 
-  struct _Attr *attr;
-  struct _Condition *condition1;
-  struct _Value *value1;
+  Condition *condition;
+  Value *value;
   char *string;
   int number;
   float floats;
-	char *position;
-  int orderdir;
-  struct _RelAttr *rel_attr;
+  char *position;
+  OrderDir orderdir;
+  RelAttr *rel_attr;
 
-#line 132 "yacc_sql.tab.h"
+#line 137 "yacc_sql.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

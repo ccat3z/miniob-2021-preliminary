@@ -1,4 +1,8 @@
 
+%code requires {
+#include "sql/parser/parse_defs.h"
+}
+
 %{
 
 #include "sql/parser/parse_defs.h"
@@ -45,7 +49,7 @@ void yyerror(yyscan_t scanner, const char *str)
   context->select_length = 0;
   context->value_length = 0;
   context->ssql->sstr.insertion.value_num = 0;
-  context->ssql->sstr.errors = str;
+  context->ssql->sstr.errors = strdup(str);
   printf("parse sql failed. error=%s", str);
 }
 
@@ -112,15 +116,14 @@ ParserContext *get_context(yyscan_t scanner)
         NE
 
 %union {
-  struct _Attr *attr;
-  struct _Condition *condition1;
-  struct _Value *value1;
+  Condition *condition;
+  Value *value;
   char *string;
   int number;
   float floats;
-	char *position;
-  int orderdir;
-  struct _RelAttr *rel_attr;
+  char *position;
+  OrderDir orderdir;
+  RelAttr *rel_attr;
 }
 
 %token <number> NUMBER
@@ -133,8 +136,8 @@ ParserContext *get_context(yyscan_t scanner)
 //非终结符
 
 %type <number> type;
-%type <condition1> condition;
-%type <value1> value;
+%type <condition> condition;
+%type <value> value;
 %type <number> number;
 %type <orderdir> order_dir;
 %type <rel_attr> order_attr;
