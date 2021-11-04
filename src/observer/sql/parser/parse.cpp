@@ -220,11 +220,11 @@ void selects_append_conditions(Selects *selects, Condition conditions[],
   selects->condition_num += condition_num;
 }
 
-void selects_append_order_attr(Selects *selects, RelAttr *rel_attr,
-                               OrderDir dir) {
-  auto &ob = selects->order_by[selects->order_by_num++];
-  ob.attr = rel_attr;
-  ob.dir = dir;
+void selects_append_order_attrs(Selects *selects, OrderBy *order_by,
+                                size_t len) {
+  for (size_t i = 0; i < len; i++) {
+    selects->order_by[selects->order_by_num++] = order_by[i];
+  }
 }
 
 void selects_destroy(Selects *selects) {

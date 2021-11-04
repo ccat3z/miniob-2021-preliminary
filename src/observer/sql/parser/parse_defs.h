@@ -242,8 +242,8 @@ void selects_append_relations(Selects *selects, const char **relation_name,
 void selects_append_join_relation(Selects *selects, const char *relation_name);
 void selects_append_conditions(Selects *selects, Condition conditions[],
                                size_t condition_num);
-void selects_append_order_attr(Selects *selects, RelAttr *rel_attr,
-                               OrderDir dir);
+void selects_append_order_attrs(Selects *selects, OrderBy *order_by,
+                                size_t len);
 void selects_destroy(Selects *selects);
 
 void inserts_init(Inserts *inserts, const char *relation_name, Value values[],

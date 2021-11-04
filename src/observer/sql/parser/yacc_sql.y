@@ -144,6 +144,8 @@ ParserContext *get_context(yyscan_t scanner)
 %type <comp_op> comp_op;
 %type <select_expr> select_expr;
 %type <list> select_expr_list;
+%type <list> order_by_attr_list;
+%type <list> order_by;
 
 %%
 
@@ -377,6 +379,11 @@ select:				/*  select 语句的语法解析树*/
 			selects_append_conditions(&CONTEXT->ssql->sstr.selection, (Condition *) $7->values, $7->len);
 			list_free($7);
 
+			if ($8 != NULL) {
+				selects_append_order_attrs(&CONTEXT->ssql->sstr.selection, (OrderBy *) $8->values, $8->len);
+				list_free($8);
+			}
+
 			CONTEXT->ssql->flag=SCF_SELECT;//"select";
 
 			//临时变量清零
@@ -553,17 +560,23 @@ comp_op:
     ;
 
 order_by:
-	/* empty */
-	| ORDER BY order_by_attr_list {}
+	/* empty */ { $$ = NULL; }
+	| ORDER BY order_by_attr_list {
+		$$ = $3;
+	}
 	;
 
 order_by_attr_list:
     order_attr order_dir {
-			selects_append_order_attr(&CONTEXT->ssql->sstr.selection, $1, $2);
-      }
+		$$ = list_create(sizeof(OrderBy), MAX_NUM);
+		OrderBy ob = {$2, $1};
+		list_append($$, &ob);
+    }
     | order_attr order_dir COMMA order_by_attr_list {
-			selects_append_order_attr(&CONTEXT->ssql->sstr.selection, $1, $2);
-      }
+		$$ = $4;
+		OrderBy ob = {$2, $1};
+		list_append($$, &ob);
+    }
 	;
 
 order_attr:
