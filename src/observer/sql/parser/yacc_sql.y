@@ -24,7 +24,6 @@ typedef struct ParserContext {
   Condition conditions[MAX_NUM];
   CompOp comp;
 	char id[MAX_NUM];
-  RelAttr *last_attr;
 } ParserContext;
 
 //获取子串
@@ -141,6 +140,7 @@ ParserContext *get_context(yyscan_t scanner)
 %type <number> number;
 %type <orderdir> order_dir;
 %type <rel_attr> order_attr;
+%type <rel_attr> select_attr;
 
 %%
 
@@ -384,11 +384,11 @@ select_expr_list:
 
 select_expr:
 	select_attr {
-		selects_append_attribute(&CONTEXT->ssql->sstr.selection, CONTEXT->last_attr);
+		selects_append_attribute(&CONTEXT->ssql->sstr.selection, $1);
 	}
 	| ID LBRACE select_attr RBRACE {
 		AggExpr *expr = (AggExpr *) malloc(sizeof(AggExpr));
-		agg_expr_init_attr(expr, $1, CONTEXT->last_attr);
+		agg_expr_init_attr(expr, $1, $3);
 		selects_append_agg_expr(&CONTEXT->ssql->sstr.selection, expr);
 	}
 	| ID LBRACE value RBRACE {
@@ -402,22 +402,22 @@ select_attr:
     STAR {
 			RelAttr *attr = malloc(sizeof(RelAttr));
 			relation_attr_init(attr, NULL, "*");
-			CONTEXT->last_attr = attr;
+			$$ = attr;
       }
     | ID {
 			RelAttr *attr = malloc(sizeof(RelAttr));
 			relation_attr_init(attr, NULL, $1);
-			CONTEXT->last_attr = attr;
+			$$ = attr;
       }
     | ID DOT ID {
 			RelAttr *attr = malloc(sizeof(RelAttr));
 			relation_attr_init(attr, $1, $3);
-			CONTEXT->last_attr = attr;
+			$$ = attr;
   	  }
     | ID DOT STAR {
 			RelAttr *attr = malloc(sizeof(RelAttr));
 			relation_attr_init(attr, $1, "*");
-			CONTEXT->last_attr = attr;
+			$$ = attr;
   	  }
   	;
 
