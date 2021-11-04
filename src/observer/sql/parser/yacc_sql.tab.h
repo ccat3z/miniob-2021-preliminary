@@ -122,7 +122,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 110 "yacc_sql.y"
+#line 109 "yacc_sql.y"
 
   Condition *condition;
   Value *value;
@@ -134,8 +134,9 @@ union YYSTYPE
   RelAttr *rel_attr;
   List *list;
   struct{List *rels; List *conds} join_list;
+  CompOp comp_op;
 
-#line 139 "yacc_sql.tab.h"
+#line 140 "yacc_sql.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

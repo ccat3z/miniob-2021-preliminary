@@ -18,7 +18,6 @@ typedef struct ParserContext {
   Query * ssql;
   size_t value_length;
   Value values[MAX_NUM];
-  CompOp comp;
 	char id[MAX_NUM];
 } ParserContext;
 
@@ -118,6 +117,7 @@ ParserContext *get_context(yyscan_t scanner)
   RelAttr *rel_attr;
   List *list;
   struct{List *rels; List *conds} join_list;
+  CompOp comp_op;
 }
 
 %token <number> NUMBER
@@ -140,6 +140,7 @@ ParserContext *get_context(yyscan_t scanner)
 %type <join_list> join_list;
 %type <list> condition_list;
 %type <list> rel_list;
+%type <comp_op> comp_op;
 
 %%
 
@@ -459,7 +460,7 @@ condition_list:
 	}
     ;
 condition:
-    ID comOp value 
+    ID comp_op value 
 		{
 			RelAttr left_attr;
 			relation_attr_init(&left_attr, NULL, $1);
@@ -467,17 +468,17 @@ condition:
 			Value *right_value = &CONTEXT->values[CONTEXT->value_length - 1];
 
 			$$ = (Condition *) malloc(sizeof(Condition));
-			condition_init($$, CONTEXT->comp, 1, &left_attr, NULL, 0, NULL, right_value);
+			condition_init($$, $2, 1, &left_attr, NULL, 0, NULL, right_value);
 		}
-		|value comOp value 
+		|value comp_op value 
 		{
 			Value *left_value = &CONTEXT->values[CONTEXT->value_length - 2];
 			Value *right_value = &CONTEXT->values[CONTEXT->value_length - 1];
 
 			$$ = (Condition *) malloc(sizeof(Condition));
-			condition_init($$, CONTEXT->comp, 0, NULL, left_value, 0, NULL, right_value);
+			condition_init($$, $2, 0, NULL, left_value, 0, NULL, right_value);
 		}
-		|ID comOp ID 
+		|ID comp_op ID 
 		{
 			RelAttr left_attr;
 			relation_attr_init(&left_attr, NULL, $1);
@@ -485,27 +486,27 @@ condition:
 			relation_attr_init(&right_attr, NULL, $3);
 
 			$$ = (Condition *) malloc(sizeof(Condition));
-			condition_init($$, CONTEXT->comp, 1, &left_attr, NULL, 1, &right_attr, NULL);
+			condition_init($$, $2, 1, &left_attr, NULL, 1, &right_attr, NULL);
 		}
-    |value comOp ID
+    |value comp_op ID
 		{
 			Value *left_value = &CONTEXT->values[CONTEXT->value_length - 1];
 			RelAttr right_attr;
 			relation_attr_init(&right_attr, NULL, $3);
 
 			$$ = (Condition *) malloc(sizeof(Condition));
-			condition_init($$, CONTEXT->comp, 0, NULL, left_value, 1, &right_attr, NULL);
+			condition_init($$, $2, 0, NULL, left_value, 1, &right_attr, NULL);
 		}
-    |ID DOT ID comOp value
+    |ID DOT ID comp_op value
 		{
 			RelAttr left_attr;
 			relation_attr_init(&left_attr, $1, $3);
 			Value *right_value = &CONTEXT->values[CONTEXT->value_length - 1];
 
 			$$ = (Condition *) malloc(sizeof(Condition));
-			condition_init($$, CONTEXT->comp, 1, &left_attr, NULL, 0, NULL, right_value);
+			condition_init($$, $4, 1, &left_attr, NULL, 0, NULL, right_value);
     }
-    |value comOp ID DOT ID
+    |value comp_op ID DOT ID
 		{
 			Value *left_value = &CONTEXT->values[CONTEXT->value_length - 1];
 
@@ -513,9 +514,9 @@ condition:
 			relation_attr_init(&right_attr, $3, $5);
 
 			$$ = (Condition *) malloc(sizeof(Condition));
-			condition_init($$, CONTEXT->comp, 0, NULL, left_value, 1, &right_attr, NULL);
+			condition_init($$, $2, 0, NULL, left_value, 1, &right_attr, NULL);
     }
-    |ID DOT ID comOp ID DOT ID
+    |ID DOT ID comp_op ID DOT ID
 		{
 			RelAttr left_attr;
 			relation_attr_init(&left_attr, $1, $3);
@@ -523,17 +524,17 @@ condition:
 			relation_attr_init(&right_attr, $5, $7);
 
 			$$ = (Condition *) malloc(sizeof(Condition));
-			condition_init($$, CONTEXT->comp, 1, &left_attr, NULL, 1, &right_attr, NULL);
+			condition_init($$, $4, 1, &left_attr, NULL, 1, &right_attr, NULL);
     }
     ;
 
-comOp:
-  	  EQ { CONTEXT->comp = EQUAL_TO; }
-    | LT { CONTEXT->comp = LESS_THAN; }
-    | GT { CONTEXT->comp = GREAT_THAN; }
-    | LE { CONTEXT->comp = LESS_EQUAL; }
-    | GE { CONTEXT->comp = GREAT_EQUAL; }
-    | NE { CONTEXT->comp = NOT_EQUAL; }
+comp_op:
+  	  EQ { $$ = EQUAL_TO; }
+    | LT { $$ = LESS_THAN; }
+    | GT { $$ = GREAT_THAN; }
+    | LE { $$ = LESS_EQUAL; }
+    | GE { $$ = GREAT_EQUAL; }
+    | NE { $$ = NOT_EQUAL; }
     ;
 
 order_by:
