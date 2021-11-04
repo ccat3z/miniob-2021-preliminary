@@ -480,8 +480,9 @@ void list_append(List *list, void *value) {
 }
 
 void list_append_list(List *list, List *append) {
-  memcpy(list->values + (list->size * list->len++), append->values,
+  memcpy(list->values + (list->size * list->len), append->values,
          append->size * append->len);
+  list->len += append->len;
 }
 
 void list_free(List *list) {
