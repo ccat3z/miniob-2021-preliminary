@@ -383,11 +383,12 @@ select_statement:				/*  select 语句的语法解析树*/
 			list_free($2);
 
 			selects_append_relations(selects, (const char **) $6.rels->values, $6.rels->len);
+			list_free($6.rels);
 			selects_append_relations(selects, (const char **) $5->values, $5->len);
+			list_free($5);
 			selects_append_relation(selects, $4);
 
 			selects_append_conditions(selects, (Condition *) $6.conds->values, $6.conds->len);
-			list_free($6.rels);
 			list_free($6.conds);
 			selects_append_conditions(selects, (Condition *) $7->values, $7->len);
 			list_free($7);
