@@ -231,6 +231,13 @@ build_select_executor_node(const char *db, Trx *trx, Selects &selects) {
     exec_node = CartesianSelectNode::create(table_scaners);
   }
 
+  // Filter
+  if (selects.condition_num > 0) {
+    exec_node = std::make_unique<FilterNode>(
+        std::move(exec_node), selects.conditions + 0,
+        selects.conditions + selects.condition_num);
+  }
+
   // Aggeration
   bool need_agg = false;
   for (size_t i = 0; i < selects.attr_num; i++) {
@@ -243,13 +250,6 @@ build_select_executor_node(const char *db, Trx *trx, Selects &selects) {
   if (need_agg) {
     exec_node = std::make_unique<AggregationNode>(
         std::move(exec_node), selects.attributes, selects.attr_num);
-  }
-
-  // Filter
-  if (selects.condition_num > 0) {
-    exec_node = std::make_unique<FilterNode>(
-        std::move(exec_node), selects.conditions + 0,
-        selects.conditions + selects.condition_num);
   }
 
   // Order

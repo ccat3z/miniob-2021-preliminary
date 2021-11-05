@@ -954,6 +954,15 @@ TEST_F(SQLTest, AggFuncWithValueShouldWork) {
   ASSERT_EQ(exec_sql("select count('a') from t;"), "count('a')\n2\n");
 }
 
+TEST_F(SQLTest, AggFuncWithConditionShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select count(1) from t where a > 2;"), "count(1)\n0\n");
+  ASSERT_EQ(exec_sql("select count(1) from t where a > 1;"), "count(1)\n1\n");
+}
+
 TEST_F(SQLTest, AggFuncUnsupportFuncShouldFailure) {
   ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
