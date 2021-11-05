@@ -107,6 +107,7 @@ void condition_init(Condition *condition, CompOp comp, ConditionExpr *left,
   case COND_EXPR_ATTR:
     condition->right_is_attr = true;
     condition->right_attr = right->value.attr;
+    condition->right_selects = nullptr;
     break;
   case COND_EXPR_VALUE:
     condition->right_is_attr = false;

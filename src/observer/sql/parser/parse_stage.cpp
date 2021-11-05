@@ -265,6 +265,14 @@ RC complete_sql(SQLStageEvent *event, Selects &selects) {
         !ensure_and_complete_relattr(tables, condition.right_attr)) {
       return RC::SQL_SYNTAX;
     }
+
+    // Complete sub selects in condition
+    if (condition.left_selects != nullptr) {
+      complete_sql(event, *condition.left_selects);
+    }
+    if (condition.right_selects != nullptr) {
+      complete_sql(event, *condition.right_selects);
+    }
   }
 
   // Complete attributes in order by
