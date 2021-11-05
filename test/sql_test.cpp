@@ -337,7 +337,7 @@ TEST_F(SQLTest, BasicSelectWithIndexEqualToMinValue) {
   ASSERT_EQ(exec_sql("select * from t where a = -1;"), "a | b\n");
 }
 
-TEST_F(SQLTest, BasicExtractFloatFormat) {
+TEST_F(SQLTest, BasicExtFloatFormat) {
   ASSERT_EQ(exec_sql("create table t(a float);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1.0);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1.2);"), "SUCCESS\n");
