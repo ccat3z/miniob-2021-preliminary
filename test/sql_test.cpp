@@ -428,8 +428,8 @@ TEST_F(SQLTest, SelectMetaSelectInvalidConditionShouldFailure) {
   ASSERT_EQ(exec_sql("select * from t where t2.b > 1;"), "FAILURE\n");
 
   ASSERT_EQ(exec_sql("select * from t where a > '1';"), "FAILURE\n");
-  ASSERT_EQ(exec_sql("select * from t where a = 1.1;"), "FAILURE\n");
-  ASSERT_EQ(exec_sql("select * from t where 1 = 1.1;"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("select * from t where a = 'a';"), "FAILURE\n");
+  ASSERT_EQ(exec_sql("select * from t where 1 = 'a';"), "FAILURE\n");
   ASSERT_EQ(exec_sql("select * from t where 1.1 > '10';"), "FAILURE\n");
 }
 
