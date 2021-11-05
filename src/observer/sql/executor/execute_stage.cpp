@@ -37,6 +37,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/trx/trx.h"
 
 using namespace common;
+using namespace std::literals::string_literals;
 
 //! Constructor
 ExecuteStage::ExecuteStage(const char *tag) : Stage(tag) {}
@@ -221,6 +222,58 @@ build_select_executor_node(const char *db, Trx *trx, Selects &selects) {
     auto table_scaner = std::make_unique<TableScaner>(trx, table);
     table_scaner->select_all_fields();
     table_scaners.push_back(std::move(table_scaner));
+  }
+
+  // Extract sub query in conditions
+  int virtual_table_idx = 0;
+  for (size_t i = 0; i < selects.condition_num; i++) {
+    Condition &condition = selects.conditions[i];
+    if (!condition.left_is_attr && condition.left_selects != nullptr) {
+      auto virtual_table_name = "."s + std::to_string(virtual_table_idx++);
+
+      std::unique_ptr<ExecutionNode> sub_select =
+          build_select_executor_node(db, trx, *condition.left_selects);
+      sub_select = std::make_unique<AliasNode>(std::move(sub_select),
+                                               virtual_table_name.c_str());
+
+      // TODO: Extract exec node: ValueNode
+      if (sub_select->schema().fields().size() != 1) {
+        throw std::invalid_argument("Attribute num in sub select must be 1");
+      }
+      auto &sub_select_field = sub_select->schema().fields().at(0);
+
+      condition.left_is_attr = true;
+      value_destroy(&condition.left_value);
+      condition.left_attr.relation_name = strdup(sub_select_field.table_name());
+      condition.left_attr.attribute_name =
+          strdup(sub_select_field.field_name());
+
+      table_scaners.push_back(std::move(sub_select));
+    }
+
+    if (!condition.right_is_attr && condition.right_selects != nullptr) {
+      auto virtual_table_name = "."s + std::to_string(virtual_table_idx++);
+
+      std::unique_ptr<ExecutionNode> sub_select =
+          build_select_executor_node(db, trx, *condition.right_selects);
+      sub_select = std::make_unique<AliasNode>(std::move(sub_select),
+                                               virtual_table_name.c_str());
+
+      // TODO: Extract exec node: ValueNode
+      if (sub_select->schema().fields().size() != 1) {
+        throw std::invalid_argument("Attribute num in sub select must be 1");
+      }
+      auto &sub_select_field = sub_select->schema().fields().at(0);
+
+      condition.right_is_attr = true;
+      value_destroy(&condition.right_value);
+      condition.right_attr.relation_name =
+          strdup(sub_select_field.table_name());
+      condition.right_attr.attribute_name =
+          strdup(sub_select_field.field_name());
+
+      table_scaners.push_back(std::move(sub_select));
+    }
   }
 
   // Build root execution node

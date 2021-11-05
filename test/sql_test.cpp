@@ -1133,6 +1133,41 @@ TEST_F(SQLTest, OrderByInvalidAttrShouldFailure) {
   ASSERT_EQ(exec_sql("select * from t order by a, c;"), "FAILURE\n");
 }
 
+//  ######  ##     ## ########
+// ##    ## ##     ## ##     ##
+// ##       ##     ## ##     ##
+//  ######  ##     ## ########
+//       ## ##     ## ##     ##
+// ##    ## ##     ## ##     ##
+//  ######   #######  ########
+//  #######  ##     ## ######## ########  ##    ##
+// ##     ## ##     ## ##       ##     ##  ##  ##
+// ##     ## ##     ## ##       ##     ##   ####
+// ##     ## ##     ## ######   ########     ##
+// ##  ## ## ##     ## ##       ##   ##      ##
+// ##    ##  ##     ## ##       ##    ##     ##
+//  ##### ##  #######  ######## ##     ##    ##
+
+TEST_F(SQLTest, SubQueryShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a float, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create table t2(b int, d int);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("insert into t values (1.0, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2.0, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (3.0, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t2 values (1, 200);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t2 values (3, 500);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select * from t where a > (select avg(b) from t2);"),
+            "a | b\n"
+            "3 | 3\n");
+
+  ASSERT_EQ(exec_sql("select * from t where a > (select avg(b) from t2 where d "
+                     ">= (select min(b) from t));"),
+            "a | b\n"
+            "3 | 3\n");
+}
+
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
   testing::InitGoogleTest(&argc, argv);
