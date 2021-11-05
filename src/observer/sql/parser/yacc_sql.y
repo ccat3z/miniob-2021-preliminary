@@ -352,7 +352,7 @@ update:			/*  update 语句的语法解析树*/
 		}
     ;
 select:
-	select_statement {
+	select_statement SEMICOLON {
 		CONTEXT->ssql->flag=SCF_SELECT;//"select";
 		CONTEXT->ssql->sstr.selection = *$1;
 		free($1);
@@ -360,7 +360,7 @@ select:
 	;
 
 select_statement:				/*  select 语句的语法解析树*/
-    SELECT select_expr_list FROM ID rel_list join_list where order_by SEMICOLON
+    SELECT select_expr_list FROM ID rel_list join_list where order_by
 		{
 			Selects *selects = (Selects *) malloc(sizeof(Selects));
 			memset(selects, 0, sizeof(*selects));
@@ -498,6 +498,10 @@ condition_expr:
 	| value {
 		$$.type = COND_EXPR_VALUE;
 		$$.value.value = $1;
+	}
+	| LBRACE select_statement RBRACE {
+		$$.type = COND_EXPR_SELECT;
+		$$.value.selects = $2;
 	}
 	;
 

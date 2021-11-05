@@ -93,6 +93,11 @@ void condition_init(Condition *condition, CompOp comp, ConditionExpr *left,
   case COND_EXPR_VALUE:
     condition->left_is_attr = false;
     condition->left_value = left->value.value;
+    condition->left_selects = nullptr;
+    break;
+  case COND_EXPR_SELECT:
+    condition->left_is_attr = false;
+    condition->left_selects = left->value.selects;
     break;
   default:
     throw std::logic_error("Unreachable code");
@@ -106,6 +111,11 @@ void condition_init(Condition *condition, CompOp comp, ConditionExpr *left,
   case COND_EXPR_VALUE:
     condition->right_is_attr = false;
     condition->right_value = right->value.value;
+    condition->right_selects = nullptr;
+    break;
+  case COND_EXPR_SELECT:
+    condition->right_is_attr = false;
+    condition->right_selects = right->value.selects;
     break;
   default:
     throw std::logic_error("Unreachable code");
