@@ -74,7 +74,7 @@ void ProjectionNode::add_field(const RelAttr *attr_p) {
     auto &child_field = child_fields[j];
     if ((any_attr ||
          strcmp(attr.attribute_name, child_field.field_name()) == 0) &&
-        (any_table ||
+        ((any_table && child_field.table_name()[0] != '.') ||
          strcmp(attr.relation_name, child_field.table_name()) == 0)) {
       matched = true;
       this->fields_map.push_back(j);
