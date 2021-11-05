@@ -245,7 +245,6 @@ build_select_executor_node(const char *db, Trx *trx, Selects &selects) {
       auto &sub_select_field = sub_select->schema().fields().at(0);
 
       condition.left_is_attr = true;
-      value_destroy(&condition.left_value);
       condition.left_attr.relation_name = strdup(sub_select_field.table_name());
       condition.left_attr.attribute_name =
           strdup(sub_select_field.field_name());
@@ -268,7 +267,6 @@ build_select_executor_node(const char *db, Trx *trx, Selects &selects) {
       auto &sub_select_field = sub_select->schema().fields().at(0);
 
       condition.right_is_attr = true;
-      value_destroy(&condition.right_value);
       condition.right_attr.relation_name =
           strdup(sub_select_field.table_name());
       condition.right_attr.attribute_name =
