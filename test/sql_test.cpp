@@ -348,6 +348,15 @@ TEST_F(SQLTest, BasicExtFloatFormat) {
   ASSERT_EQ(exec_sql("select * from t;"), "a\n1\n1.2\n1.23\n1.26\n10\n");
 }
 
+TEST_F(SQLTest, BasicExtConditionBetweenDifferentType) {
+  ASSERT_EQ(exec_sql("create table t(a int, b float);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1.0);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1.2);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (3, 1.23);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select * from t where a > b;"), "a | b\n3 | 1.23\n");
+}
+
 //  ######  ######## ##       ########  ######  ########
 // ##    ## ##       ##       ##       ##    ##    ##
 // ##       ##       ##       ##       ##          ##
@@ -441,7 +450,7 @@ TEST_F(SQLTest, SelectMetaSelectInvalidConditionInMultiTablesShouldFailure) {
       exec_sql("select * from t, t2 where a > 1 and b > 1 and t.a > t3.b;"),
       "FAILURE\n");
 
-  ASSERT_EQ(exec_sql("create table t3(c float);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create table t3(c char);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("select * from t, t3 where a > c;"), "FAILURE\n");
 }
 
@@ -1160,6 +1169,11 @@ TEST_F(SQLTest, SubQueryShouldWork) {
 
   ASSERT_EQ(exec_sql("select * from t where a > (select avg(b) from t2);"),
             "a | b\n"
+            "3 | 3\n");
+
+  ASSERT_EQ(exec_sql("select * from t where b > (select avg(b) from t2);"),
+            "a | b\n"
+            "2 | 3\n"
             "3 | 3\n");
 
   ASSERT_EQ(exec_sql("select * from t where a > (select avg(b) from t2 where d "

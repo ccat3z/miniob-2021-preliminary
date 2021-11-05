@@ -28,7 +28,7 @@ RC OrderNode::execute(TupleSet &tuple_set) {
   child->execute(tuple_set);
   tuple_set.sort([&](const Tuple &a, const Tuple &b) {
     for (auto &field : fields) {
-      int res = a.get(field.first).compare(b.get(field.first));
+      int res = a.get(field.first).compare(&b.get(field.first));
       if (res == 0) {
         continue;
       }

@@ -37,14 +37,18 @@ DefaultTupleFilter::DefaultTupleFilter(const TupleSchema &schema,
     rtype = condition.right_value.type;
   }
 
+  // TODO: Comparable table is hard code for now. Needs to be refactored. It may be possible to use an undirected graph to represent comparable and comparative methods.
   if (ltype != rtype) {
-    throw std::invalid_argument("Incompareble fields");
+    if (!((ltype == INTS && rtype == FLOATS) ||
+          (ltype == FLOATS && rtype == INTS))) {
+      throw std::invalid_argument("Incompareble fields");
+    }
   }
 }
 DefaultTupleFilter::~DefaultTupleFilter() {}
 
 bool DefaultTupleFilter::filter(const Tuple &tuple) const {
-  int cmp = left(tuple).compare(right(tuple));
+  int cmp = left(tuple).compare(&right(tuple));
 
   switch (op) {
   case EQUAL_TO:

@@ -134,7 +134,7 @@ void MaxAggregator::add(std::shared_ptr<TupleValue> v) {
     return;
   }
 
-  if (max->compare(*v) < 0) {
+  if (max->compare(v.get()) < 0) {
     max = v;
   }
 }
@@ -146,7 +146,7 @@ void MinAggregator::add(std::shared_ptr<TupleValue> v) {
     return;
   }
 
-  if (min->compare(*v) > 0) {
+  if (min->compare(v.get()) > 0) {
     min = v;
   }
 }

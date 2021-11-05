@@ -28,7 +28,8 @@ public:
   virtual ~TupleValue() = default;
 
   virtual void to_string(std::ostream &os) const = 0;
-  virtual int compare(const TupleValue &other) const = 0;
+  virtual int compare(const TupleValue *other) const = 0;
+  // TODO: Comparable table is hard code for now. Needs to be refactored. It may be possible to use an undirected graph to represent comparable and comparative methods.
   static TupleValue *from_value(Value &value, AttrType type = UNDEFINED);
 
 private:
@@ -40,12 +41,9 @@ public:
 
   void to_string(std::ostream &os) const override { os << value_; }
 
-  int compare(const TupleValue &other) const override {
-    const IntValue &int_other = (const IntValue &)other;
-    return value_ - int_other.value_;
-  }
+  int compare(const TupleValue *other) const override;
 
-  int value() { return value_; }
+  int value() const { return value_; }
 
 private:
   int value_;
@@ -67,19 +65,9 @@ public:
     os << buf;
   }
 
-  int compare(const TupleValue &other) const override {
-    const FloatValue &float_other = (const FloatValue &)other;
-    float result = value_ - float_other.value_;
-    if (result > 0) { // 浮点数没有考虑精度问题
-      return 1;
-    }
-    if (result < 0) {
-      return -1;
-    }
-    return 0;
-  }
+  int compare(const TupleValue *other) const override;
 
-  float value() { return value_; }
+  float value() const { return value_; }
 
 private:
   float value_;
@@ -92,10 +80,7 @@ public:
 
   void to_string(std::ostream &os) const override { os << value_; }
 
-  int compare(const TupleValue &other) const override {
-    const StringValue &string_other = (const StringValue &)other;
-    return strcmp(value_.c_str(), string_other.value_.c_str());
-  }
+  int compare(const TupleValue *other) const override;
 
 private:
   std::string value_;
@@ -105,7 +90,7 @@ class DateValue : public TupleValue {
 public:
   explicit DateValue(int julian) : date(julian){};
   void to_string(std::ostream &os) const override;
-  int compare(const TupleValue &other) const override;
+  int compare(const TupleValue *other) const override;
 
   int julian() { return date.julian(); }
 
