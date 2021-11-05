@@ -240,7 +240,7 @@ RC complete_sql(SQLStageEvent *event, Selects &selects) {
   // Complete attributes
   for (int i = selects.attr_num - 1; i >= 0; i--) {
     auto &expr = selects.attributes[i];
-    RC rc;
+    RC rc = RC::SUCCESS;
     if (expr.attribute != nullptr) {
       rc = complete_attr(tables, *expr.attribute);
     } else if (expr.agg != nullptr && expr.agg->attr != nullptr) {
