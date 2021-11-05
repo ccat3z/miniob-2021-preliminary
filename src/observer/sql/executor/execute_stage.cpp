@@ -236,7 +236,7 @@ build_select_executor_node(const char *db, Trx *trx, Selects &selects) {
           build_select_executor_node(db, trx, *condition.left_selects);
       sub_select = std::make_unique<AliasNode>(std::move(sub_select),
                                                virtual_table_name.c_str());
-      // TODO: Ensure only on tuple will be produced by sub_select
+      // TODO: Ensure only on tuple will be produced by sub_select if comp is not IN
 
       // TODO: Extract exec node: ValueNode
       if (sub_select->schema().fields().size() != 1) {
@@ -275,6 +275,10 @@ build_select_executor_node(const char *db, Trx *trx, Selects &selects) {
           strdup(sub_select_field.field_name());
 
       table_scaners.push_back(std::move(sub_select));
+    }
+
+    if (condition.comp == IN_SET) {
+      condition.comp = EQUAL_TO;
     }
   }
 

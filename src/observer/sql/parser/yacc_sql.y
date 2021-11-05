@@ -102,6 +102,7 @@ ParserContext *get_context(yyscan_t scanner)
         LE
         GE
         NE
+		IN
 
 %union {
   Condition *condition;
@@ -512,6 +513,7 @@ comp_op:
     | LE { $$ = LESS_EQUAL; }
     | GE { $$ = GREAT_EQUAL; }
     | NE { $$ = NOT_EQUAL; }
+	| IN { $$ = IN_SET; }
     ;
 
 order_by:
