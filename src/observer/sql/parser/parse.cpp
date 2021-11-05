@@ -256,8 +256,8 @@ void inserts_init(Inserts *inserts, const char *relation_name, Value values[],
   assert(value_num <= sizeof(inserts->values) / sizeof(inserts->values[0]));
 
   inserts->relation_name = strdup(relation_name);
-  for (size_t i = 0; i < value_num; i++) {
-    inserts->values[i] = values[i];
+  for (int i = value_num - 1; i >= 0; i--) {
+    inserts->values[value_num - i - 1] = values[i];
   }
   inserts->value_num = value_num;
 }

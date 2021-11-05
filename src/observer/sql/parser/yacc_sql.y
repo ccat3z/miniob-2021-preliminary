@@ -16,8 +16,6 @@
 
 typedef struct ParserContext {
   Query * ssql;
-  size_t value_length;
-  Value values[MAX_NUM];
 	char id[MAX_NUM];
 } ParserContext;
 
@@ -38,7 +36,6 @@ void yyerror(yyscan_t scanner, const char *str)
   ParserContext *context = (ParserContext *)(yyget_extra(scanner));
   query_reset(context->ssql);
   context->ssql->flag = SCF_ERROR;
-  context->value_length = 0;
   context->ssql->sstr.insertion.value_num = 0;
   context->ssql->sstr.errors = strdup(str);
   printf("parse sql failed. error=%s", str);
@@ -108,7 +105,7 @@ ParserContext *get_context(yyscan_t scanner)
 
 %union {
   Condition *condition;
-  Value *value;
+  Value value;
   char *string;
   int number;
   float floats;
@@ -134,6 +131,8 @@ ParserContext *get_context(yyscan_t scanner)
 %type <number> type;
 %type <condition> condition;
 %type <value> value;
+%type <list> value_list;
+%type <list> value_lists;
 %type <number> number;
 %type <orderdir> order_dir;
 %type <rel_attr> order_attr;
@@ -248,10 +247,7 @@ create_table:		/*create table 语句的语法解析树*/
     CREATE TABLE ID LBRACE attr_def attr_def_list RBRACE SEMICOLON 
 		{
 			CONTEXT->ssql->flag=SCF_CREATE_TABLE;//"create_table";
-			// CONTEXT->ssql->sstr.create_table.attribute_count = CONTEXT->value_length;
 			create_table_init_name(&CONTEXT->ssql->sstr.create_table, $3);
-			//临时变量清零	
-			CONTEXT->value_length = 0;
 		}
     ;
 attr_def_list:
@@ -265,22 +261,12 @@ attr_def:
 			AttrInfo attribute;
 			attr_info_init(&attribute, CONTEXT->id, $2, $4);
 			create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
-			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name =(char*)malloc(sizeof(char));
-			// strcpy(CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name, CONTEXT->id); 
-			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].type = $2;  
-			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].length = $4;
-			CONTEXT->value_length++;
 		}
     |ID_get type
 		{
 			AttrInfo attribute;
 			attr_info_init(&attribute, CONTEXT->id, $2, 4);
 			create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
-			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name=(char*)malloc(sizeof(char));
-			// strcpy(CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name, CONTEXT->id); 
-			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].type=$2;  
-			// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].length=4; // default attribute length
-			CONTEXT->value_length++;
 		}
     ;
 number:
@@ -304,44 +290,43 @@ ID_get:
 insert:				/*insert   语句的语法解析树*/
     INSERT INTO ID VALUES value_lists SEMICOLON 
 		{
-			// CONTEXT->values[CONTEXT->value_length++] = *$6;
-
 			CONTEXT->ssql->flag=SCF_INSERT;//"insert";
-			// CONTEXT->ssql->sstr.insertion.relation_name = $3;
-			// CONTEXT->ssql->sstr.insertion.value_num = CONTEXT->value_length;
-			// for(i = 0; i < CONTEXT->value_length; i++){
-			// 	CONTEXT->ssql->sstr.insertion.values[i] = CONTEXT->values[i];
-      // }
-			inserts_init(&CONTEXT->ssql->sstr.insertion, $3, CONTEXT->values, CONTEXT->value_length);
-
-      //临时变量清零
-      CONTEXT->value_length=0;
+			inserts_init(&CONTEXT->ssql->sstr.insertion, $3, (Value *)$5->values, $5->len);
+			list_free($5);
     }
 
 value_lists:
 	LBRACE value_list RBRACE {
 		CONTEXT->ssql->sstr.insertion.tuple_num++;
+		$$ = $2;
 	}
 	| LBRACE value_list RBRACE COMMA value_lists {
 		CONTEXT->ssql->sstr.insertion.tuple_num++;
+		$$ = $5;
+		list_append_list($$, $2);
+		list_free($2);
 	}
 	;
 value_list:
-	value
+	value {
+		$$ = list_create(sizeof(Value), MAX_NUM);
+		list_append($$, &$1);
+	}
     | value COMMA value_list  { 
-  		// CONTEXT->values[CONTEXT->value_length++] = *$2;
+		$$ = $3;
+		list_append($$, &$1);
 	  }
     ;
 value:
     NUMBER{	
-  		value_init_integer(&CONTEXT->values[CONTEXT->value_length++], $1);
+  		value_init_integer(&$$, $1);
 		}
     |FLOAT{
-  		value_init_float(&CONTEXT->values[CONTEXT->value_length++], $1);
+  		value_init_float(&$$, $1);
 		}
     |SSS {
 			$1 = substr($1,1,strlen($1)-2);
-  		value_init_string(&CONTEXT->values[CONTEXT->value_length++], $1);
+  		value_init_string(&$$, $1);
 		}
     ;
     
@@ -359,8 +344,7 @@ update:			/*  update 语句的语法解析树*/
     UPDATE ID SET ID EQ value where SEMICOLON
 		{
 			CONTEXT->ssql->flag = SCF_UPDATE;//"update";
-			Value *value = &CONTEXT->values[0];
-			updates_init(&CONTEXT->ssql->sstr.update, $2, $4, value, 
+			updates_init(&CONTEXT->ssql->sstr.update, $2, $4, &$6, 
 					(Condition *) $7->values, $7->len);
 			list_free($7);
 		}
@@ -400,9 +384,6 @@ select_statement:				/*  select 语句的语法解析树*/
 
 			CONTEXT->ssql->flag=SCF_SELECT;//"select";
 
-			//临时变量清零
-			CONTEXT->value_length = 0;
-
 			$$ = selects;
 	}
 	;
@@ -431,7 +412,7 @@ select_expr:
 	}
 	| ID LBRACE value RBRACE {
 		AggExpr *expr = (AggExpr *) malloc(sizeof(AggExpr));
-		agg_expr_init_value(expr, $1, &CONTEXT->values[CONTEXT->value_length - 1]);
+		agg_expr_init_value(expr, $1, &$3);
 		$$.agg = expr;
 		$$.attribute = NULL;
 	}
@@ -503,18 +484,13 @@ condition:
 			RelAttr left_attr;
 			relation_attr_init(&left_attr, NULL, $1);
 
-			Value *right_value = &CONTEXT->values[CONTEXT->value_length - 1];
-
 			$$ = (Condition *) malloc(sizeof(Condition));
-			condition_init($$, $2, 1, &left_attr, NULL, 0, NULL, right_value);
+			condition_init($$, $2, 1, &left_attr, NULL, 0, NULL, &$3);
 		}
 		|value comp_op value 
 		{
-			Value *left_value = &CONTEXT->values[CONTEXT->value_length - 2];
-			Value *right_value = &CONTEXT->values[CONTEXT->value_length - 1];
-
 			$$ = (Condition *) malloc(sizeof(Condition));
-			condition_init($$, $2, 0, NULL, left_value, 0, NULL, right_value);
+			condition_init($$, $2, 0, NULL, &$1, 0, NULL, &$3);
 		}
 		|ID comp_op ID 
 		{
@@ -528,31 +504,27 @@ condition:
 		}
     |value comp_op ID
 		{
-			Value *left_value = &CONTEXT->values[CONTEXT->value_length - 1];
 			RelAttr right_attr;
 			relation_attr_init(&right_attr, NULL, $3);
 
 			$$ = (Condition *) malloc(sizeof(Condition));
-			condition_init($$, $2, 0, NULL, left_value, 1, &right_attr, NULL);
+			condition_init($$, $2, 0, NULL, &$1, 1, &right_attr, NULL);
 		}
     |ID DOT ID comp_op value
 		{
 			RelAttr left_attr;
 			relation_attr_init(&left_attr, $1, $3);
-			Value *right_value = &CONTEXT->values[CONTEXT->value_length - 1];
 
 			$$ = (Condition *) malloc(sizeof(Condition));
-			condition_init($$, $4, 1, &left_attr, NULL, 0, NULL, right_value);
+			condition_init($$, $4, 1, &left_attr, NULL, 0, NULL, &$5);
     }
     |value comp_op ID DOT ID
 		{
-			Value *left_value = &CONTEXT->values[CONTEXT->value_length - 1];
-
 			RelAttr right_attr;
 			relation_attr_init(&right_attr, $3, $5);
 
 			$$ = (Condition *) malloc(sizeof(Condition));
-			condition_init($$, $2, 0, NULL, left_value, 1, &right_attr, NULL);
+			condition_init($$, $2, 0, NULL, &$1, 1, &right_attr, NULL);
     }
     |ID DOT ID comp_op ID DOT ID
 		{

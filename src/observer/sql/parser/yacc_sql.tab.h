@@ -122,10 +122,10 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 109 "yacc_sql.y"
+#line 106 "yacc_sql.y"
 
   Condition *condition;
-  Value *value;
+  Value value;
   char *string;
   int number;
   float floats;
