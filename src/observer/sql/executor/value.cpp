@@ -19,9 +19,9 @@ int DateValue::compare(const TupleValue *other) const {
   }
 }
 
-TupleValue *TupleValue::from_value(Value &value, AttrType type) {
+TupleValue *TupleValue::from_value(Value &value, AttrType type, bool must) {
   if (type != UNDEFINED) {
-    if (!value_cast(&value, type)) {
+    if (!value_cast(&value, type) && must) {
       std::stringstream msg;
       msg << "Cannot convert value's type from " << value.type << " to "
           << type;

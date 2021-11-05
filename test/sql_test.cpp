@@ -355,6 +355,8 @@ TEST_F(SQLTest, BasicExtConditionBetweenDifferentType) {
   ASSERT_EQ(exec_sql("insert into t values (3, 1.23);"), "SUCCESS\n");
 
   ASSERT_EQ(exec_sql("select * from t where a > b;"), "a | b\n3 | 1.23\n");
+  ASSERT_EQ(exec_sql("select * from t where a > 1.2;"), "a | b\n3 | 1.23\n");
+  ASSERT_EQ(exec_sql("select * from t where 1.2 < a;"), "a | b\n3 | 1.23\n");
 }
 
 //  ######  ######## ##       ########  ######  ########

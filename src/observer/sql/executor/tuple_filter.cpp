@@ -27,13 +27,13 @@ DefaultTupleFilter::DefaultTupleFilter(const TupleSchema &schema,
 
   if (!condition.left_is_attr) {
     left_value = std::unique_ptr<TupleValue>(
-        std::move(TupleValue::from_value(condition.left_value, rtype)));
+        std::move(TupleValue::from_value(condition.left_value, rtype, false)));
     ltype = condition.left_value.type;
   }
 
   if (!condition.right_is_attr) {
     right_value = std::unique_ptr<TupleValue>(
-        std::move(TupleValue::from_value(condition.right_value, ltype)));
+        std::move(TupleValue::from_value(condition.right_value, ltype, false)));
     rtype = condition.right_value.type;
   }
 

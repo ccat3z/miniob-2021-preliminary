@@ -30,7 +30,8 @@ public:
   virtual void to_string(std::ostream &os) const = 0;
   virtual int compare(const TupleValue *other) const = 0;
   // TODO: Comparable table is hard code for now. Needs to be refactored. It may be possible to use an undirected graph to represent comparable and comparative methods.
-  static TupleValue *from_value(Value &value, AttrType type = UNDEFINED);
+  static TupleValue *from_value(Value &value, AttrType type = UNDEFINED,
+                                bool must = true);
 
 private:
 };
