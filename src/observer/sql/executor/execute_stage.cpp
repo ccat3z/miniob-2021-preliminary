@@ -224,7 +224,8 @@ build_select_executor_node(const char *db, Trx *trx, Selects &selects) {
     table_scaners.push_back(std::move(table_scaner));
   }
 
-  // Extract sub query in conditions
+  // Flatten sub query in conditions
+  // TODO: We need a better method to implement sub query
   int virtual_table_idx = 0;
   for (size_t i = 0; i < selects.condition_num; i++) {
     Condition &condition = selects.conditions[i];
@@ -235,6 +236,7 @@ build_select_executor_node(const char *db, Trx *trx, Selects &selects) {
           build_select_executor_node(db, trx, *condition.left_selects);
       sub_select = std::make_unique<AliasNode>(std::move(sub_select),
                                                virtual_table_name.c_str());
+      // TODO: Ensure only on tuple will be produced by sub_select
 
       // TODO: Extract exec node: ValueNode
       if (sub_select->schema().fields().size() != 1) {

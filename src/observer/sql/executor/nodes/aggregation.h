@@ -23,6 +23,7 @@ public:
   virtual void add(std::shared_ptr<TupleValue> v) = 0;
   virtual std::shared_ptr<TupleValue> value() = 0;
   virtual bool support_any_column() { return false; };
+  // TODO: predicate push down is required for trigger push down in child node
 
 protected:
   AttrType in_type;
