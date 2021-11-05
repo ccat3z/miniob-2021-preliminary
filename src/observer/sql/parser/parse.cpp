@@ -81,22 +81,34 @@ void value_destroy(Value *value) {
   value->data = nullptr;
 }
 
-void condition_init(Condition *condition, CompOp comp, int left_is_attr,
-                    RelAttr *left_attr, Value *left_value, int right_is_attr,
-                    RelAttr *right_attr, Value *right_value) {
+void condition_init(Condition *condition, CompOp comp, ConditionExpr *left,
+                    ConditionExpr *right) {
   condition->comp = comp;
-  condition->left_is_attr = left_is_attr;
-  if (left_is_attr) {
-    condition->left_attr = *left_attr;
-  } else {
-    condition->left_value = *left_value;
+
+  switch (left->type) {
+  case COND_EXPR_ATTR:
+    condition->left_is_attr = true;
+    condition->left_attr = left->value.attr;
+    break;
+  case COND_EXPR_VALUE:
+    condition->left_is_attr = false;
+    condition->left_value = left->value.value;
+    break;
+  default:
+    throw std::logic_error("Unreachable code");
   }
 
-  condition->right_is_attr = right_is_attr;
-  if (right_is_attr) {
-    condition->right_attr = *right_attr;
-  } else {
-    condition->right_value = *right_value;
+  switch (right->type) {
+  case COND_EXPR_ATTR:
+    condition->right_is_attr = true;
+    condition->right_attr = right->value.attr;
+    break;
+  case COND_EXPR_VALUE:
+    condition->right_is_attr = false;
+    condition->right_value = right->value.value;
+    break;
+  default:
+    throw std::logic_error("Unreachable code");
   }
 }
 void condition_destroy(Condition *condition) {

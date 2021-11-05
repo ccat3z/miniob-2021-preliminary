@@ -137,8 +137,9 @@ union YYSTYPE
   CompOp comp_op;
   SelectExpr select_expr;
   Selects *select_statement;
+  ConditionExpr condition_expr;
 
-#line 142 "yacc_sql.tab.h"
+#line 143 "yacc_sql.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

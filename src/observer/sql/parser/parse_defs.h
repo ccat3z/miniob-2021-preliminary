@@ -50,6 +50,16 @@ typedef struct _Value {
   void *data;    // value
 } Value;
 
+typedef enum { COND_EXPR_VALUE, COND_EXPR_ATTR } ConditionExprType;
+
+typedef struct {
+  union {
+    Value value;
+    RelAttr attr;
+  } value;
+  ConditionExprType type;
+} ConditionExpr;
+
 typedef struct _Condition {
   int left_is_attr;  // TRUE if left-hand side is an attribute
                      // 1时，操作符左边是属性名，0时，是属性值
@@ -83,7 +93,7 @@ typedef struct {
 } OrderBy;
 
 // struct of select
-typedef struct {
+typedef struct _Selects {
   size_t attr_num;                // Length of attrs in Select clause
   SelectExpr attributes[MAX_NUM]; // attrs in Select clause
   size_t relation_num;            // Length of relations in Fro clause
@@ -225,9 +235,8 @@ void agg_expr_init_attr(AggExpr *expr, const char *func, const RelAttr *attr);
 void agg_expr_destroy(AggExpr *expr);
 void select_expr_destroy(SelectExpr *expr);
 
-void condition_init(Condition *condition, CompOp comp, int left_is_attr,
-                    RelAttr *left_attr, Value *left_value, int right_is_attr,
-                    RelAttr *right_attr, Value *right_value);
+void condition_init(Condition *condition, CompOp comp, ConditionExpr *left,
+                    ConditionExpr *right);
 void condition_destroy(Condition *condition);
 
 void attr_info_init(AttrInfo *attr_info, const char *name, AttrType type,

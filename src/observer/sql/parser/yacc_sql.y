@@ -117,6 +117,7 @@ ParserContext *get_context(yyscan_t scanner)
   CompOp comp_op;
   SelectExpr select_expr;
   Selects *select_statement;
+  ConditionExpr condition_expr;
 }
 
 %token <number> NUMBER
@@ -147,6 +148,7 @@ ParserContext *get_context(yyscan_t scanner)
 %type <list> order_by_attr_list;
 %type <list> order_by;
 %type <select_statement> select_statement;
+%type <condition_expr> condition_expr;
 
 %%
 
@@ -479,64 +481,25 @@ condition_list:
 	}
     ;
 condition:
-    ID comp_op value 
-		{
-			RelAttr left_attr;
-			relation_attr_init(&left_attr, NULL, $1);
-
-			$$ = (Condition *) malloc(sizeof(Condition));
-			condition_init($$, $2, 1, &left_attr, NULL, 0, NULL, &$3);
-		}
-		|value comp_op value 
-		{
-			$$ = (Condition *) malloc(sizeof(Condition));
-			condition_init($$, $2, 0, NULL, &$1, 0, NULL, &$3);
-		}
-		|ID comp_op ID 
-		{
-			RelAttr left_attr;
-			relation_attr_init(&left_attr, NULL, $1);
-			RelAttr right_attr;
-			relation_attr_init(&right_attr, NULL, $3);
-
-			$$ = (Condition *) malloc(sizeof(Condition));
-			condition_init($$, $2, 1, &left_attr, NULL, 1, &right_attr, NULL);
-		}
-    |value comp_op ID
-		{
-			RelAttr right_attr;
-			relation_attr_init(&right_attr, NULL, $3);
-
-			$$ = (Condition *) malloc(sizeof(Condition));
-			condition_init($$, $2, 0, NULL, &$1, 1, &right_attr, NULL);
-		}
-    |ID DOT ID comp_op value
-		{
-			RelAttr left_attr;
-			relation_attr_init(&left_attr, $1, $3);
-
-			$$ = (Condition *) malloc(sizeof(Condition));
-			condition_init($$, $4, 1, &left_attr, NULL, 0, NULL, &$5);
-    }
-    |value comp_op ID DOT ID
-		{
-			RelAttr right_attr;
-			relation_attr_init(&right_attr, $3, $5);
-
-			$$ = (Condition *) malloc(sizeof(Condition));
-			condition_init($$, $2, 0, NULL, &$1, 1, &right_attr, NULL);
-    }
-    |ID DOT ID comp_op ID DOT ID
-		{
-			RelAttr left_attr;
-			relation_attr_init(&left_attr, $1, $3);
-			RelAttr right_attr;
-			relation_attr_init(&right_attr, $5, $7);
-
-			$$ = (Condition *) malloc(sizeof(Condition));
-			condition_init($$, $4, 1, &left_attr, NULL, 1, &right_attr, NULL);
-    }
-    ;
+	condition_expr comp_op condition_expr {
+		$$ = (Condition *) malloc(sizeof(Condition));
+		condition_init($$, $2, &$1, &$3);
+	}
+	;
+condition_expr:
+	ID {
+		$$.type = COND_EXPR_ATTR;
+		relation_attr_init(&$$.value.attr, NULL, $1);
+	}
+	| ID DOT ID {
+		$$.type = COND_EXPR_ATTR;
+		relation_attr_init(&$$.value.attr, $1, $3);
+	}
+	| value {
+		$$.type = COND_EXPR_VALUE;
+		$$.value.value = $1;
+	}
+	;
 
 comp_op:
   	  EQ { $$ = EQUAL_TO; }
