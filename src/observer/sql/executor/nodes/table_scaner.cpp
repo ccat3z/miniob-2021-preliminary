@@ -10,7 +10,6 @@
 
 #include "table_scaner.h"
 #include "common/log/log.h"
-#include "sql/executor/execution_node.h"
 #include "storage/common/table.h"
 
 TableScaner::TableScaner(Trx *trx, Table *table) : trx_(trx), table_(table) {}

@@ -8,8 +8,8 @@
 // NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE. See the
 // Mulan PSL v2 for more details.
 
-#ifndef __OBSERVER_SQL_EXECUTOR_NODES_EXECUTION_NODE_H_
-#define __OBSERVER_SQL_EXECUTOR_NODES_EXECUTION_NODE_H_
+#ifndef __OBSERVER_SQL_EXECUTOR_NODES_BASE_H_
+#define __OBSERVER_SQL_EXECUTOR_NODES_BASE_H_
 #include "../tuple.h"
 #include <list>
 
@@ -51,4 +51,4 @@ public:
   // Set model
   virtual RC execute(TupleSet &tuple_set);
 };
-#endif // __OBSERVER_SQL_EXECUTOR_NODES_EXECUTION_NODE_H_
+#endif // __OBSERVER_SQL_EXECUTOR_NODES_BASE_H_
