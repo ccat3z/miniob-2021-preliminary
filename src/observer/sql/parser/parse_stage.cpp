@@ -257,21 +257,21 @@ RC complete_sql(SQLStageEvent *event, Selects &selects) {
     Condition &condition = selects.conditions[i];
 
     // Fill relation name in condition
-    if (condition.left_is_attr &&
-        !ensure_and_complete_relattr(tables, condition.left_attr)) {
+    if (condition.left_expr.type == COND_EXPR_ATTR &&
+        !ensure_and_complete_relattr(tables, condition.left_expr.value.attr)) {
       return RC::SQL_SYNTAX;
     }
-    if (condition.right_is_attr &&
-        !ensure_and_complete_relattr(tables, condition.right_attr)) {
+    if (condition.right_expr.type == COND_EXPR_ATTR &&
+        !ensure_and_complete_relattr(tables, condition.right_expr.value.attr)) {
       return RC::SQL_SYNTAX;
     }
 
     // Complete sub selects in condition
-    if (condition.left_selects != nullptr) {
-      complete_sql(event, *condition.left_selects);
+    if (condition.left_expr.type == COND_EXPR_SELECT) {
+      complete_sql(event, *condition.left_expr.value.selects);
     }
-    if (condition.right_selects != nullptr) {
-      complete_sql(event, *condition.right_selects);
+    if (condition.right_expr.type == COND_EXPR_SELECT) {
+      complete_sql(event, *condition.right_expr.value.selects);
     }
   }
 

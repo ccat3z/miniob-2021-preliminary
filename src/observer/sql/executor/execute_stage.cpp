@@ -213,6 +213,39 @@ void end_trx_if_need(Session *session, Trx *trx, bool all_right) {
 }
 
 std::unique_ptr<ExecutionNode>
+build_select_executor_node(const char *db, Trx *trx, Selects &selects);
+
+void rewite_sub_query(
+    ConditionExpr &expr, const char *db, Trx *trx,
+    std::vector<std::unique_ptr<ExecutionNode>> &table_scaners,
+    int &virtual_table_idx) {
+  if (expr.type != COND_EXPR_SELECT) {
+    return;
+  }
+
+  auto virtual_table_name = "."s + std::to_string(virtual_table_idx++);
+
+  std::unique_ptr<ExecutionNode> sub_select =
+      build_select_executor_node(db, trx, *expr.value.selects);
+  sub_select = std::make_unique<AliasNode>(std::move(sub_select),
+                                           virtual_table_name.c_str());
+  // TODO: Ensure only on tuple will be produced by sub_select if comp is not IN
+
+  // TODO: Extract exec node: ValueNode
+  if (sub_select->schema().fields().size() != 1) {
+    throw std::invalid_argument("Attribute num in sub select must be 1");
+  }
+  auto &sub_select_field = sub_select->schema().fields().at(0);
+
+  selects_destroy(expr.value.selects);
+  expr.type = COND_EXPR_ATTR;
+  expr.value.attr.relation_name = strdup(sub_select_field.table_name());
+  expr.value.attr.attribute_name = strdup(sub_select_field.field_name());
+
+  table_scaners.push_back(std::move(sub_select));
+}
+
+std::unique_ptr<ExecutionNode>
 build_select_executor_node(const char *db, Trx *trx, Selects &selects) {
   // Build table scanners
   std::vector<std::unique_ptr<ExecutionNode>> table_scaners;
@@ -229,51 +262,10 @@ build_select_executor_node(const char *db, Trx *trx, Selects &selects) {
   int virtual_table_idx = 0;
   for (size_t i = 0; i < selects.condition_num; i++) {
     Condition &condition = selects.conditions[i];
-    if (!condition.left_is_attr && condition.left_selects != nullptr) {
-      auto virtual_table_name = "."s + std::to_string(virtual_table_idx++);
-
-      std::unique_ptr<ExecutionNode> sub_select =
-          build_select_executor_node(db, trx, *condition.left_selects);
-      sub_select = std::make_unique<AliasNode>(std::move(sub_select),
-                                               virtual_table_name.c_str());
-      // TODO: Ensure only on tuple will be produced by sub_select if comp is not IN
-
-      // TODO: Extract exec node: ValueNode
-      if (sub_select->schema().fields().size() != 1) {
-        throw std::invalid_argument("Attribute num in sub select must be 1");
-      }
-      auto &sub_select_field = sub_select->schema().fields().at(0);
-
-      condition.left_is_attr = true;
-      condition.left_attr.relation_name = strdup(sub_select_field.table_name());
-      condition.left_attr.attribute_name =
-          strdup(sub_select_field.field_name());
-
-      table_scaners.push_back(std::move(sub_select));
-    }
-
-    if (!condition.right_is_attr && condition.right_selects != nullptr) {
-      auto virtual_table_name = "."s + std::to_string(virtual_table_idx++);
-
-      std::unique_ptr<ExecutionNode> sub_select =
-          build_select_executor_node(db, trx, *condition.right_selects);
-      sub_select = std::make_unique<AliasNode>(std::move(sub_select),
-                                               virtual_table_name.c_str());
-
-      // TODO: Extract exec node: ValueNode
-      if (sub_select->schema().fields().size() != 1) {
-        throw std::invalid_argument("Attribute num in sub select must be 1");
-      }
-      auto &sub_select_field = sub_select->schema().fields().at(0);
-
-      condition.right_is_attr = true;
-      condition.right_attr.relation_name =
-          strdup(sub_select_field.table_name());
-      condition.right_attr.attribute_name =
-          strdup(sub_select_field.field_name());
-
-      table_scaners.push_back(std::move(sub_select));
-    }
+    rewite_sub_query(condition.left_expr, db, trx, table_scaners,
+                     virtual_table_idx);
+    rewite_sub_query(condition.right_expr, db, trx, table_scaners,
+                     virtual_table_idx);
 
     if (condition.comp == IN_SET) {
       condition.comp = EQUAL_TO;

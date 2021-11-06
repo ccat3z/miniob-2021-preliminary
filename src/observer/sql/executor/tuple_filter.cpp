@@ -7,34 +7,36 @@ DefaultTupleFilter::DefaultTupleFilter(const TupleSchema &schema,
 
   AttrType ltype = UNDEFINED, rtype = UNDEFINED;
 
-  if (condition.left_is_attr) {
-    left_index = schema.index_of_field(condition.left_attr.relation_name,
-                                       condition.left_attr.attribute_name);
+  if (condition.left_expr.type == COND_EXPR_ATTR) {
+    left_index =
+        schema.index_of_field(condition.left_expr.value.attr.relation_name,
+                              condition.left_expr.value.attr.attribute_name);
     if (left_index < 0) {
       throw std::invalid_argument("Cannot find left attr in schema");
     }
     ltype = schema.fields().at(left_index).type();
   }
 
-  if (condition.right_is_attr) {
-    right_index = schema.index_of_field(condition.right_attr.relation_name,
-                                        condition.right_attr.attribute_name);
+  if (condition.right_expr.type == COND_EXPR_ATTR) {
+    right_index =
+        schema.index_of_field(condition.right_expr.value.attr.relation_name,
+                              condition.right_expr.value.attr.attribute_name);
     if (right_index < 0) {
       throw std::invalid_argument("Cannot find right attr in schema");
     }
     rtype = schema.fields().at(right_index).type();
   }
 
-  if (!condition.left_is_attr) {
-    left_value = std::unique_ptr<TupleValue>(
-        std::move(TupleValue::from_value(condition.left_value, rtype, false)));
-    ltype = condition.left_value.type;
+  if (condition.left_expr.type != COND_EXPR_ATTR) {
+    left_value = std::unique_ptr<TupleValue>(std::move(
+        TupleValue::from_value(condition.left_expr.value.value, rtype, false)));
+    ltype = condition.left_expr.value.value.type;
   }
 
-  if (!condition.right_is_attr) {
-    right_value = std::unique_ptr<TupleValue>(
-        std::move(TupleValue::from_value(condition.right_value, ltype, false)));
-    rtype = condition.right_value.type;
+  if (condition.right_expr.type != COND_EXPR_ATTR) {
+    right_value = std::unique_ptr<TupleValue>(std::move(TupleValue::from_value(
+        condition.right_expr.value.value, ltype, false)));
+    rtype = condition.right_expr.value.value.type;
   }
 
   // TODO: Comparable table is hard code for now. Needs to be refactored. It may be possible to use an undirected graph to represent comparable and comparative methods.

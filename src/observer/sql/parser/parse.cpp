@@ -81,59 +81,31 @@ void value_destroy(Value *value) {
   value->data = nullptr;
 }
 
-void condition_init(Condition *condition, CompOp comp, ConditionExpr *left,
-                    ConditionExpr *right) {
-  condition->comp = comp;
-
-  switch (left->type) {
+void condition_expr_destroy(ConditionExpr *expr) {
+  switch (expr->type) {
   case COND_EXPR_ATTR:
-    condition->left_is_attr = true;
-    condition->left_attr = left->value.attr;
-    condition->left_selects = nullptr;
+    relation_attr_destroy(&expr->value.attr);
     break;
   case COND_EXPR_VALUE:
-    condition->left_is_attr = false;
-    condition->left_value = left->value.value;
-    condition->left_selects = nullptr;
+    value_destroy(&expr->value.value);
     break;
   case COND_EXPR_SELECT:
-    condition->left_is_attr = false;
-    condition->left_selects = left->value.selects;
-    break;
-  default:
-    throw std::logic_error("Unreachable code");
-  }
-
-  switch (right->type) {
-  case COND_EXPR_ATTR:
-    condition->right_is_attr = true;
-    condition->right_attr = right->value.attr;
-    condition->right_selects = nullptr;
-    break;
-  case COND_EXPR_VALUE:
-    condition->right_is_attr = false;
-    condition->right_value = right->value.value;
-    condition->right_selects = nullptr;
-    break;
-  case COND_EXPR_SELECT:
-    condition->right_is_attr = false;
-    condition->right_selects = right->value.selects;
+    selects_destroy(expr->value.selects);
+    free(expr->value.selects);
     break;
   default:
     throw std::logic_error("Unreachable code");
   }
 }
+void condition_init(Condition *condition, CompOp comp, ConditionExpr *left,
+                    ConditionExpr *right) {
+  condition->left_expr = *left;
+  condition->right_expr = *right;
+  condition->comp = comp;
+}
 void condition_destroy(Condition *condition) {
-  if (condition->left_is_attr) {
-    relation_attr_destroy(&condition->left_attr);
-  } else {
-    value_destroy(&condition->left_value);
-  }
-  if (condition->right_is_attr) {
-    relation_attr_destroy(&condition->right_attr);
-  } else {
-    value_destroy(&condition->right_value);
-  }
+  condition_expr_destroy(&condition->left_expr);
+  condition_expr_destroy(&condition->right_expr);
 }
 
 void attr_info_init(AttrInfo *attr_info, const char *name, AttrType type,

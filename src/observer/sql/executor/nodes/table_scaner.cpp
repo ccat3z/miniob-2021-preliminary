@@ -44,13 +44,13 @@ bool table_contains_attr(const Table *table, RelAttr &attr) {
 }
 
 bool TableScaner::add_filter(Condition &condition) {
-  if (condition.left_is_attr &&
-      !table_contains_attr(table_, condition.left_attr)) {
+  if (condition.left_expr.type == COND_EXPR_ATTR &&
+      !table_contains_attr(table_, condition.left_expr.value.attr)) {
     return false;
   }
 
-  if (condition.right_is_attr &&
-      !table_contains_attr(table_, condition.right_attr)) {
+  if (condition.right_expr.type == COND_EXPR_ATTR &&
+      !table_contains_attr(table_, condition.right_expr.value.attr)) {
     return false;
   }
 

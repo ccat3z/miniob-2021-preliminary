@@ -66,13 +66,13 @@ RC DefaultConditionFilter::init(Table &table, Condition &condition) {
   AttrType type_right = UNDEFINED;
 
   // Prepare attr first, because value_cast is based on attrs
-  if (1 == condition.left_is_attr) {
+  if (condition.left_expr.type == COND_EXPR_ATTR) {
     left.is_attr = true;
     const FieldMeta *field_left =
-        table_meta.field(condition.left_attr.attribute_name);
+        table_meta.field(condition.left_expr.value.attr.attribute_name);
     if (nullptr == field_left) {
       LOG_WARN("No such field in condition. %s.%s", table.name(),
-               condition.left_attr.attribute_name);
+               condition.left_expr.value.attr.attribute_name);
       return RC::SCHEMA_FIELD_MISSING;
     }
     left.attr_length = field_left->len();
@@ -83,13 +83,13 @@ RC DefaultConditionFilter::init(Table &table, Condition &condition) {
     type_left = field_left->type();
   }
 
-  if (1 == condition.right_is_attr) {
+  if (condition.right_expr.type == COND_EXPR_ATTR) {
     right.is_attr = true;
     const FieldMeta *field_right =
-        table_meta.field(condition.right_attr.attribute_name);
+        table_meta.field(condition.right_expr.value.attr.attribute_name);
     if (nullptr == field_right) {
       LOG_WARN("No such field in condition. %s.%s", table.name(),
-               condition.right_attr.attribute_name);
+               condition.right_expr.value.attr.attribute_name);
       return RC::SCHEMA_FIELD_MISSING;
     }
     right.attr_length = field_right->len();
@@ -99,29 +99,29 @@ RC DefaultConditionFilter::init(Table &table, Condition &condition) {
     right.value = nullptr;
   }
 
-  if (1 != condition.left_is_attr) {
+  if (condition.left_expr.type != COND_EXPR_ATTR) {
     // Detect value's type by another attr
-    if (condition.right_is_attr) {
-      value_cast(&condition.left_value, type_right);
+    if (condition.right_expr.type == COND_EXPR_ATTR) {
+      value_cast(&condition.left_expr.value.value, type_right);
     }
 
     left.is_attr = false;
-    left.value = condition.left_value.data; // 校验type 或者转换类型
-    type_left = condition.left_value.type;
+    left.value = condition.left_expr.value.value.data; // 校验type 或者转换类型
+    type_left = condition.left_expr.value.value.type;
 
     left.attr_length = 0;
     left.attr_offset = 0;
   }
 
-  if (1 != condition.right_is_attr) {
+  if (condition.right_expr.type != COND_EXPR_ATTR) {
     // Detect value's type by another attr
-    if (condition.left_is_attr) {
-      value_cast(&condition.right_value, type_left);
+    if (condition.left_expr.type == COND_EXPR_ATTR) {
+      value_cast(&condition.right_expr.value.value, type_left);
     }
 
     right.is_attr = false;
-    right.value = condition.right_value.data;
-    type_right = condition.right_value.type;
+    right.value = condition.right_expr.value.value.data;
+    type_right = condition.right_expr.value.value.type;
 
     right.attr_length = 0;
     right.attr_offset = 0;

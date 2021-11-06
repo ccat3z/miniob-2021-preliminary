@@ -82,26 +82,26 @@ void extract_condition(Condition &condition, std::list<Condition *> &both,
                        const TupleSchema &rschema,
                        std::list<Condition *> &right_only) {
   bool lschema_involved = false, rschema_involved = false;
-  if (condition.left_is_attr) {
+  if (condition.left_expr.type == COND_EXPR_ATTR) {
     lschema_involved =
         lschema_involved ||
-        lschema.index_of_field(condition.left_attr.relation_name,
-                               condition.left_attr.attribute_name) >= 0;
+        lschema.index_of_field(condition.left_expr.value.attr.relation_name,
+                               condition.left_expr.value.attr.attribute_name) >= 0;
     rschema_involved =
         rschema_involved ||
-        rschema.index_of_field(condition.left_attr.relation_name,
-                               condition.left_attr.attribute_name) >= 0;
+        rschema.index_of_field(condition.left_expr.value.attr.relation_name,
+                               condition.left_expr.value.attr.attribute_name) >= 0;
   }
 
-  if (condition.right_is_attr) {
+  if (condition.right_expr.type == COND_EXPR_ATTR) {
     lschema_involved =
         lschema_involved ||
-        lschema.index_of_field(condition.right_attr.relation_name,
-                               condition.right_attr.attribute_name) >= 0;
+        lschema.index_of_field(condition.right_expr.value.attr.relation_name,
+                               condition.right_expr.value.attr.attribute_name) >= 0;
     rschema_involved =
         rschema_involved ||
-        rschema.index_of_field(condition.right_attr.relation_name,
-                               condition.right_attr.attribute_name) >= 0;
+        rschema.index_of_field(condition.right_expr.value.attr.relation_name,
+                               condition.right_expr.value.attr.attribute_name) >= 0;
   }
 
   if (!lschema_involved && !rschema_involved) {
