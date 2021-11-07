@@ -99,7 +99,7 @@ RC DefaultConditionFilter::init(Table &table, Condition &condition) {
     right.value = nullptr;
   }
 
-  if (condition.left_expr.type != COND_EXPR_ATTR) {
+  if (condition.left_expr.type == COND_EXPR_VALUE) {
     // Detect value's type by another attr
     if (condition.right_expr.type == COND_EXPR_ATTR) {
       value_cast(&condition.left_expr.value.value, type_right);
@@ -113,7 +113,7 @@ RC DefaultConditionFilter::init(Table &table, Condition &condition) {
     left.attr_offset = 0;
   }
 
-  if (condition.right_expr.type != COND_EXPR_ATTR) {
+  if (condition.right_expr.type == COND_EXPR_VALUE) {
     // Detect value's type by another attr
     if (condition.left_expr.type == COND_EXPR_ATTR) {
       value_cast(&condition.right_expr.value.value, type_left);
@@ -127,13 +127,10 @@ RC DefaultConditionFilter::init(Table &table, Condition &condition) {
     right.attr_offset = 0;
   }
 
-  // 校验和转换
-  //  if (!field_type_compare_compatible_table[type_left][type_right]) {
-  //    // 不能比较的两个字段， 要把信息传给客户端
-  //    return RC::SCHEMA_FIELD_TYPE_MISMATCH;
-  //  }
-  // NOTE：这里没有实现不同类型的数据比较，比如整数跟浮点数之间的对比
-  // 但是选手们还是要实现。这个功能在预选赛中会出现
+  if (type_left == UNDEFINED || type_right == UNDEFINED) {
+    return RC::INVALID_ARGUMENT;
+  }
+
   if (type_left != type_right) {
     return RC::SCHEMA_FIELD_TYPE_MISMATCH;
   }
