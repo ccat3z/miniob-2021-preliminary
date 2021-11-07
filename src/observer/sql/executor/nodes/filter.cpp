@@ -11,6 +11,17 @@
 #include "filter.h"
 #include "common/log/log.h"
 
+FilterNode::FilterNode(Session *session, std::unique_ptr<ExecutionNode> child,
+                       Condition *begin, Condition *end)
+    : session(session), child(std::move(child)) {
+  tuple_schema_ = this->child->schema();
+  for (; begin != end; begin++) {
+    conditions.push_back(begin);
+  }
+
+  build_filters();
+}
+
 FilterNode::~FilterNode() {}
 const TupleSchema &FilterNode::schema() { return tuple_schema_; };
 
@@ -38,7 +49,8 @@ RC FilterNode::next(Tuple &tuple) {
 void FilterNode::build_filters() {
   filters.clear();
   for (auto &cond : conditions) {
-    auto filter = std::make_unique<DefaultTupleFilter>(child->schema(), *cond);
+    auto filter =
+        std::make_unique<TupleFilter>(session, child->schema(), *cond);
     filters.push_back(std::move(filter));
   }
 }
@@ -56,4 +68,54 @@ FilterNode::push_down_predicate(std::list<Condition *> &predicate) {
 
   build_filters();
   return nullptr;
+}
+
+TupleFilter::TupleFilter(Session *session, const TupleSchema &schema,
+                         Condition &condition) {
+  op = condition.comp;
+
+  // Handle value expressions as far back as possible
+  // since the AttrType of the value expression must be determined by
+  // the expression on the other side.
+  if (condition.left_expr.type != COND_EXPR_VALUE) {
+    left = create_expression(session, &condition.left_expr, schema);
+  }
+  right = create_expression(session, &condition.right_expr, schema,
+                            left == nullptr ? UNDEFINED : left->type());
+  if (condition.left_expr.type == COND_EXPR_VALUE) {
+    left =
+        create_expression(session, &condition.left_expr, schema, right->type());
+  }
+
+  // TODO: Comparable table is hard code for now. Needs to be refactored. It may be possible to use an undirected graph to represent comparable and comparative methods.
+  auto ltype = left->type(), rtype = right->type();
+  if (ltype != rtype) {
+    if (!((ltype == INTS && rtype == FLOATS) ||
+          (ltype == FLOATS && rtype == INTS))) {
+      throw std::invalid_argument("Incompareble fields");
+    }
+  }
+}
+TupleFilter::~TupleFilter() {}
+
+bool TupleFilter::filter(const Tuple &tuple) const {
+  int cmp = left->eval(tuple)->compare(right->eval(tuple).get());
+
+  switch (op) {
+  case EQUAL_TO:
+    return 0 == cmp;
+  case LESS_EQUAL:
+    return cmp <= 0;
+  case NOT_EQUAL:
+    return cmp != 0;
+  case LESS_THAN:
+    return cmp < 0;
+  case GREAT_EQUAL:
+    return cmp >= 0;
+  case GREAT_THAN:
+    return cmp > 0;
+  default:
+    LOG_ERROR("Unsupport CompOp: %d", op);
+    return false;
+  }
 }

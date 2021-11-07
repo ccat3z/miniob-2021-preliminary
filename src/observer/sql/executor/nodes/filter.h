@@ -10,23 +10,28 @@
 
 #ifndef __OBSERVER_SQL_EXECUTOR_NODES_FILTER_H_
 #define __OBSERVER_SQL_EXECUTOR_NODES_FILTER_H_
-#include "../tuple_filter.h"
+#include "../expression/expression.h"
 #include "base.h"
+#include "session/session.h"
 #include <list>
 #include <memory>
 
+class TupleFilter {
+public:
+  TupleFilter(Session *session, const TupleSchema &schema,
+              Condition &condition);
+  virtual ~TupleFilter();
+  bool filter(const Tuple &tuple) const;
+
+private:
+  std::unique_ptr<Expression> left, right;
+  CompOp op;
+};
+
 class FilterNode : public VolcanoExecutionNode {
 public:
-  FilterNode(std::unique_ptr<ExecutionNode> child, Condition *begin,
-             Condition *end)
-      : child(std::move(child)) {
-    tuple_schema_ = this->child->schema();
-    for (; begin != end; begin++) {
-      conditions.push_back(begin);
-    }
-
-    build_filters();
-  }
+  FilterNode(Session *session, std::unique_ptr<ExecutionNode> child,
+             Condition *begin, Condition *end);
   template <class InputIt>
   FilterNode(std::unique_ptr<ExecutionNode> child, InputIt begin, InputIt end)
       : child(std::move(child)) {
@@ -45,6 +50,8 @@ public:
   push_down_predicate(std::list<Condition *> &predicate) override;
 
 private:
+  Session *session;
+
   TupleSchema tuple_schema_;
   std::unique_ptr<ExecutionNode> child;
   std::list<Condition *> conditions;

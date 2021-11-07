@@ -220,7 +220,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql,
 
   std::unique_ptr<ExecutionNode> exec_node;
   try {
-    exec_node = build_select_executor_node(db, trx, selects);
+    exec_node = build_select_executor_node(session, selects);
   } catch (const std::exception &e) {
     LOG_ERROR(e.what());
     return RC::SQL_SYNTAX;

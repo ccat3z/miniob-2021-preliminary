@@ -8,21 +8,20 @@
 // NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE. See the
 // Mulan PSL v2 for more details.
 
-#ifndef __OBSERVER_SQL_EXECUTOR_NODES_EXECUTION_NODE_H_
-#define __OBSERVER_SQL_EXECUTOR_NODES_EXECUTION_NODE_H_
+#ifndef __OBSERVER_SQL_EXECUTOR_EXPRESSION_ATTR_H_
+#define __OBSERVER_SQL_EXECUTOR_EXPRESSION_ATTR_H_
 
-#include "aggregation.h"
-#include "alias.h"
 #include "base.h"
-#include "cartesian.h"
-#include "filter.h"
-#include "order.h"
-#include "projection.h"
-#include "storage/trx/trx.h"
-#include "table_scaner.h"
-#include <memory>
 
-std::unique_ptr<ExecutionNode> build_select_executor_node(Session *session,
-                                                          Selects &selects);
+class AttrExpression : public Expression {
+public:
+  AttrExpression(RelAttr &attr, const TupleSchema &schema);
+  std::shared_ptr<TupleValue> eval(const Tuple &tuple) override;
+  AttrType type() override;
 
-#endif // __OBSERVER_SQL_EXECUTOR_NODES_EXECUTION_NODE_H_
+private:
+  int index;
+  AttrType field_type;
+};
+
+#endif // __OBSERVER_SQL_EXECUTOR_EXPRESSION_ATTR_H_
