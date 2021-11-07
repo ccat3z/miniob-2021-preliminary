@@ -10,7 +10,14 @@ See the Mulan PSL v2 for more details. */
 
 #include "value.h"
 
-void DateValue::to_string(std::ostream &os) const { os << date.format(); }
+void DateValue::to_string(std::ostream &os) const {
+  if (is_null()) {
+    os << "NULL";
+    return;
+  }
+
+  os << date.format();
+}
 int DateValue::compare(const TupleValue *other) const {
   if (auto date_other = dynamic_cast<const DateValue *>(other)) {
     return date.julian() - date_other->date.julian();
@@ -48,6 +55,9 @@ TupleValue *TupleValue::from_value(Value &value, AttrType type, bool must) {
     throw std::invalid_argument(msg.str());
   }
 }
+
+bool TupleValue::is_null() const { return null; }
+void TupleValue::set_null(bool null) { this->null = null; }
 
 int IntValue::compare(const TupleValue *other) const {
   if (auto int_value = dynamic_cast<const IntValue *>(other)) {

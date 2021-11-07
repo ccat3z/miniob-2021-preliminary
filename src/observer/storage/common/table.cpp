@@ -331,7 +331,7 @@ RC Table::make_record(int value_num, Value *values, char *&record_out) {
     memcpy(record + field->offset(), value.data, field->len());
     if (value.is_null) {
       if (field->nullable()) {
-        *null_field |= 1 << i;
+        *null_field |= 1 << (i + normal_field_start_index);
       } else {
         LOG_ERROR("%s is not nullable", field->name());
         return RC::GENERIC_ERROR;

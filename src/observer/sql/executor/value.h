@@ -33,14 +33,25 @@ public:
   static TupleValue *from_value(Value &value, AttrType type = UNDEFINED,
                                 bool must = true);
 
+  virtual bool is_null() const;
+  virtual void set_null(bool null);
+
 private:
+  bool null = false;
 };
 
 class IntValue : public TupleValue {
 public:
   explicit IntValue(int value) : value_(value) {}
 
-  void to_string(std::ostream &os) const override { os << value_; }
+  void to_string(std::ostream &os) const override {
+    if (is_null()) {
+      os << "NULL";
+      return;
+    }
+
+    os << value_;
+  }
 
   int compare(const TupleValue *other) const override;
 
@@ -55,6 +66,11 @@ public:
   explicit FloatValue(float value) : value_(value) {}
 
   void to_string(std::ostream &os) const override {
+    if (is_null()) {
+      os << "NULL";
+      return;
+    }
+
     char buf[100];
     char *end = buf + snprintf(buf, 100, "%.2f", value_) - 1;
 
@@ -79,7 +95,13 @@ public:
   StringValue(const char *value, int len) : value_(value, len) {}
   explicit StringValue(const char *value) : value_(value) {}
 
-  void to_string(std::ostream &os) const override { os << value_; }
+  void to_string(std::ostream &os) const override {
+    if (is_null()) {
+      os << "NULL";
+      return;
+    }
+    os << value_;
+  }
 
   int compare(const TupleValue *other) const override;
 

@@ -213,9 +213,18 @@ void TupleRecordConverter::add_record(const char *record) {
   const TupleSchema &schema = tuple_set_.schema();
   Tuple tuple;
   const TableMeta &table_meta = table_->table_meta();
+  uint32_t null = *(uint32_t *)(record + table_meta.null_field()->offset());
   for (const TupleField &field : schema.fields()) {
-    const FieldMeta *field_meta = table_meta.field(field.field_name());
-    assert(field_meta != nullptr);
+    int field_idx = -1;
+    for (int i = 0; i < table_meta.field_num(); i++) {
+      if (strcmp(table_meta.field(i)->name(), field.field_name()) == 0) {
+        field_idx = i;
+        break;
+      }
+    }
+    assert(field_idx != -1);
+    const FieldMeta *field_meta = table_meta.field(field_idx);
+
     switch (field_meta->type()) {
     case INTS: {
       int value = *(int *)(record + field_meta->offset());
@@ -235,6 +244,10 @@ void TupleRecordConverter::add_record(const char *record) {
     default: {
       LOG_PANIC("Unsupported field type. type=%d", field_meta->type());
     }
+    }
+
+    if ((null & ((uint32_t)1 << field_idx)) == ((uint32_t)1 << field_idx)) {
+      tuple.values().back()->set_null(true);
     }
   }
 
