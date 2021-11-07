@@ -134,6 +134,7 @@ typedef struct {
   char *name;    // Attribute name
   AttrType type; // Type of attribute
   size_t length; // Length of attribute
+  bool nullable;
 } AttrInfo;
 
 // struct of craete_table
@@ -241,7 +242,7 @@ void condition_init(Condition *condition, CompOp comp, ConditionExpr *left,
 void condition_destroy(Condition *condition);
 
 void attr_info_init(AttrInfo *attr_info, const char *name, AttrType type,
-                    size_t length);
+                    size_t length, bool nullable);
 void attr_info_destroy(AttrInfo *attr_info);
 
 void selects_init(Selects *selects, ...);

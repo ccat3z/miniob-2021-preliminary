@@ -60,6 +60,7 @@ ParserContext *get_context(yyscan_t scanner)
         DROP
         TABLE
         TABLES
+		NULLABLE
         INDEX
         SELECT
         DESC
@@ -112,6 +113,7 @@ ParserContext *get_context(yyscan_t scanner)
   int number;
   float floats;
   char *position;
+  bool boolean;
   OrderDir orderdir;
   RelAttr *rel_attr;
   List *list;
@@ -151,6 +153,7 @@ ParserContext *get_context(yyscan_t scanner)
 %type <list> order_by;
 %type <select_statement> select_statement;
 %type <condition_expr> condition_expr;
+%type <boolean> attr_def_nullable;
 
 %%
 
@@ -260,16 +263,16 @@ attr_def_list:
     ;
     
 attr_def:
-    ID_get type LBRACE number RBRACE 
+    ID_get type LBRACE number RBRACE attr_def_nullable
 		{
 			AttrInfo attribute;
-			attr_info_init(&attribute, CONTEXT->id, $2, $4);
+			attr_info_init(&attribute, CONTEXT->id, $2, $4, $6);
 			create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
 		}
-    |ID_get type
+    |ID_get type attr_def_nullable
 		{
 			AttrInfo attribute;
-			attr_info_init(&attribute, CONTEXT->id, $2, 4);
+			attr_info_init(&attribute, CONTEXT->id, $2, 4, $3);
 			create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
 		}
     ;
@@ -288,6 +291,10 @@ ID_get:
 		char *temp=$1; 
 		snprintf(CONTEXT->id, sizeof(CONTEXT->id), "%s", temp);
 	}
+	;
+attr_def_nullable:
+	{ $$ = false; }
+	| NULLABLE { $$ = true; }
 	;
 
 	

@@ -652,9 +652,10 @@ TEST_F(SQLTest, DateCanCreateTable) {
   ASSERT_EQ(exec_sql("create table t(a int, d date);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("desc t;"),
             "t(\n"
-            "\tfield name=__trx, type=ints, len=4, visible=no\n"
-            "\tfield name=a, type=ints, len=4, visible=yes\n"
-            "\tfield name=d, type=date, len=4, visible=yes\n"
+            "\tfield name=__trx, type=ints, len=4, visible=no, nullable=no\n"
+            "\tfield name=__null, type=ints, len=4, visible=no, nullable=no\n"
+            "\tfield name=a, type=ints, len=4, visible=yes, nullable=no\n"
+            "\tfield name=d, type=date, len=4, visible=yes, nullable=no\n"
             ")\n");
 }
 
@@ -1210,6 +1211,25 @@ TEST_F(SQLTest, SubQueryNotInShouldWork) {
 
   ASSERT_EQ(exec_sql("select * from t where b not in (select b from t2);"),
             "a | b\n2 | 2\n");
+}
+
+// ##    ## ##     ## ##       ##
+// ###   ## ##     ## ##       ##
+// ####  ## ##     ## ##       ##
+// ## ## ## ##     ## ##       ##
+// ##  #### ##     ## ##       ##
+// ##   ### ##     ## ##       ##
+// ##    ##  #######  ######## ########
+
+TEST_F(SQLTest, NullCreateTableShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a float, b int nullable);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("desc t;"),
+            "t(\n"
+            "\tfield name=__trx, type=ints, len=4, visible=no, nullable=no\n"
+            "\tfield name=__null, type=ints, len=4, visible=no, nullable=no\n"
+            "\tfield name=a, type=floats, len=4, visible=yes, nullable=no\n"
+            "\tfield name=b, type=ints, len=4, visible=yes, nullable=yes\n"
+            ")\n");
 }
 
 int main(int argc, char **argv) {
