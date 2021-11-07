@@ -321,10 +321,22 @@ RC Table::make_record(int value_num, Value *values, char *&record_out) {
   int record_size = table_meta_.record_size();
   char *record = new char[record_size];
 
+  uint32_t *null_field =
+      (uint32_t *)(record + table_meta_.null_field()->offset());
+  *null_field = 0;
   for (int i = 0; i < value_num; i++) {
     const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
     Value &value = values[i];
+
     memcpy(record + field->offset(), value.data, field->len());
+    if (value.is_null) {
+      if (field->nullable()) {
+        *null_field |= 1 << i;
+      } else {
+        LOG_ERROR("%s is not nullable", field->name());
+        return RC::GENERIC_ERROR;
+      }
+    }
   }
 
   record_out = record;

@@ -40,23 +40,37 @@ void relation_attr_destroy(RelAttr *relation_attr) {
   relation_attr->attribute_name = nullptr;
 }
 
+void value_init_null(Value *value) {
+  value->type = TYPE_NULL;
+  value->data = malloc(4);
+  memset(value->data, 0, 4);
+  value->is_null = true;
+}
 void value_init_integer(Value *value, int v) {
   value->type = INTS;
   value->data = malloc(sizeof(v));
   memcpy(value->data, &v, sizeof(v));
+  value->is_null = false;
 }
 void value_init_float(Value *value, float v) {
   value->type = FLOATS;
   value->data = malloc(sizeof(v));
   memcpy(value->data, &v, sizeof(v));
+  value->is_null = false;
 }
 void value_init_string(Value *value, const char *v) {
   value->type = CHARS;
   value->data = strdup(v);
+  value->is_null = false;
 }
 bool value_cast(Value *value, AttrType type) {
   if (value->type == type)
     return true;
+
+  if (value->type == TYPE_NULL) {
+    value->type = type;
+    return true;
+  }
 
   if (value->type == CHARS && type == DATE) {
     common::Date date;
