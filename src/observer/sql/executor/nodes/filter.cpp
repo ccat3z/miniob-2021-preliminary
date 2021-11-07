@@ -122,6 +122,15 @@ bool TupleFilter::filter(const Tuple &tuple) const {
                           return lvalue->compare(rvalue.get()) == 0;
                         }) != rvalues.end();
   }
+  case NOT_IN_SET: {
+    auto lvalue = left->eval(tuple);
+    std::vector<std::shared_ptr<TupleValue>> rvalues;
+    right->evals(rvalues, tuple);
+    return std::find_if(rvalues.begin(), rvalues.end(),
+                        [&](std::shared_ptr<TupleValue> &rvalue) {
+                          return lvalue->compare(rvalue.get()) == 0;
+                        }) == rvalues.end();
+  }
   default:
     LOG_ERROR("Unsupport CompOp: %d", op);
     return false;

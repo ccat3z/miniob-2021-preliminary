@@ -88,6 +88,7 @@ ParserContext *get_context(yyscan_t scanner)
 		JOIN
         WHERE
         AND
+		NOT
 		ORDER
 		BY
 		ASC
@@ -514,6 +515,7 @@ comp_op:
     | GE { $$ = GREAT_EQUAL; }
     | NE { $$ = NOT_EQUAL; }
 	| IN { $$ = IN_SET; }
+	| NOT IN { $$ = NOT_IN_SET; }
     ;
 
 order_by:

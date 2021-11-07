@@ -58,6 +58,7 @@ QUOTE            [\'\"]
 [Jj][Oo][Ii][Nn]                         RETURN_TOKEN(JOIN);
 [Ww][Hh][Ee][Rr][Ee]                  	 RETURN_TOKEN(WHERE);
 [Aa][Nn][Dd]                             RETURN_TOKEN(AND);
+[Nn][Oo][Tt]                             RETURN_TOKEN(NOT);
 [Oo][Rr][Dd][Ee][Rr]                     RETURN_TOKEN(ORDER);
 [Bb][Yy]                                 RETURN_TOKEN(BY);
 [Aa][Ss][Cc]                             RETURN_TOKEN(ASC);
