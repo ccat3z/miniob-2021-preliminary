@@ -37,7 +37,7 @@ void TableMeta::swap(TableMeta &other) noexcept {
 }
 
 RC TableMeta::init_sys_fields() {
-  sys_fields_.reserve(1);
+  sys_fields_.reserve(2);
   FieldMeta field_meta;
   RC rc = field_meta.init(Trx::trx_field_name(), Trx::trx_field_type(), 0,
                           Trx::trx_field_len(), false);
@@ -47,6 +47,11 @@ RC TableMeta::init_sys_fields() {
   }
 
   sys_fields_.push_back(field_meta);
+
+  // Null field
+  FieldMeta null_field;
+  null_field.init("__null", INTS, 4, 4, false);
+  sys_fields_.push_back(null_field);
   return rc;
 }
 RC TableMeta::init(const char *name, int field_num,
@@ -109,6 +114,7 @@ RC TableMeta::add_index(const IndexMeta &index) {
 const char *TableMeta::name() const { return name_.c_str(); }
 
 const FieldMeta *TableMeta::trx_field() const { return &fields_[0]; }
+const FieldMeta *TableMeta::null_field() const { return &fields_[1]; }
 
 const FieldMeta *TableMeta::field(int index) const { return &fields_[index]; }
 const FieldMeta *TableMeta::field(const char *name) const {
