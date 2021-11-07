@@ -19,7 +19,7 @@ class Expression {
 public:
   virtual ~Expression() = default;
   virtual std::shared_ptr<TupleValue> eval(const Tuple &tuple) = 0;
-  virtual void evals(std::vector<std::shared_ptr<TupleValue>> values,
+  virtual void evals(std::vector<std::shared_ptr<TupleValue>> &values,
                      const Tuple &tuple) {
     values.push_back(eval(tuple));
   };

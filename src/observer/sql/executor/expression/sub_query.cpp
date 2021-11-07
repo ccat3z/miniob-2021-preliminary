@@ -20,7 +20,7 @@ std::shared_ptr<TupleValue> SubQueryExpression::eval(const Tuple &tuple) {
   return tuple_set.tuples()[0].get_pointer(0);
 }
 
-void SubQueryExpression::evals(std::vector<std::shared_ptr<TupleValue>> values,
+void SubQueryExpression::evals(std::vector<std::shared_ptr<TupleValue>> &values,
                                const Tuple &tuple) {
   retrieve();
   for (auto &tuple : tuple_set.tuples()) {

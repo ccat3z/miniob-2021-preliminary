@@ -10,6 +10,7 @@
 
 #include "filter.h"
 #include "common/log/log.h"
+#include <algorithm>
 
 FilterNode::FilterNode(Session *session, std::unique_ptr<ExecutionNode> child,
                        Condition *begin, Condition *end)
@@ -99,21 +100,28 @@ TupleFilter::TupleFilter(Session *session, const TupleSchema &schema,
 TupleFilter::~TupleFilter() {}
 
 bool TupleFilter::filter(const Tuple &tuple) const {
-  int cmp = left->eval(tuple)->compare(right->eval(tuple).get());
-
   switch (op) {
   case EQUAL_TO:
-    return 0 == cmp;
+    return left->eval(tuple)->compare(right->eval(tuple).get()) == 0;
   case LESS_EQUAL:
-    return cmp <= 0;
+    return left->eval(tuple)->compare(right->eval(tuple).get()) <= 0;
   case NOT_EQUAL:
-    return cmp != 0;
+    return left->eval(tuple)->compare(right->eval(tuple).get()) != 0;
   case LESS_THAN:
-    return cmp < 0;
+    return left->eval(tuple)->compare(right->eval(tuple).get()) < 0;
   case GREAT_EQUAL:
-    return cmp >= 0;
+    return left->eval(tuple)->compare(right->eval(tuple).get()) >= 0;
   case GREAT_THAN:
-    return cmp > 0;
+    return left->eval(tuple)->compare(right->eval(tuple).get()) > 0;
+  case IN_SET: {
+    auto lvalue = left->eval(tuple);
+    std::vector<std::shared_ptr<TupleValue>> rvalues;
+    right->evals(rvalues, tuple);
+    return std::find_if(rvalues.begin(), rvalues.end(),
+                        [&](std::shared_ptr<TupleValue> &rvalue) {
+                          return lvalue->compare(rvalue.get()) == 0;
+                        }) != rvalues.end();
+  }
   default:
     LOG_ERROR("Unsupport CompOp: %d", op);
     return false;

@@ -21,7 +21,7 @@ class SubQueryExpression : public Expression {
 public:
   SubQueryExpression(Session *session, Selects *select);
   std::shared_ptr<TupleValue> eval(const Tuple &tuple) override;
-  void evals(std::vector<std::shared_ptr<TupleValue>> values,
+  void evals(std::vector<std::shared_ptr<TupleValue>> &values,
              const Tuple &tuple) override;
   AttrType type() override;
 
