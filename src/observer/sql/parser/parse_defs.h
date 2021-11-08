@@ -40,6 +40,8 @@ typedef enum {
   GREAT_THAN,  //">"     5
   IN_SET,
   NOT_IN_SET,
+  IS_NULL,
+  IS_NOT_NULL,
   NO_OP
 } CompOp;
 

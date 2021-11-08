@@ -105,39 +105,52 @@ TupleFilter::TupleFilter(Session *session, const TupleSchema &schema,
 TupleFilter::~TupleFilter() {}
 
 bool TupleFilter::filter(const Tuple &tuple) const {
-  switch (op) {
-  case EQUAL_TO:
-    return left->eval(tuple)->compare(right->eval(tuple).get()) == 0;
-  case LESS_EQUAL:
-    return left->eval(tuple)->compare(right->eval(tuple).get()) <= 0;
-  case NOT_EQUAL:
-    return left->eval(tuple)->compare(right->eval(tuple).get()) != 0;
-  case LESS_THAN:
-    return left->eval(tuple)->compare(right->eval(tuple).get()) < 0;
-  case GREAT_EQUAL:
-    return left->eval(tuple)->compare(right->eval(tuple).get()) >= 0;
-  case GREAT_THAN:
-    return left->eval(tuple)->compare(right->eval(tuple).get()) > 0;
-  case IN_SET: {
+  if (EQUAL_TO <= op && op <= GREAT_THAN) {
+    int cmp = left->eval(tuple)->compare(right->eval(tuple).get());
+
+    switch (op) {
+    case EQUAL_TO:
+      return cmp == 0;
+    case LESS_EQUAL:
+      return cmp <= 0;
+    case NOT_EQUAL:
+      return cmp != 0;
+    case LESS_THAN:
+      return cmp < 0;
+    case GREAT_EQUAL:
+      return cmp >= 0;
+    case GREAT_THAN:
+      return cmp > 0;
+    default:
+      throw std::logic_error("Unreachable code: 127");
+    }
+  }
+
+  if (op == IN_SET || op == NOT_IN_SET) {
     auto lvalue = left->eval(tuple);
     std::vector<std::shared_ptr<TupleValue>> rvalues;
     right->evals(rvalues, tuple);
-    return std::find_if(rvalues.begin(), rvalues.end(),
-                        [&](std::shared_ptr<TupleValue> &rvalue) {
-                          return lvalue->compare(rvalue.get()) == 0;
-                        }) != rvalues.end();
+    auto found = std::find_if(rvalues.begin(), rvalues.end(),
+                              [&](std::shared_ptr<TupleValue> &rvalue) {
+                                return lvalue->compare(rvalue.get()) == 0;
+                              }) != rvalues.end();
+
+    if (op == IN_SET) {
+      return found;
+    } else {
+      return !found;
+    }
   }
-  case NOT_IN_SET: {
-    auto lvalue = left->eval(tuple);
-    std::vector<std::shared_ptr<TupleValue>> rvalues;
-    right->evals(rvalues, tuple);
-    return std::find_if(rvalues.begin(), rvalues.end(),
-                        [&](std::shared_ptr<TupleValue> &rvalue) {
-                          return lvalue->compare(rvalue.get()) == 0;
-                        }) == rvalues.end();
+
+  if (op == IS_NULL || op == IS_NOT_NULL) {
+    bool is_null = left->eval(tuple)->is_null();
+    if (op == IS_NULL) {
+      return is_null;
+    } else {
+      return !is_null;
+    }
   }
-  default:
-    LOG_ERROR("Unsupport CompOp: %d", op);
-    return false;
-  }
+
+  LOG_ERROR("Unsupport CompOp: %d", op);
+  return false;
 }

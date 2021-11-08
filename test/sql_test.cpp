@@ -1268,6 +1268,15 @@ TEST_F(SQLTest, NullCompareWithNullShouldAlwaysFalse) {
   ASSERT_EQ(exec_sql("select * from t where null = null;"), "a | b\n");
 }
 
+TEST_F(SQLTest, NullIsNullShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int nullable);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, null);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select * from t where b is null;"), "a | b\n1 | NULL\n");
+  ASSERT_EQ(exec_sql("select * from t where b is not null;"), "a | b\n1 | 1\n");
+}
+
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
   testing::InitGoogleTest(&argc, argv);

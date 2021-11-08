@@ -89,6 +89,7 @@ ParserContext *get_context(yyscan_t scanner)
 		INNER
 		JOIN
         WHERE
+		IS
         AND
 		NOT
 		ORDER
@@ -497,6 +498,26 @@ condition:
 	condition_expr comp_op condition_expr {
 		$$ = (Condition *) malloc(sizeof(Condition));
 		condition_init($$, $2, &$1, &$3);
+	}
+	| condition_expr IS NULL_VALUE {
+		$$ = (Condition *) malloc(sizeof(Condition));
+		Value null;
+		value_init_null(&null);
+		ConditionExpr null_expr;
+		null_expr.type = COND_EXPR_VALUE;
+		null_expr.value.value = null;
+
+		condition_init($$, IS_NULL, &$1, &null_expr);
+	}
+	| condition_expr IS NOT NULL_VALUE {
+		$$ = (Condition *) malloc(sizeof(Condition));
+		Value null;
+		value_init_null(&null);
+		ConditionExpr null_expr;
+		null_expr.type = COND_EXPR_VALUE;
+		null_expr.value.value = null;
+
+		condition_init($$, IS_NOT_NULL, &$1, &null_expr);
 	}
 	;
 condition_expr:
