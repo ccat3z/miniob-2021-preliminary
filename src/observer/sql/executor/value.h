@@ -121,4 +121,14 @@ private:
   const common::Date date;
 };
 
+class NullValue : public TupleValue {
+public:
+  NullValue() = default;
+  void to_string(std::ostream &os) const override { os << "NULL"; }
+  int compare(const TupleValue *other) const override {
+    throw std::invalid_argument("Null is incompareable");
+  }
+  bool is_null() const override { return true; }
+};
+
 #endif //__OBSERVER_SQL_EXECUTOR_VALUE_H_

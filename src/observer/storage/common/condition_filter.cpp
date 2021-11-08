@@ -75,6 +75,12 @@ RC DefaultConditionFilter::init(Table &table, Condition &condition) {
                condition.left_expr.value.attr.attribute_name);
       return RC::SCHEMA_FIELD_MISSING;
     }
+
+    if (field_left->nullable()) {
+      LOG_ERROR("Nullable field is not support yet in storage condition");
+      return RC::INVALID_ARGUMENT;
+    }
+
     left.attr_length = field_left->len();
     left.attr_offset = field_left->offset();
 
@@ -92,6 +98,12 @@ RC DefaultConditionFilter::init(Table &table, Condition &condition) {
                condition.right_expr.value.attr.attribute_name);
       return RC::SCHEMA_FIELD_MISSING;
     }
+
+    if (field_right->nullable()) {
+      LOG_ERROR("Nullable field is not support yet in storage condition");
+      return RC::INVALID_ARGUMENT;
+    }
+
     right.attr_length = field_right->len();
     right.attr_offset = field_right->offset();
     type_right = field_right->type();
@@ -100,6 +112,11 @@ RC DefaultConditionFilter::init(Table &table, Condition &condition) {
   }
 
   if (condition.left_expr.type == COND_EXPR_VALUE) {
+    if (condition.left_expr.value.value.is_null) {
+      LOG_ERROR("Nullable value is not support yet in storage condition");
+      return RC::INVALID_ARGUMENT;
+    }
+
     // Detect value's type by another attr
     if (condition.right_expr.type == COND_EXPR_ATTR) {
       value_cast(&condition.left_expr.value.value, type_right);
@@ -114,6 +131,11 @@ RC DefaultConditionFilter::init(Table &table, Condition &condition) {
   }
 
   if (condition.right_expr.type == COND_EXPR_VALUE) {
+    if (condition.right_expr.value.value.is_null) {
+      LOG_ERROR("Nullable value is not support yet in storage condition");
+      return RC::INVALID_ARGUMENT;
+    }
+
     // Detect value's type by another attr
     if (condition.left_expr.type == COND_EXPR_ATTR) {
       value_cast(&condition.right_expr.value.value, type_left);

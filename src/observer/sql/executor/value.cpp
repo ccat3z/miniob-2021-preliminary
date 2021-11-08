@@ -19,6 +19,10 @@ void DateValue::to_string(std::ostream &os) const {
   os << date.format();
 }
 int DateValue::compare(const TupleValue *other) const {
+  if (is_null() || other->is_null()) {
+    throw std::invalid_argument("Null is incompareable");
+  }
+
   if (auto date_other = dynamic_cast<const DateValue *>(other)) {
     return date.julian() - date_other->date.julian();
   } else {
@@ -36,30 +40,44 @@ TupleValue *TupleValue::from_value(Value &value, AttrType type, bool must) {
     }
   }
 
+  TupleValue *res;
   switch (value.type) {
   case INTS:
-    return new IntValue(*((int *)value.data));
+    res = new IntValue(*((int *)value.data));
     break;
   case FLOATS:
-    return new FloatValue(*((float *)value.data));
+    res = new FloatValue(*((float *)value.data));
     break;
   case CHARS: {
     auto s = (char *)value.data;
-    return new StringValue(s, strlen(s));
+    res = new StringValue(s, strlen(s));
+    break;
   }
   case DATE:
-    return new DateValue(*((int *)value.data));
+    res = new DateValue(*((int *)value.data));
+    break;
+  case TYPE_NULL:
+    res = new NullValue();
+    break;
   default:
     std::stringstream msg;
     msg << "Unsupport value type " << value.type;
     throw std::invalid_argument(msg.str());
   }
+
+  res->set_null(value.is_null);
+
+  return res;
 }
 
 bool TupleValue::is_null() const { return null; }
 void TupleValue::set_null(bool null) { this->null = null; }
 
 int IntValue::compare(const TupleValue *other) const {
+  if (is_null() || other->is_null()) {
+    throw std::invalid_argument("Null is incompareable");
+  }
+
   if (auto int_value = dynamic_cast<const IntValue *>(other)) {
     return value_ - int_value->value();
   } else if (auto float_value = dynamic_cast<const FloatValue *>(other)) {
@@ -78,6 +96,10 @@ int IntValue::compare(const TupleValue *other) const {
 }
 
 int FloatValue::compare(const TupleValue *other) const {
+  if (is_null() || other->is_null()) {
+    throw std::invalid_argument("Null is incompareable");
+  }
+
   float result;
   if (auto int_value = dynamic_cast<const IntValue *>(other)) {
     result = value_ - int_value->value();
@@ -97,6 +119,10 @@ int FloatValue::compare(const TupleValue *other) const {
 }
 
 int StringValue::compare(const TupleValue *other) const {
+  if (is_null() || other->is_null()) {
+    throw std::invalid_argument("Null is incompareable");
+  }
+
   if (auto string_other = dynamic_cast<const StringValue *>(other)) {
     return strcmp(value_.c_str(), string_other->value_.c_str());
   } else {

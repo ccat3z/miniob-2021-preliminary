@@ -1257,6 +1257,17 @@ TEST_F(SQLTest, NullInsertWithIndexShouldWork) {
                                           "1 | 1\n");
 }
 
+TEST_F(SQLTest, NullCompareWithNullShouldAlwaysFalse) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int nullable);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, null);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t where a = null;"), "a | b\n");
+  ASSERT_EQ(exec_sql("select * from t where b = null;"), "a | b\n");
+  ASSERT_EQ(exec_sql("select * from t where b < null;"), "a | b\n");
+  ASSERT_EQ(exec_sql("select * from t where b > null;"), "a | b\n");
+  ASSERT_EQ(exec_sql("select * from t where null = null;"), "a | b\n");
+}
+
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
   testing::InitGoogleTest(&argc, argv);

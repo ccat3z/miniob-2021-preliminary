@@ -33,10 +33,15 @@ RC FilterNode::next(Tuple &tuple) {
   while ((rc = child->next(tuple)) == RC::SUCCESS) {
     bool add = true;
     for (auto &filter : filters) {
-      if (!filter->filter(tuple)) {
+      try {
+        add = filter->filter(tuple);
+      } catch (const std::exception &e) {
+        LOG_WARN("Filter failed: %s", e.what());
         add = false;
-        break;
       }
+
+      if (!add)
+        break;
     }
 
     if (add) {
