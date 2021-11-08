@@ -1,7 +1,7 @@
 name: Build & Test
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 jobs:
   build-then-test:
@@ -20,6 +20,6 @@ jobs:
         with:
           token: ${{ secrets.COMMENT_TOKEN }}
           repository: hnwyllmm/miniob_test
-          issue-number: 1
+          issue-number: 7
           body: test ${{github.repository_owner}}
     timeout-minutes: 10
