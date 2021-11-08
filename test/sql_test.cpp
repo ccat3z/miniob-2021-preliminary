@@ -1246,7 +1246,8 @@ TEST_F(SQLTest, SubQueryNotInShouldWork) {
 // ##    ##  #######  ######## ########
 
 TEST_F(SQLTest, NullCreateTableShouldWork) {
-  ASSERT_EQ(exec_sql("create table t(a float, b int nullable);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create table t(a float not null, b int nullable);"),
+            "SUCCESS\n");
   ASSERT_EQ(exec_sql("desc t;"),
             "t(\n"
             "\tfield name=__trx, type=ints, len=4, visible=no, nullable=no\n"
