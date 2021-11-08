@@ -102,6 +102,9 @@ RC AggregationNode::next(Tuple &tuple) {
 void AggregationNode::reset() {
   end = false;
   child->reset();
+  for (auto &agg : aggregators) {
+    agg->reset();
+  }
 }
 
 Aggregator &AggregationNode::add_aggregator(const char *func) {

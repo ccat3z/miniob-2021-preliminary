@@ -23,7 +23,7 @@ public:
   virtual void add(std::shared_ptr<TupleValue> v) = 0;
   virtual std::shared_ptr<TupleValue> value() = 0;
   virtual bool support_any_column() { return false; };
-  // TODO: predicate push down is required for trigger push down in child node
+  virtual void reset(){};
 
 protected:
   AttrType in_type;
@@ -35,6 +35,7 @@ public:
   void add(std::shared_ptr<TupleValue> v) override;
   std::shared_ptr<TupleValue> value() override;
   bool support_any_column() { return true; };
+  void reset() override { count = 0; };
 
 private:
   int count = 0;
@@ -45,6 +46,7 @@ public:
   MaxAggregator() : max(new NullValue()){};
   void add(std::shared_ptr<TupleValue> v) override;
   std::shared_ptr<TupleValue> value() override;
+  void reset() override { max = std::shared_ptr<TupleValue>(new NullValue()); };
 
 private:
   std::shared_ptr<TupleValue> max;
@@ -55,6 +57,7 @@ public:
   MinAggregator() : min(new NullValue()){};
   void add(std::shared_ptr<TupleValue> v) override;
   std::shared_ptr<TupleValue> value() override;
+  void reset() override { min = std::shared_ptr<TupleValue>(new NullValue()); };
 
 private:
   std::shared_ptr<TupleValue> min;
@@ -67,6 +70,7 @@ public:
 
   void add(std::shared_ptr<TupleValue> v) override;
   std::shared_ptr<TupleValue> value() override;
+  void reset() override { count = 0; };
 
 private:
   uint32_t count = 0;
@@ -81,6 +85,7 @@ public:
   const TupleSchema &schema() override;
   RC next(Tuple &tuple) override;
   void reset() override;
+  // TODO: predicate push down is required for trigger push down in child node
 
 private:
   TupleSchema tuple_schema_;
