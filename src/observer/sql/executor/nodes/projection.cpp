@@ -29,6 +29,9 @@ ProjectionNode::ProjectionNode(Session *session,
       attr.relation_name = strdup("");
       attr.attribute_name = expr.agg->name;
       add_field(&attr, tables);
+    } else {
+      exprs.push_back(create_expression(&expr, this->child->schema()));
+      tuple_schema_.add(exprs.back()->type(), "", "#");
     }
   }
 }

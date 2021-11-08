@@ -41,6 +41,14 @@ std::unique_ptr<Expression> create_expression(SelectExpr *expr,
     return std::make_unique<AttrExpression>(*expr->attribute, schema);
   }
 
+  if (expr->value != nullptr) {
+    return std::make_unique<ValueExpression>(expr->value);
+  }
+
+  if (expr->calc != nullptr) {
+    return std::make_unique<CalcExpression>(*expr->calc, schema);
+  }
+
   throw std::logic_error("Unreachable code: 44");
 }
 
@@ -72,6 +80,29 @@ create_expression_pair(Session *session, const TupleSchema &schema,
                         res.first == nullptr ? UNDEFINED : res.first->type());
   if (left->type == COND_EXPR_VALUE) {
     res.first = create_expression(session, left, schema, res.second->type());
+  }
+
+  return res;
+}
+
+std::pair<std::unique_ptr<Expression>, std::unique_ptr<Expression>>
+create_expression_pair(const TupleSchema &schema, SelectExpr *left,
+                       SelectExpr *right) {
+  std::pair<std::unique_ptr<Expression>, std::unique_ptr<Expression>> res;
+
+  // Handle value expressions as far back as possible
+  // since the AttrType of the value expression must be determined by
+  // the expression on the other side.
+  if (left->value != nullptr && right->value != nullptr) {
+    try_to_match_values_type(*left->value, *right->value);
+  }
+  if (left->value == nullptr) {
+    res.first = create_expression(left, schema);
+  }
+  res.second = create_expression(
+      right, schema, res.first == nullptr ? UNDEFINED : res.first->type());
+  if (left->value != nullptr) {
+    res.first = create_expression(left, schema, res.second->type());
   }
 
   return res;

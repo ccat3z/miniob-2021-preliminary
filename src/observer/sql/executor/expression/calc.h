@@ -18,6 +18,7 @@ class CalcExpression : public Expression {
 public:
   CalcExpression(ConditionCalcExpr &calc_expr, Session *session,
                  const TupleSchema &schema);
+  CalcExpression(SelectCalcExpr &calc_expr, const TupleSchema &schema);
   std::shared_ptr<TupleValue> eval(const Tuple &tuple) override;
   AttrType type() override;
 

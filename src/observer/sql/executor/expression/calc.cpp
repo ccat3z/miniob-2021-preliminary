@@ -18,6 +18,18 @@ CalcExpression::CalcExpression(ConditionCalcExpr &calc_expr, Session *session,
   }
 }
 
+CalcExpression::CalcExpression(SelectCalcExpr &calc_expr,
+                               const TupleSchema &schema) {
+  std::tie(left, right) =
+      create_expression_pair(schema, calc_expr.left, calc_expr.right);
+  op = calc_expr.op;
+
+  if (!((left->type() == INTS || right->type() == FLOATS) &&
+        (right->type() == INTS || right->type() == FLOATS))) {
+    throw std::invalid_argument("Calc expr only support INTS and FLOATS");
+  }
+}
+
 AttrType CalcExpression ::type() {
   if (left->type() == FLOATS || right->type() == FLOATS) {
     return FLOATS;

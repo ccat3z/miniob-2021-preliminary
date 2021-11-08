@@ -1433,6 +1433,15 @@ TEST_F(SQLTest, ExpressionInConditionShouldWork) {
   ASSERT_EQ(exec_sql("select * from t where 1 + 1 > 2;"), "a | b\n");
 }
 
+TEST_F(SQLTest, ExpressionInSelectShouldWork) {
+  ASSERT_EQ(exec_sql("create table t (a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select a + b from t;"), "#\n5\n");
+  ASSERT_EQ(exec_sql("select a + b, a - b from t;"), "# | #\n5 | -1\n");
+  ASSERT_EQ(exec_sql("select 1 + 1, a - b from t;"), "# | #\n2 | -1\n");
+  ASSERT_EQ(exec_sql("select a + b - a * (b - b / a) from t;"), "#\n2\n");
+}
+
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
   testing::InitGoogleTest(&argc, argv);

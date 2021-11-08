@@ -29,4 +29,8 @@ std::unique_ptr<Expression> create_expression(const RelAttr &attr,
 std::pair<std::unique_ptr<Expression>, std::unique_ptr<Expression>>
 create_expression_pair(Session *session, const TupleSchema &schema,
                        ConditionExpr *left, ConditionExpr *right);
+
+std::pair<std::unique_ptr<Expression>, std::unique_ptr<Expression>>
+create_expression_pair(const TupleSchema &schema, SelectExpr *left,
+                       SelectExpr *right);
 #endif // __OBSERVER_SQL_EXECUTOR_EXPRESSION_EXPRESSION_H_
