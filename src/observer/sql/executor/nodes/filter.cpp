@@ -76,6 +76,10 @@ FilterNode::push_down_predicate(std::list<Condition *> &predicate) {
   return nullptr;
 }
 
+inline bool try_to_match_values_type(Value &a, Value &b) {
+  return value_cast(&a, b.type) || value_cast(&b, a.type);
+}
+
 TupleFilter::TupleFilter(Session *session, const TupleSchema &schema,
                          Condition &condition) {
   op = condition.comp;
@@ -83,6 +87,11 @@ TupleFilter::TupleFilter(Session *session, const TupleSchema &schema,
   // Handle value expressions as far back as possible
   // since the AttrType of the value expression must be determined by
   // the expression on the other side.
+  if (condition.left_expr.type == COND_EXPR_VALUE &&
+      condition.right_expr.type == COND_EXPR_VALUE) {
+    try_to_match_values_type(condition.left_expr.value.value,
+                             condition.right_expr.value.value);
+  }
   if (condition.left_expr.type != COND_EXPR_VALUE) {
     left = create_expression(session, &condition.left_expr, schema);
   }

@@ -1291,6 +1291,7 @@ TEST_F(SQLTest, NullCompareWithNullShouldAlwaysFalse) {
   ASSERT_EQ(exec_sql("select * from t where b < null;"), "a | b\n");
   ASSERT_EQ(exec_sql("select * from t where b > null;"), "a | b\n");
   ASSERT_EQ(exec_sql("select * from t where null = null;"), "a | b\n");
+  ASSERT_EQ(exec_sql("select * from t where 1 = null;"), "a | b\n");
 }
 
 TEST_F(SQLTest, NullIsNullShouldWork) {
@@ -1300,6 +1301,10 @@ TEST_F(SQLTest, NullIsNullShouldWork) {
 
   ASSERT_EQ(exec_sql("select * from t where b is null;"), "a | b\n1 | NULL\n");
   ASSERT_EQ(exec_sql("select * from t where b is not null;"), "a | b\n1 | 1\n");
+  ASSERT_EQ(exec_sql("select * from t where 1 is null;"), "a | b\n");
+  ASSERT_EQ(exec_sql("select * from t where 1 is not null;"), "a | b\n"
+                                                              "1 | NULL\n"
+                                                              "1 | 1\n");
 }
 
 TEST_F(SQLTest, NullAggCountNullableShouldWork) {
