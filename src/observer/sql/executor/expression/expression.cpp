@@ -16,8 +16,8 @@ std::unique_ptr<Expression> create_expression(Session *session,
     return std::make_unique<AttrExpression>(cond_expr->value.attr, schema);
     break;
   case COND_EXPR_SELECT:
-    return std::make_unique<SubQueryExpression>(session,
-                                                cond_expr->value.selects);
+    return std::make_unique<SubQueryExpression>(
+        session, cond_expr->value.selects, schema);
     break;
   default:
     throw std::logic_error("Unreachable code");

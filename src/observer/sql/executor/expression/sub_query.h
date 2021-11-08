@@ -19,17 +19,20 @@ class ExecutionNode;
 
 class SubQueryExpression : public Expression {
 public:
-  SubQueryExpression(Session *session, Selects *select);
+  SubQueryExpression(Session *session, Selects *select,
+                     const TupleSchema &schema);
   std::shared_ptr<TupleValue> eval(const Tuple &tuple) override;
   void evals(std::vector<std::shared_ptr<TupleValue>> &values,
              const Tuple &tuple) override;
   AttrType type() override;
+  friend class SubQueryContextNode;
 
 private:
-  void retrieve();
-  bool retrieved = false;
+  void retrieve(const Tuple &tuple);
   TupleSet tuple_set;
   std::unique_ptr<ExecutionNode> exec_node;
+
+  const Tuple *current_tuple;
 };
 
 #endif // __OBSERVER_SQL_EXECUTOR_EXPRESSION_SUB_QUERY_H_
