@@ -83,13 +83,18 @@ int IntValue::compare(const TupleValue *other) const {
   } else if (auto float_value = dynamic_cast<const FloatValue *>(other)) {
     float result = value_ - float_value->value();
 
-    if (result > 0) { // 浮点数没有考虑精度问题
+    if (-0.001 < result && result < 0.001) {
+      return 0;
+    }
+
+    if (result > 0) {
       return 1;
     }
     if (result < 0) {
       return -1;
     }
-    return 0;
+
+    throw std::logic_error("Unreachable code: 97");
   }
 
   throw std::logic_error("Uncomparable values");
@@ -109,13 +114,18 @@ int FloatValue::compare(const TupleValue *other) const {
     throw std::logic_error("Uncomparable values");
   }
 
-  if (result > 0) { // 浮点数没有考虑精度问题
+  if (-0.001 < result && result < 0.001) {
+    return 0;
+  }
+
+  if (result > 0) {
     return 1;
   }
   if (result < 0) {
     return -1;
   }
-  return 0;
+
+  throw std::logic_error("Unreachable code: 128");
 }
 
 int StringValue::compare(const TupleValue *other) const {
