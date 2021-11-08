@@ -1,5 +1,6 @@
 #include "expression.h"
 #include "attr.h"
+#include "calc.h"
 #include "sub_query.h"
 #include "value.h"
 
@@ -19,8 +20,12 @@ std::unique_ptr<Expression> create_expression(Session *session,
     return std::make_unique<SubQueryExpression>(
         session, cond_expr->value.selects, schema);
     break;
+  case COND_EXPR_CALC:
+    return std::make_unique<CalcExpression>(*cond_expr->value.calc, session,
+                                            schema);
+    break;
   default:
-    throw std::logic_error("Unreachable code");
+    throw std::logic_error("Unreachable code: 23");
     break;
   }
 }

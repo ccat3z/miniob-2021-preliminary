@@ -1412,6 +1412,27 @@ TEST_F(SQLTest, NullAggAvgOfNullableShouldWork) {
   ASSERT_EQ(exec_sql("select avg(a) from t;"), "avg(a)\n1.5\n");
 }
 
+// ######## ##     ## ########  ########
+// ##        ##   ##  ##     ## ##     ##
+// ##         ## ##   ##     ## ##     ##
+// ######      ###    ########  ########
+// ##         ## ##   ##        ##   ##
+// ##        ##   ##  ##        ##    ##
+// ######## ##     ## ##        ##     ##
+
+TEST_F(SQLTest, ExpressionInConditionShouldWork) {
+  ASSERT_EQ(exec_sql("create table t (a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t where a + b = 5;"), "a | b\n2 | 3\n");
+  ASSERT_EQ(exec_sql("select * from t where a - b = -1;"), "a | b\n2 | 3\n");
+  ASSERT_EQ(exec_sql("select * from t where a - b = a + b - a * b;"),
+            "a | b\n2 | 3\n");
+  ASSERT_EQ(exec_sql("select * from t where b / a = 1.5;"), "a | b\n2 | 3\n");
+  ASSERT_EQ(exec_sql("select * from t where 2 = a + b - a * (b - b / a);"),
+            "a | b\n2 | 3\n");
+  ASSERT_EQ(exec_sql("select * from t where 1 + 1 > 2;"), "a | b\n");
+}
+
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
   testing::InitGoogleTest(&argc, argv);

@@ -86,8 +86,7 @@ bool is_expr_involved_schema(ConditionExpr &expr, const TupleSchema &schema) {
     return schema.index_of_field(expr.value.attr.relation_name,
                                  expr.value.attr.attribute_name) >= 0;
   case COND_EXPR_SELECT:
-    // TODO
-    return true;
+  case COND_EXPR_CALC:
   default:
     LOG_ERROR("Cannot determine if it is involved");
     return true;
