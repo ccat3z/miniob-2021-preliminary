@@ -67,17 +67,12 @@ See details [here](./docs/lectures/miniob-topics.md).
 - [X] 多表join操作 (join-tables)
 - [X] 一次插入多条数据 (insert)
 - [ ] 唯一索引 (unique)
-- [ ] 支持NULL类型 (null)
+- [X] 支持NULL类型 (null)
 - [ ] 多列索引 (multi-index)
 - [ ] 超长字段 (text)
 - [ ] 查询条件支持表达式 (expression)
-- [ ] 子查询
-  - [ ] 简单子查询 (simple-sub-query)
-  - [ ] 复杂子查询 (complex-sub-query)
-    - [ ] Support expression eval
-      - [ ] Evaluator builder (condition expr, schema -> tuple -> tuple field)
-      - [ ] Evaluator (tuple -> tuple value)
-    - [ ] Rewrite filter exec node with expression support
-    - [ ] Remove tuple_filter (which only used in filter exec node)
+- [X] 子查询
+  - [X] 简单子查询 (simple-sub-query)
+  - [X] 复杂子查询 (complex-sub-query)
 - [X] 排序 (order-by)
 - [ ] 分组 (group-by)
