@@ -12,9 +12,10 @@
 #include "filter.h"
 
 CartesianSelectNode::CartesianSelectNode(
-    std::unique_ptr<ExecutionNode> left_node,
+    Session *session, std::unique_ptr<ExecutionNode> left_node,
     std::unique_ptr<ExecutionNode> right_node)
-    : left_node(std::move(left_node)), right_node(std::move(right_node)) {
+    : left_node(std::move(left_node)), right_node(std::move(right_node)),
+      session(session) {
   tuple_schema_.append(this->left_node->schema());
   tuple_schema_.append(this->right_node->schema());
 };
@@ -58,19 +59,19 @@ void CartesianSelectNode::reset() {
 }
 
 std::unique_ptr<CartesianSelectNode> CartesianSelectNode::create(
-    std::vector<std::unique_ptr<ExecutionNode>> &nodes) {
+    Session *session, std::vector<std::unique_ptr<ExecutionNode>> &nodes) {
   if (nodes.size() < 2) {
     throw std::invalid_argument("At least 2 nodes");
   }
 
-  std::unique_ptr<CartesianSelectNode> root(
-      new CartesianSelectNode(std::move(nodes[0]), std::move(nodes[1])));
+  std::unique_ptr<CartesianSelectNode> root(new CartesianSelectNode(
+      session, std::move(nodes[0]), std::move(nodes[1])));
 
   auto it = nodes.begin();
   std::advance(it, 2);
   for (; it != nodes.end(); it++) {
     root = std::unique_ptr<CartesianSelectNode>(
-        new CartesianSelectNode(std::move(root), std::move(*it)));
+        new CartesianSelectNode(session, std::move(root), std::move(*it)));
   }
 
   return root;
@@ -83,25 +84,25 @@ void extract_condition(Condition &condition, std::list<Condition *> &both,
                        std::list<Condition *> &right_only) {
   bool lschema_involved = false, rschema_involved = false;
   if (condition.left_expr.type == COND_EXPR_ATTR) {
-    lschema_involved =
-        lschema_involved ||
-        lschema.index_of_field(condition.left_expr.value.attr.relation_name,
-                               condition.left_expr.value.attr.attribute_name) >= 0;
-    rschema_involved =
-        rschema_involved ||
-        rschema.index_of_field(condition.left_expr.value.attr.relation_name,
-                               condition.left_expr.value.attr.attribute_name) >= 0;
+    lschema_involved = lschema_involved ||
+                       lschema.index_of_field(
+                           condition.left_expr.value.attr.relation_name,
+                           condition.left_expr.value.attr.attribute_name) >= 0;
+    rschema_involved = rschema_involved ||
+                       rschema.index_of_field(
+                           condition.left_expr.value.attr.relation_name,
+                           condition.left_expr.value.attr.attribute_name) >= 0;
   }
 
   if (condition.right_expr.type == COND_EXPR_ATTR) {
-    lschema_involved =
-        lschema_involved ||
-        lschema.index_of_field(condition.right_expr.value.attr.relation_name,
-                               condition.right_expr.value.attr.attribute_name) >= 0;
-    rschema_involved =
-        rschema_involved ||
-        rschema.index_of_field(condition.right_expr.value.attr.relation_name,
-                               condition.right_expr.value.attr.attribute_name) >= 0;
+    lschema_involved = lschema_involved ||
+                       lschema.index_of_field(
+                           condition.right_expr.value.attr.relation_name,
+                           condition.right_expr.value.attr.attribute_name) >= 0;
+    rschema_involved = rschema_involved ||
+                       rschema.index_of_field(
+                           condition.right_expr.value.attr.relation_name,
+                           condition.right_expr.value.attr.attribute_name) >= 0;
   }
 
   if (!lschema_involved && !rschema_involved) {
@@ -132,7 +133,7 @@ CartesianSelectNode::push_down_predicate(std::list<Condition *> &predicate) {
       left_node = std::move(new_left);
     }
     if (left.size() > 0) {
-      left_node = std::make_unique<FilterNode>(std::move(left_node),
+      left_node = std::make_unique<FilterNode>(session, std::move(left_node),
                                                left.begin(), left.end());
     }
   }
@@ -143,7 +144,7 @@ CartesianSelectNode::push_down_predicate(std::list<Condition *> &predicate) {
       right_node = std::move(new_right);
     }
     if (right.size() > 0) {
-      right_node = std::make_unique<FilterNode>(std::move(right_node),
+      right_node = std::make_unique<FilterNode>(session, std::move(right_node),
                                                 right.begin(), right.end());
     }
   }

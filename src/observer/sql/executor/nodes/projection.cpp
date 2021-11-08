@@ -14,10 +14,11 @@
 #include "storage/common/table_meta.h"
 #include <algorithm>
 
-ProjectionNode::ProjectionNode(std::unique_ptr<ExecutionNode> child,
+ProjectionNode::ProjectionNode(Session *session,
+                               std::unique_ptr<ExecutionNode> child,
                                std::vector<const TableMeta *> tables,
                                SelectExpr *attrs, int attr_num)
-    : child(std::move(child)), tables(std::move(tables)) {
+    : child(std::move(child)), tables(std::move(tables)), session(session) {
   this->fields_map.reserve(attr_num);
 
   for (int i = attr_num - 1; i >= 0; i--) {
@@ -44,8 +45,8 @@ ProjectionNode::push_down_predicate(std::list<Condition *> &predicate) {
     child = std::move(new_child);
   }
   if (predicate.size() == 0) {
-    child = std::make_unique<FilterNode>(std::move(child), predicate.begin(),
-                                         predicate.end());
+    child = std::make_unique<FilterNode>(session, std::move(child),
+                                         predicate.begin(), predicate.end());
   }
   return nullptr;
 }

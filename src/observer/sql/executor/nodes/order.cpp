@@ -1,8 +1,9 @@
 #include "order.h"
 #include "filter.h"
 
-OrderNode::OrderNode(std::unique_ptr<ExecutionNode> child, OrderBy *order_by,
-                     size_t order_by_num) {
+OrderNode::OrderNode(Session *session, std::unique_ptr<ExecutionNode> child,
+                     OrderBy *order_by, size_t order_by_num)
+    : session(session) {
   for (int i = order_by_num - 1; i >= 0; i--) {
     auto &ob = order_by[i];
 
@@ -53,8 +54,8 @@ OrderNode::push_down_predicate(std::list<Condition *> &predicate) {
     child = std::move(new_child);
   }
   if (predicate.size() == 0) {
-    child = std::make_unique<FilterNode>(std::move(child), predicate.begin(),
-                                         predicate.end());
+    child = std::make_unique<FilterNode>(session, std::move(child),
+                                         predicate.begin(), predicate.end());
   }
   return nullptr;
 }

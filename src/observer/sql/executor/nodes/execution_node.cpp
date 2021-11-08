@@ -31,7 +31,7 @@ build_select_executor_node(Session *session, Selects &selects,
   if (table_scaners.size() == 1) {
     exec_node = std::move(*table_scaners.begin());
   } else {
-    exec_node = CartesianSelectNode::create(table_scaners);
+    exec_node = CartesianSelectNode::create(session, table_scaners);
   }
 
   // Filter
@@ -58,12 +58,13 @@ build_select_executor_node(Session *session, Selects &selects,
   // Order
   if (selects.order_by_num > 0) {
     exec_node = std::make_unique<OrderNode>(
-        std::move(exec_node), selects.order_by, selects.order_by_num);
+        session, std::move(exec_node), selects.order_by, selects.order_by_num);
   }
 
   // Projection
-  exec_node = std::make_unique<ProjectionNode>(
-      std::move(exec_node), table_metas, selects.attributes, selects.attr_num);
+  exec_node = std::make_unique<ProjectionNode>(session, std::move(exec_node),
+                                               table_metas, selects.attributes,
+                                               selects.attr_num);
 
   // Simple rule-based optimizer
   auto new_node = exec_node->push_down_predicate();

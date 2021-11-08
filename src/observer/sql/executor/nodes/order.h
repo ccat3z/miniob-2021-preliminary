@@ -11,13 +11,14 @@
 #ifndef __OBSERVER_SQL_EXECUTOR_NODES_ORDER_H_
 #define __OBSERVER_SQL_EXECUTOR_NODES_ORDER_H_
 #include "base.h"
+#include "session/session.h"
 #include "sql/parser/parse.h"
 #include <vector>
 
 class OrderNode : public SetExecutionNode {
 public:
-  OrderNode(std::unique_ptr<ExecutionNode> child, OrderBy *order_by,
-            size_t order_by_num);
+  OrderNode(Session *session, std::unique_ptr<ExecutionNode> child,
+            OrderBy *order_by, size_t order_by_num);
   virtual ~OrderNode();
   const TupleSchema &schema() override;
 
@@ -28,6 +29,7 @@ public:
 private:
   std::unique_ptr<ExecutionNode> child;
   std::vector<std::pair<int, OrderDir>> fields;
+  Session *session;
 };
 
 #endif // __OBSERVER_SQL_EXECUTOR_NODES_ORDER_H_

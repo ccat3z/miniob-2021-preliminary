@@ -1,9 +1,9 @@
 #include "alias.h"
 #include "filter.h"
 
-AliasNode::AliasNode(std::unique_ptr<ExecutionNode> child,
+AliasNode::AliasNode(Session *session, std::unique_ptr<ExecutionNode> child,
                      const char *table_name)
-    : child(std::move(child)) {
+    : child(std::move(child)), session(session) {
   for (auto field : this->child->schema().fields()) {
     tuple_schema_.add(field.type(), table_name, field.field_name());
   }
@@ -23,8 +23,8 @@ AliasNode::push_down_predicate(std::list<Condition *> &predicate) {
     child = std::move(new_child);
   }
   if (predicate.size() == 0) {
-    child = std::make_unique<FilterNode>(std::move(child), predicate.begin(),
-                                         predicate.end());
+    child = std::make_unique<FilterNode>(session, std::move(child),
+                                         predicate.begin(), predicate.end());
   }
   return nullptr;
 }

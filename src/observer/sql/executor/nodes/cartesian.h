@@ -11,13 +11,14 @@
 #ifndef __OBSERVER_SQL_EXECUTOR_NODES_CARTESIAN_H_
 #define __OBSERVER_SQL_EXECUTOR_NODES_CARTESIAN_H_
 #include "base.h"
+#include "session/session.h"
 #include <memory>
 
 class CartesianSelectNode : public VolcanoExecutionNode {
 public:
   virtual ~CartesianSelectNode();
   static std::unique_ptr<CartesianSelectNode>
-  create(std::vector<std::unique_ptr<ExecutionNode>> &nodes);
+  create(Session *session, std::vector<std::unique_ptr<ExecutionNode>> &nodes);
 
   const TupleSchema &schema() override;
   RC next(Tuple &tuple) override;
@@ -26,7 +27,8 @@ public:
   push_down_predicate(std::list<Condition *> &predicate) override;
 
 private:
-  CartesianSelectNode(std::unique_ptr<ExecutionNode> left_node,
+  CartesianSelectNode(Session *session,
+                      std::unique_ptr<ExecutionNode> left_node,
                       std::unique_ptr<ExecutionNode> right_node);
   TupleSchema tuple_schema_;
   std::unique_ptr<ExecutionNode> left_node;
@@ -34,5 +36,6 @@ private:
 
   Tuple tuple_left;
   bool require_next_left = true;
+  Session *session;
 };
 #endif // __OBSERVER_SQL_EXECUTOR_NODES_CARTESIAN_H_

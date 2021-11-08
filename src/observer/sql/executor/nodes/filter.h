@@ -33,8 +33,9 @@ public:
   FilterNode(Session *session, std::unique_ptr<ExecutionNode> child,
              Condition *begin, Condition *end);
   template <class InputIt>
-  FilterNode(std::unique_ptr<ExecutionNode> child, InputIt begin, InputIt end)
-      : child(std::move(child)) {
+  FilterNode(Session *session, std::unique_ptr<ExecutionNode> child,
+             InputIt begin, InputIt end)
+      : session(session), child(std::move(child)) {
     tuple_schema_ = this->child->schema();
     for (; begin != end; begin++) {
       conditions.push_back(*begin);

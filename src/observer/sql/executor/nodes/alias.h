@@ -12,10 +12,12 @@
 #define __OBSERVER_SQL_EXECUTOR_NODES_ALIAS_H_
 
 #include "base.h"
+#include "session/session.h"
 
 class AliasNode : public VolcanoExecutionNode {
 public:
-  AliasNode(std::unique_ptr<ExecutionNode> child, const char *table_name);
+  AliasNode(Session *session, std::unique_ptr<ExecutionNode> child,
+            const char *table_name);
   virtual ~AliasNode();
   const TupleSchema &schema() override;
   RC next(Tuple &tuple) override;
@@ -26,6 +28,7 @@ public:
 private:
   TupleSchema tuple_schema_;
   std::unique_ptr<ExecutionNode> child;
+  Session *session;
 };
 
 #endif // __OBSERVER_SQL_EXECUTOR_NODES_ALIAS_H_

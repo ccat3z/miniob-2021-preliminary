@@ -11,13 +11,14 @@
 #ifndef __OBSERVER_SQL_EXECUTOR_NODES_PROJECTION_H_
 #define __OBSERVER_SQL_EXECUTOR_NODES_PROJECTION_H_
 #include "base.h"
+#include "session/session.h"
 #include <memory>
 
 class TableMeta;
 
 class ProjectionNode : public VolcanoExecutionNode {
 public:
-  ProjectionNode(std::unique_ptr<ExecutionNode> child,
+  ProjectionNode(Session *session, std::unique_ptr<ExecutionNode> child,
                  std::vector<const TableMeta *> tables, SelectExpr *attrs,
                  int attr_num);
   virtual ~ProjectionNode();
@@ -33,6 +34,7 @@ private:
   std::unique_ptr<ExecutionNode> child;
   std::vector<int> fields_map;
   std::vector<const TableMeta *> tables;
+  Session *session;
 };
 
 #endif // __OBSERVER_SQL_EXECUTOR_NODES_PROJECTION_H_
