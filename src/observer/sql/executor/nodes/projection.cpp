@@ -12,9 +12,10 @@
 #include "common/log/log.h"
 #include "filter.h"
 #include "storage/common/table_meta.h"
+#include <algorithm>
 
 ProjectionNode::ProjectionNode(std::unique_ptr<ExecutionNode> child,
-                               std::map<std::string, const TableMeta *> tables,
+                               std::vector<const TableMeta *> tables,
                                SelectExpr *attrs, int attr_num)
     : child(std::move(child)), tables(std::move(tables)) {
   this->fields_map.reserve(attr_num);
@@ -74,7 +75,7 @@ void ProjectionNode::add_field(const RelAttr *attr_p) {
     RelAttr new_attr;
     new_attr.attribute_name = attr.attribute_name;
     for (auto table : tables) {
-      new_attr.relation_name = strdup(table.first.c_str());
+      new_attr.relation_name = strdup(table->name());
       add_field(&new_attr);
       free(new_attr.relation_name);
     }
@@ -84,19 +85,21 @@ void ProjectionNode::add_field(const RelAttr *attr_p) {
   // Any attributes
   if (strcmp(attr.attribute_name, "*") == 0) {
     // Find table
-    auto table_pair = tables.find(attr.relation_name);
-    if (table_pair == tables.end()) {
+    auto table = std::find_if(
+        tables.begin(), tables.end(), [&](const TableMeta *&table) {
+          return strcmp(table->name(), attr.relation_name) == 0;
+        });
+    if (table == tables.end()) {
       std::stringstream ss;
       ss << "No such table " << attr.relation_name << " in child";
       throw std::invalid_argument(ss.str());
     }
-    auto table = table_pair->second;
 
     // Iter attributes in table
     RelAttr new_attr;
     new_attr.relation_name = attr.relation_name;
-    for (int i = table->sys_field_num(); i < table->field_num(); i++) {
-      new_attr.attribute_name = strdup(table->field(i)->name());
+    for (int i = (*table)->sys_field_num(); i < (*table)->field_num(); i++) {
+      new_attr.attribute_name = strdup((*table)->field(i)->name());
       add_field(&new_attr);
       free(new_attr.attribute_name);
     }

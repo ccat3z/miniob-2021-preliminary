@@ -816,6 +816,12 @@ TEST_F(SQLTest, SelectTablesColumnsOrderShouldCorrect) {
             "777 | 2 | 100\n"
             "999 | 2 | 300\n"
             "777 | 2 | 300\n");
+
+  ASSERT_EQ(exec_sql("select * from t2, t;"), "t2.b | t2.d | t.a | t.b\n"
+                                              "100 | 200 | 1 | 1\n"
+                                              "100 | 200 | 2 | 3\n"
+                                              "300 | 500 | 1 | 1\n"
+                                              "300 | 500 | 2 | 3\n");
 }
 
 TEST_F(SQLTest, SelectTablesSingleColumnShouldShowTableName) {

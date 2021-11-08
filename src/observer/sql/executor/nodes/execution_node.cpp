@@ -11,12 +11,12 @@ std::unique_ptr<ExecutionNode> build_select_executor_node(Session *session,
   auto trx = session->current_trx();
 
   // Build table scanners
-  std::map<std::string, const TableMeta *> table_metas;
+  std::vector<const TableMeta *> table_metas;
   std::vector<std::unique_ptr<ExecutionNode>> table_scaners;
   for (int i = selects.relation_num - 1; i >= 0; i--) {
     const char *table_name = selects.relations[i];
     Table *table = DefaultHandler::get_default().find_table(db, table_name);
-    table_metas[table_name] = &table->table_meta();
+    table_metas.push_back(&table->table_meta());
     auto table_scaner = std::make_unique<TableScaner>(trx, table);
     table_scaner->select_all_fields();
     table_scaners.push_back(std::move(table_scaner));
