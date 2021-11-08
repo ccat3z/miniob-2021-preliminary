@@ -112,7 +112,8 @@ void ParseStage::callback_event(StageEvent *event, CallbackContext *context) {
   return;
 }
 
-RC complete_sql(SQLStageEvent *event, Selects &selects);
+RC complete_sql(SQLStageEvent *event, Selects &selects,
+                std::map<std::string, Table *> *context_tables = nullptr);
 
 StageEvent *ParseStage::handle_request(StageEvent *event) {
   SQLStageEvent *sql_event = static_cast<SQLStageEvent *>(event);
@@ -201,7 +202,8 @@ RC complete_attr(std::map<std::string, Table *> &tables, RelAttr &attr) {
   return RC::SUCCESS;
 }
 
-RC complete_sql(SQLStageEvent *event, Selects &selects) {
+RC complete_sql(SQLStageEvent *event, Selects &selects,
+                std::map<std::string, Table *> *context_tables) {
   const char *db =
       event->session_event()->get_client()->session->get_current_db().c_str();
 
@@ -224,12 +226,15 @@ RC complete_sql(SQLStageEvent *event, Selects &selects) {
     const char *table_name = selects.relations[i];
     Table *table = DefaultHandler::get_default().find_table(db, table_name);
     if (table == nullptr) {
-      LOG_ERROR("Invalid table %s", table);
+      LOG_ERROR("Invalid table %s", table_name);
       return RC::SQL_SYNTAX;
     }
     if (!tables.insert({table_name, table}).second) {
       LOG_WARN("Duplicate table is ignored");
     }
+  }
+  if (context_tables != nullptr) {
+    tables.insert(context_tables->begin(), context_tables->end());
   }
 
   if (tables.empty()) {
