@@ -5,8 +5,10 @@ using namespace std::literals::string_literals;
 AttrExpression::AttrExpression(RelAttr &attr, const TupleSchema &schema) {
   index = schema.index_of_field(attr.relation_name, attr.attribute_name);
   if (index < 0) {
-    throw std::invalid_argument("Cannot find attr "
-                                " in schema");
+    std::stringstream ss;
+    ss << "Cannot find attr " << attr.relation_name << ":"
+       << attr.attribute_name << " in scehma";
+    throw std::invalid_argument(ss.str());
   }
   field_type = schema.fields()[index].type();
 }
