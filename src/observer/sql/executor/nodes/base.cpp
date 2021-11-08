@@ -38,6 +38,7 @@ RC VolcanoExecutionNode::execute(TupleSet &tuple_set) {
   Tuple tuple;
   RC rc;
 
+  reset();
   while ((rc = next(tuple)) != RC::RECORD_EOF) {
     if (rc != RC::SUCCESS) {
       return rc;
