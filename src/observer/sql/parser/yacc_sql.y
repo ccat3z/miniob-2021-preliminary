@@ -149,7 +149,7 @@ ParserContext *get_context(yyscan_t scanner)
 %type <list> condition_list;
 %type <list> rel_list;
 %type <comp_op> comp_op;
-%type <select_expr> select_expr;
+%type <select_expr> select_expr select_calc_expr;
 %type <list> select_expr_list;
 %type <list> order_by_attr_list;
 %type <list> order_by;
@@ -420,20 +420,52 @@ select_expr_list:
 
 select_expr:
 	select_attr {
+		memset(&$$, 0, sizeof $$);
 		$$.attribute = $1;
-		$$.agg = NULL;
+	}
+	| value {
+		memset(&$$, 0, sizeof $$);
+		$$.value = malloc(sizeof(Value));
+		*$$.value = $1;
+	}
+	| select_calc_expr {
+		$$ = $1;
 	}
 	| ID LBRACE select_attr RBRACE {
 		AggExpr *expr = (AggExpr *) malloc(sizeof(AggExpr));
 		agg_expr_init_attr(expr, $1, $3);
+
+		memset(&$$, 0, sizeof $$);
 		$$.agg = expr;
-		$$.attribute = NULL;
 	}
 	| ID LBRACE value RBRACE {
 		AggExpr *expr = (AggExpr *) malloc(sizeof(AggExpr));
 		agg_expr_init_value(expr, $1, &$3);
+
+		memset(&$$, 0, sizeof $$);
 		$$.agg = expr;
-		$$.attribute = NULL;
+	}
+	;
+
+select_calc_expr:
+	select_expr ADD select_expr {
+		memset(&$$, 0, sizeof $$);
+		$$.calc = select_calc_expr_create(&$1, CALC_ADD, &$3);
+	}
+	| select_expr MINUS select_expr {
+		memset(&$$, 0, sizeof $$);
+		$$.calc = select_calc_expr_create(&$1, CALC_MINUS, &$3);
+	}
+	| select_expr STAR select_expr {
+		memset(&$$, 0, sizeof $$);
+		$$.calc = select_calc_expr_create(&$1, CALC_MULTI, &$3);
+	}
+	| select_expr DIV select_expr {
+		memset(&$$, 0, sizeof $$);
+		$$.calc = select_calc_expr_create(&$1, CALC_DIV, &$3);
+	}
+	| LBRACE select_calc_expr RBRACE {
+		$$ = $2;
 	}
 	;
 

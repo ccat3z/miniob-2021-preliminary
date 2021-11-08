@@ -234,6 +234,37 @@ RC complete_conditon(ConditionExpr *expr, SQLStageEvent *event,
   return RC::SUCCESS;
 }
 
+RC complete_select_expr(SelectExpr *expr,
+                        std::map<std::string, Table *> &tables) {
+  if (expr->attribute != nullptr) {
+    RC rc = complete_attr(tables, *expr->attribute);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+  }
+
+  if (expr->agg != nullptr && expr->agg->attr != nullptr) {
+    RC rc = complete_attr(tables, *expr->agg->attr);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+  }
+
+  if (expr->calc != nullptr) {
+    RC rc = complete_select_expr(expr->calc->left, tables);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+
+    rc = complete_select_expr(expr->calc->right, tables);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+  }
+
+  return RC::SUCCESS;
+}
+
 RC complete_sql(SQLStageEvent *event, Selects &selects,
                 std::map<std::string, Table *> *context_tables) {
   const char *db =
@@ -278,11 +309,7 @@ RC complete_sql(SQLStageEvent *event, Selects &selects,
   for (int i = selects.attr_num - 1; i >= 0; i--) {
     auto &expr = selects.attributes[i];
     RC rc = RC::SUCCESS;
-    if (expr.attribute != nullptr) {
-      rc = complete_attr(tables, *expr.attribute);
-    } else if (expr.agg != nullptr && expr.agg->attr != nullptr) {
-      rc = complete_attr(tables, *expr.agg->attr);
-    }
+    rc = complete_select_expr(&expr, tables);
 
     if (rc != RC::SUCCESS) {
       return rc;

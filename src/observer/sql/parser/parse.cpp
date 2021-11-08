@@ -209,14 +209,44 @@ void agg_expr_destroy(AggExpr *expr) {
   }
 }
 
+SelectCalcExpr *select_calc_expr_create(SelectExpr *left, CalcOp op,
+                                        SelectExpr *right) {
+  SelectCalcExpr *expr = (SelectCalcExpr *)malloc(sizeof(SelectCalcExpr));
+  expr->left = (SelectExpr *)malloc(sizeof(SelectExpr));
+  *expr->left = *left;
+
+  expr->op = op;
+
+  expr->right = (SelectExpr *)malloc(sizeof(SelectExpr));
+  *expr->right = *right;
+  return expr;
+}
+
+void select_calc_expr_free(SelectCalcExpr *expr) {
+  select_expr_destroy(expr->left);
+  free(expr->left);
+  select_expr_destroy(expr->right);
+  free(expr->right);
+  free(expr);
+}
+
 void select_expr_destroy(SelectExpr *expr) {
   if (expr == nullptr)
     return;
+  if (expr->value != nullptr) {
+    value_destroy(expr->value);
+    free(expr->value);
+  }
   if (expr->agg != nullptr) {
     agg_expr_destroy(expr->agg);
+    free(expr->agg);
   }
   if (expr->attribute != nullptr) {
     relation_attr_destroy(expr->attribute);
+    free(expr->attribute);
+  }
+  if (expr->calc != nullptr) {
+    select_calc_expr_free(expr->calc);
   }
 }
 
