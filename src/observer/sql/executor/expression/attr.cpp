@@ -2,7 +2,7 @@
 #include <string>
 using namespace std::literals::string_literals;
 
-AttrExpression::AttrExpression(RelAttr &attr, const TupleSchema &schema) {
+AttrExpression::AttrExpression(const RelAttr &attr, const TupleSchema &schema) {
   index = schema.index_of_field(attr.relation_name, attr.attribute_name);
   if (index < 0) {
     std::stringstream ss;

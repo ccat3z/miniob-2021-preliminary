@@ -10,6 +10,7 @@
 
 #ifndef __OBSERVER_SQL_EXECUTOR_NODES_PROJECTION_H_
 #define __OBSERVER_SQL_EXECUTOR_NODES_PROJECTION_H_
+#include "../expression/expression.h"
 #include "base.h"
 #include "session/session.h"
 #include <memory>
@@ -19,7 +20,7 @@ class TableMeta;
 class ProjectionNode : public VolcanoExecutionNode {
 public:
   ProjectionNode(Session *session, std::unique_ptr<ExecutionNode> child,
-                 std::vector<const TableMeta *> tables, SelectExpr *attrs,
+                 std::vector<const TableMeta *> &tables, SelectExpr *attrs,
                  int attr_num);
   virtual ~ProjectionNode();
   const TupleSchema &schema() override;
@@ -29,11 +30,10 @@ public:
   push_down_predicate(std::list<Condition *> &predicate) override;
 
 private:
-  void add_field(const RelAttr *attr);
+  void add_field(const RelAttr *attr, std::vector<const TableMeta *> &tables);
   TupleSchema tuple_schema_;
   std::unique_ptr<ExecutionNode> child;
-  std::vector<int> fields_map;
-  std::vector<const TableMeta *> tables;
+  std::vector<std::unique_ptr<Expression>> exprs;
   Session *session;
 };
 

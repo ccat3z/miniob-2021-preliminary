@@ -19,7 +19,14 @@ std::unique_ptr<Expression> create_expression(Session *session,
                                               const TupleSchema &schema,
                                               AttrType prefer_type = UNDEFINED);
 
+std::unique_ptr<Expression> create_expression(SelectExpr *expr,
+                                              const TupleSchema &schema,
+                                              AttrType prefer_type = UNDEFINED);
+
+std::unique_ptr<Expression> create_expression(const RelAttr &attr,
+                                              const TupleSchema &schema);
+
 std::pair<std::unique_ptr<Expression>, std::unique_ptr<Expression>>
-create_expression_pair(Session *session, const TupleSchema &schema, ConditionExpr *left,
-                       ConditionExpr *right);
+create_expression_pair(Session *session, const TupleSchema &schema,
+                       ConditionExpr *left, ConditionExpr *right);
 #endif // __OBSERVER_SQL_EXECUTOR_EXPRESSION_EXPRESSION_H_

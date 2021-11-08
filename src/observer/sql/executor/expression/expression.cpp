@@ -30,6 +30,25 @@ std::unique_ptr<Expression> create_expression(Session *session,
   }
 }
 
+std::unique_ptr<Expression> create_expression(SelectExpr *expr,
+                                              const TupleSchema &schema,
+                                              AttrType prefer_type) {
+  if (expr->agg != nullptr) {
+    throw std::invalid_argument("Agg is not support in expression");
+  }
+
+  if (expr->attribute != nullptr) {
+    return std::make_unique<AttrExpression>(*expr->attribute, schema);
+  }
+
+  throw std::logic_error("Unreachable code: 44");
+}
+
+std::unique_ptr<Expression> create_expression(const RelAttr &attr,
+                                              const TupleSchema &schema) {
+  return std::make_unique<AttrExpression>(attr, schema);
+}
+
 inline bool try_to_match_values_type(Value &a, Value &b) {
   return value_cast(&a, b.type) || value_cast(&b, a.type);
 }

@@ -15,7 +15,7 @@
 
 class AttrExpression : public Expression {
 public:
-  AttrExpression(RelAttr &attr, const TupleSchema &schema);
+  AttrExpression(const RelAttr &attr, const TupleSchema &schema);
   std::shared_ptr<TupleValue> eval(const Tuple &tuple) override;
   AttrType type() override;
 

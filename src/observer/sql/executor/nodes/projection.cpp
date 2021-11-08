@@ -16,21 +16,19 @@
 
 ProjectionNode::ProjectionNode(Session *session,
                                std::unique_ptr<ExecutionNode> child,
-                               std::vector<const TableMeta *> tables,
+                               std::vector<const TableMeta *> &tables,
                                SelectExpr *attrs, int attr_num)
-    : child(std::move(child)), tables(std::move(tables)), session(session) {
-  this->fields_map.reserve(attr_num);
-
+    : child(std::move(child)), session(session) {
   for (int i = attr_num - 1; i >= 0; i--) {
     auto &expr = attrs[i];
 
     if (expr.attribute != nullptr) {
-      add_field(expr.attribute);
+      add_field(expr.attribute, tables);
     } else if (expr.agg != nullptr) {
       RelAttr attr;
       attr.relation_name = strdup("");
       attr.attribute_name = expr.agg->name;
-      add_field(&attr);
+      add_field(&attr, tables);
     }
   }
 }
@@ -59,16 +57,16 @@ RC ProjectionNode::next(Tuple &tuple) {
   }
 
   tuple.clear();
-  for (auto &i : fields_map) {
-    tuple.add(child_tuple.values()[i]);
+  for (auto &expr : exprs) {
+    tuple.add(expr->eval(child_tuple));
   }
 
   return RC::SUCCESS;
 }
 void ProjectionNode::reset() { child->reset(); }
 
-void ProjectionNode::add_field(const RelAttr *attr_p) {
-  auto &child_fields = this->child->schema().fields();
+void ProjectionNode::add_field(const RelAttr *attr_p,
+                               std::vector<const TableMeta *> &tables) {
   auto &attr = *attr_p;
 
   // Any relations
@@ -77,7 +75,7 @@ void ProjectionNode::add_field(const RelAttr *attr_p) {
     new_attr.attribute_name = attr.attribute_name;
     for (auto table : tables) {
       new_attr.relation_name = strdup(table->name());
-      add_field(&new_attr);
+      add_field(&new_attr, tables);
       free(new_attr.relation_name);
     }
     return;
@@ -101,28 +99,13 @@ void ProjectionNode::add_field(const RelAttr *attr_p) {
     new_attr.relation_name = attr.relation_name;
     for (int i = (*table)->sys_field_num(); i < (*table)->field_num(); i++) {
       new_attr.attribute_name = strdup((*table)->field(i)->name());
-      add_field(&new_attr);
+      add_field(&new_attr, tables);
       free(new_attr.attribute_name);
     }
     return;
   }
 
-  bool matched = false;
-  for (size_t j = 0; j < child_fields.size(); j++) {
-    auto &child_field = child_fields[j];
-    if ((strcmp(attr.attribute_name, child_field.field_name()) == 0) &&
-        (strcmp(attr.relation_name, child_field.table_name()) == 0)) {
-      matched = true;
-      this->fields_map.push_back(j);
-      this->tuple_schema_.add(child_field.type(), child_field.table_name(),
-                              child_field.field_name());
-      break;
-    }
-  }
-  if (!matched) {
-    std::stringstream ss;
-    ss << "Failed to find field " << attr.relation_name << '.'
-       << attr.attribute_name;
-    throw std::invalid_argument(ss.str());
-  }
+  this->exprs.push_back(create_expression(attr, child->schema()));
+  this->tuple_schema_.add(this->exprs.back()->type(), attr.relation_name,
+                          attr.attribute_name);
 }
