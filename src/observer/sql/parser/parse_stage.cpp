@@ -202,6 +202,38 @@ RC complete_attr(std::map<std::string, Table *> &tables, RelAttr &attr) {
   return RC::SUCCESS;
 }
 
+RC complete_conditon(ConditionExpr *expr, SQLStageEvent *event,
+                     std::map<std::string, Table *> &tables) {
+  RC rc;
+  switch (expr->type) {
+  case COND_EXPR_ATTR:
+    if (!ensure_and_complete_relattr(tables, expr->value.attr)) {
+      return RC::SQL_SYNTAX;
+    }
+    break;
+  case COND_EXPR_CALC:
+    if ((rc = complete_conditon(&expr->value.calc->left, event, tables)) !=
+        RC::SUCCESS) {
+      return rc;
+    }
+    if ((rc = complete_conditon(&expr->value.calc->right, event, tables)) !=
+        RC::SUCCESS) {
+      return rc;
+    }
+    break;
+  case COND_EXPR_SELECT: {
+    rc = complete_sql(event, *expr->value.selects, &tables);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+  } break;
+  default:
+    break;
+  }
+
+  return RC::SUCCESS;
+}
+
 RC complete_sql(SQLStageEvent *event, Selects &selects,
                 std::map<std::string, Table *> *context_tables) {
   const char *db =
@@ -261,28 +293,15 @@ RC complete_sql(SQLStageEvent *event, Selects &selects,
   for (size_t i = 0; i < selects.condition_num; i++) {
     Condition &condition = selects.conditions[i];
 
-    // Fill relation name in condition
-    if (condition.left_expr.type == COND_EXPR_ATTR &&
-        !ensure_and_complete_relattr(tables, condition.left_expr.value.attr)) {
-      return RC::SQL_SYNTAX;
-    }
-    if (condition.right_expr.type == COND_EXPR_ATTR &&
-        !ensure_and_complete_relattr(tables, condition.right_expr.value.attr)) {
-      return RC::SQL_SYNTAX;
+    RC rc;
+    rc = complete_conditon(&condition.left_expr, event, tables);
+    if (rc != RC::SUCCESS) {
+      return rc;
     }
 
-    // Complete sub selects in condition
-    if (condition.left_expr.type == COND_EXPR_SELECT) {
-      RC rc = complete_sql(event, *condition.left_expr.value.selects, &tables);
-      if (rc != RC::SUCCESS) {
-        return rc;
-      }
-    }
-    if (condition.right_expr.type == COND_EXPR_SELECT) {
-      RC rc = complete_sql(event, *condition.right_expr.value.selects, &tables);
-      if (rc != RC::SUCCESS) {
-        return rc;
-      }
+    rc = complete_conditon(&condition.right_expr, event, tables);
+    if (rc != RC::SUCCESS) {
+      return rc;
     }
   }
 
