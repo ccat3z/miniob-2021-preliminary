@@ -22,7 +22,8 @@
 #include "table_scaner.h"
 #include <memory>
 
-std::unique_ptr<ExecutionNode> build_select_executor_node(Session *session,
-                                                          Selects &selects);
+std::unique_ptr<ExecutionNode>
+build_select_executor_node(Session *session, Selects &selects,
+                           std::unique_ptr<ExecutionNode> context = nullptr);
 
 #endif // __OBSERVER_SQL_EXECUTOR_NODES_EXECUTION_NODE_H_

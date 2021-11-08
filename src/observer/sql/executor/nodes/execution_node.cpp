@@ -5,8 +5,9 @@
 #include <string>
 using namespace std::literals::string_literals;
 
-std::unique_ptr<ExecutionNode> build_select_executor_node(Session *session,
-                                                          Selects &selects) {
+std::unique_ptr<ExecutionNode>
+build_select_executor_node(Session *session, Selects &selects,
+                           std::unique_ptr<ExecutionNode> context) {
   auto db = session->get_current_db().c_str();
   auto trx = session->current_trx();
 
@@ -20,6 +21,9 @@ std::unique_ptr<ExecutionNode> build_select_executor_node(Session *session,
     auto table_scaner = std::make_unique<TableScaner>(trx, table);
     table_scaner->select_all_fields();
     table_scaners.push_back(std::move(table_scaner));
+  }
+  if (context != nullptr) {
+    table_scaners.push_back(std::move(context));
   }
 
   // Build root execution node
