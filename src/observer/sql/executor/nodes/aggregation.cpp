@@ -39,13 +39,15 @@ AggregationNode::AggregationNode(std::unique_ptr<ExecutionNode> child,
       } else {
         field_idx = child->schema().index_of_field(agg->attr->relation_name,
                                                    agg->attr->attribute_name);
+
+        if (field_idx < 0) {
+          throw std::invalid_argument("cannot find field for aggregation func");
+        }
+
+        aggor.set_input_type(child->schema().field(field_idx).type());
+        field_idx++;
       }
 
-      if (field_idx < 0) {
-        throw std::invalid_argument("cannot find field for aggregation func");
-      }
-
-      aggor.set_input_type(child->schema().field(field_idx).type());
       fields_map.push_back(field_idx);
     } else {
       throw std::invalid_argument("non value or attr for aggregation func");
@@ -77,8 +79,10 @@ RC AggregationNode::next(Tuple &tuple) {
         int idx = fields_map[i];
         if (idx < 0) {
           aggregators[i]->add(values[-idx - 1]);
+        } else if (idx == 0) {
+          aggregators[i]->add(nullptr);
         } else {
-          aggregators[i]->add(buf.get_pointer(idx));
+          aggregators[i]->add(buf.get_pointer(idx - 1));
         }
       } catch (const std::exception &e) {
         LOG_ERROR(e.what());
@@ -123,13 +127,23 @@ Aggregator &AggregationNode::add_aggregator(const char *func) {
 }
 
 AttrType CountAggregator::out_type() { return INTS; }
-void CountAggregator::add(std::shared_ptr<TupleValue> v) { count++; }
+void CountAggregator::add(std::shared_ptr<TupleValue> v) {
+  if (v == nullptr) { // any column
+    count++;
+  } else if (!v->is_null()) {
+    count++;
+  }
+}
 std::shared_ptr<TupleValue> CountAggregator::value() {
   return std::make_shared<IntValue>(count);
 }
 
 void MaxAggregator::add(std::shared_ptr<TupleValue> v) {
-  if (max == nullptr) {
+  if (v->is_null()) {
+    return;
+  }
+
+  if (max->is_null()) {
     max = v;
     return;
   }
@@ -141,7 +155,11 @@ void MaxAggregator::add(std::shared_ptr<TupleValue> v) {
 std::shared_ptr<TupleValue> MaxAggregator::value() { return max; };
 
 void MinAggregator::add(std::shared_ptr<TupleValue> v) {
-  if (min == nullptr) {
+  if (v->is_null()) {
+    return;
+  }
+
+  if (min->is_null()) {
     min = v;
     return;
   }
@@ -171,6 +189,10 @@ AttrType AvgAggregator::out_type() {
   throw std::logic_error("Unreachable code");
 }
 void AvgAggregator::add(std::shared_ptr<TupleValue> v) {
+  if (v->is_null()) {
+    return;
+  }
+
   float value;
   switch (this->in_type) {
   case INTS: {
@@ -194,6 +216,10 @@ void AvgAggregator::add(std::shared_ptr<TupleValue> v) {
   this->count++;
 }
 std::shared_ptr<TupleValue> AvgAggregator::value() {
+  if (count == 0) {
+    return std::make_shared<NullValue>();
+  }
+
   switch (out_type()) {
   case FLOATS: {
     auto tv = std::make_shared<FloatValue>(avg);

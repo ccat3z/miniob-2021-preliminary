@@ -42,6 +42,7 @@ private:
 
 class MaxAggregator : public Aggregator {
 public:
+  MaxAggregator() : max(new NullValue()){};
   void add(std::shared_ptr<TupleValue> v) override;
   std::shared_ptr<TupleValue> value() override;
 
@@ -51,6 +52,7 @@ private:
 
 class MinAggregator : public Aggregator {
 public:
+  MinAggregator() : min(new NullValue()){};
   void add(std::shared_ptr<TupleValue> v) override;
   std::shared_ptr<TupleValue> value() override;
 
@@ -87,6 +89,9 @@ private:
   std::vector<std::unique_ptr<Aggregator>> aggregators;
   std::unique_ptr<ExecutionNode> child;
 
+  // < 0: value index
+  // = 0: any
+  // > 0: tuple index
   std::vector<int> fields_map;
   std::vector<std::shared_ptr<TupleValue>> values;
 };

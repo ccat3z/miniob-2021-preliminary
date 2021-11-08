@@ -921,6 +921,12 @@ TEST_F(SQLTest, AggFuncCountShouldWork) {
             "count(a) | count(*)\n2 | 2\n");
 }
 
+TEST_F(SQLTest, AggFuncCountEmptyTableShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select count(a) from t;"), "count(a)\n0\n");
+  ASSERT_EQ(exec_sql("select count(*) from t;"), "count(*)\n0\n");
+}
+
 TEST_F(SQLTest, AggFuncMaxShouldWork) {
   ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
@@ -931,6 +937,12 @@ TEST_F(SQLTest, AggFuncMaxShouldWork) {
   ASSERT_EQ(exec_sql("select max(t.b) from t;"), "max(t.b)\n3\n");
 }
 
+TEST_F(SQLTest, AggFuncMaxEmptyTableShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select max(a) from t;"), "max(a)\nNULL\n");
+}
+
 TEST_F(SQLTest, AggFuncMinShouldWork) {
   ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1, 1);"), "SUCCESS\n");
@@ -939,6 +951,12 @@ TEST_F(SQLTest, AggFuncMinShouldWork) {
   ASSERT_EQ(exec_sql("select min(1) from t;"), "min(1)\n1\n");
   ASSERT_EQ(exec_sql("select min(a) from t;"), "min(a)\n1\n");
   ASSERT_EQ(exec_sql("select min(t.b) from t;"), "min(t.b)\n1\n");
+}
+
+TEST_F(SQLTest, AggFuncMinEmptyTableShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b int);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select min(a) from t;"), "min(a)\nNULL\n");
 }
 
 TEST_F(SQLTest, AggFuncAvgShouldWork) {
@@ -954,6 +972,12 @@ TEST_F(SQLTest, AggFuncAvgShouldWork) {
   ASSERT_EQ(exec_sql("select avg(a) from t;"), "avg(a)\n2\n");
   ASSERT_EQ(exec_sql("select avg(t.b) from t;"), "avg(t.b)\n2.37\n");
   ASSERT_EQ(exec_sql("select avg(d) from t;"), "avg(d)\n2021-11-01\n");
+}
+
+TEST_F(SQLTest, AggFuncAvgEmptyTableShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int, b float, d date);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select avg(a) from t;"), "avg(a)\nNULL\n");
 }
 
 TEST_F(SQLTest, AggFuncWithValueShouldWork) {
@@ -1275,6 +1299,48 @@ TEST_F(SQLTest, NullIsNullShouldWork) {
 
   ASSERT_EQ(exec_sql("select * from t where b is null;"), "a | b\n1 | NULL\n");
   ASSERT_EQ(exec_sql("select * from t where b is not null;"), "a | b\n1 | 1\n");
+}
+
+TEST_F(SQLTest, NullAggCountNullableShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int nullable);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (null);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select count(*) from t;"), "count(*)\n2\n");
+  ASSERT_EQ(exec_sql("select count(a) from t;"), "count(a)\n1\n");
+}
+
+TEST_F(SQLTest, NullAggMaxOfNullableShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int nullable);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (null);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (null);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select max(a) from t;"), "max(a)\nNULL\n");
+
+  ASSERT_EQ(exec_sql("insert into t values (1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select max(a) from t;"), "max(a)\n2\n");
+}
+
+TEST_F(SQLTest, NullAggMinOfNullableShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int nullable);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (null);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (null);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select min(a) from t;"), "min(a)\nNULL\n");
+
+  ASSERT_EQ(exec_sql("insert into t values (1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select min(a) from t;"), "min(a)\n1\n");
+}
+
+TEST_F(SQLTest, NullAggAvgOfNullableShouldWork) {
+  ASSERT_EQ(exec_sql("create table t(a int nullable);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (null);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (null);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select avg(a) from t;"), "avg(a)\nNULL\n");
+
+  ASSERT_EQ(exec_sql("insert into t values (1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select avg(a) from t;"), "avg(a)\n1.5\n");
 }
 
 int main(int argc, char **argv) {
