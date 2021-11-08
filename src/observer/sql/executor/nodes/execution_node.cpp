@@ -1,4 +1,6 @@
 #include "execution_node.h"
+#include "storage/common/table.h"
+#include "storage/common/table_meta.h"
 #include "storage/default/default_handler.h"
 #include <string>
 using namespace std::literals::string_literals;
@@ -9,10 +11,12 @@ std::unique_ptr<ExecutionNode> build_select_executor_node(Session *session,
   auto trx = session->current_trx();
 
   // Build table scanners
+  std::map<std::string, const TableMeta *> table_metas;
   std::vector<std::unique_ptr<ExecutionNode>> table_scaners;
   for (int i = selects.relation_num - 1; i >= 0; i--) {
     const char *table_name = selects.relations[i];
     Table *table = DefaultHandler::get_default().find_table(db, table_name);
+    table_metas[table_name] = &table->table_meta();
     auto table_scaner = std::make_unique<TableScaner>(trx, table);
     table_scaner->select_all_fields();
     table_scaners.push_back(std::move(table_scaner));
@@ -55,7 +59,7 @@ std::unique_ptr<ExecutionNode> build_select_executor_node(Session *session,
 
   // Projection
   exec_node = std::make_unique<ProjectionNode>(
-      std::move(exec_node), selects.attributes, selects.attr_num);
+      std::move(exec_node), table_metas, selects.attributes, selects.attr_num);
 
   // Simple rule-based optimizer
   auto new_node = exec_node->push_down_predicate();

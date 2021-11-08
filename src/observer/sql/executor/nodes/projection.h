@@ -11,12 +11,16 @@
 #ifndef __OBSERVER_SQL_EXECUTOR_NODES_PROJECTION_H_
 #define __OBSERVER_SQL_EXECUTOR_NODES_PROJECTION_H_
 #include "base.h"
+#include <map>
 #include <memory>
+
+class TableMeta;
 
 class ProjectionNode : public VolcanoExecutionNode {
 public:
-  ProjectionNode(std::unique_ptr<ExecutionNode> child, SelectExpr *attrs,
-                 int attr_num);
+  ProjectionNode(std::unique_ptr<ExecutionNode> child,
+                 std::map<std::string, const TableMeta *> tables,
+                 SelectExpr *attrs, int attr_num);
   virtual ~ProjectionNode();
   const TupleSchema &schema() override;
   RC next(Tuple &tuple) override;
@@ -29,6 +33,7 @@ private:
   TupleSchema tuple_schema_;
   std::unique_ptr<ExecutionNode> child;
   std::vector<int> fields_map;
+  std::map<std::string, const TableMeta *> tables;
 };
 
 #endif // __OBSERVER_SQL_EXECUTOR_NODES_PROJECTION_H_

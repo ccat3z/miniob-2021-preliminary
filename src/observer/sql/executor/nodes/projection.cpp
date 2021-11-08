@@ -11,10 +11,12 @@
 #include "projection.h"
 #include "common/log/log.h"
 #include "filter.h"
+#include "storage/common/table_meta.h"
 
 ProjectionNode::ProjectionNode(std::unique_ptr<ExecutionNode> child,
+                               std::map<std::string, const TableMeta *> tables,
                                SelectExpr *attrs, int attr_num)
-    : child(std::move(child)) {
+    : child(std::move(child)), tables(std::move(tables)) {
   this->fields_map.reserve(attr_num);
 
   for (int i = attr_num - 1; i >= 0; i--) {
@@ -67,23 +69,50 @@ void ProjectionNode::add_field(const RelAttr *attr_p) {
   auto &child_fields = this->child->schema().fields();
   auto &attr = *attr_p;
 
-  bool any_table = strcmp(attr.relation_name, "*") == 0;
-  bool any_attr = strcmp(attr.attribute_name, "*") == 0;
+  // Any relations
+  if (strcmp(attr.relation_name, "*") == 0) {
+    RelAttr new_attr;
+    new_attr.attribute_name = attr.attribute_name;
+    for (auto table : tables) {
+      new_attr.relation_name = strdup(table.first.c_str());
+      add_field(&new_attr);
+      free(new_attr.relation_name);
+    }
+    return;
+  }
+
+  // Any attributes
+  if (strcmp(attr.attribute_name, "*") == 0) {
+    // Find table
+    auto table_pair = tables.find(attr.relation_name);
+    if (table_pair == tables.end()) {
+      std::stringstream ss;
+      ss << "No such table " << attr.relation_name << " in child";
+      throw std::invalid_argument(ss.str());
+    }
+    auto table = table_pair->second;
+
+    // Iter attributes in table
+    RelAttr new_attr;
+    new_attr.relation_name = attr.relation_name;
+    for (int i = table->sys_field_num(); i < table->field_num(); i++) {
+      new_attr.attribute_name = strdup(table->field(i)->name());
+      add_field(&new_attr);
+      free(new_attr.attribute_name);
+    }
+    return;
+  }
+
   bool matched = false;
   for (size_t j = 0; j < child_fields.size(); j++) {
     auto &child_field = child_fields[j];
-    if ((any_attr ||
-         strcmp(attr.attribute_name, child_field.field_name()) == 0) &&
-        ((any_table && child_field.table_name()[0] != '.') ||
-         strcmp(attr.relation_name, child_field.table_name()) == 0)) {
+    if ((strcmp(attr.attribute_name, child_field.field_name()) == 0) &&
+        (strcmp(attr.relation_name, child_field.table_name()) == 0)) {
       matched = true;
       this->fields_map.push_back(j);
       this->tuple_schema_.add(child_field.type(), child_field.table_name(),
                               child_field.field_name());
-
-      if (!(any_table || any_attr)) {
-        break;
-      }
+      break;
     }
   }
   if (!matched) {
