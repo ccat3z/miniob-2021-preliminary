@@ -84,23 +84,8 @@ TupleFilter::TupleFilter(Session *session, const TupleSchema &schema,
                          Condition &condition) {
   op = condition.comp;
 
-  // Handle value expressions as far back as possible
-  // since the AttrType of the value expression must be determined by
-  // the expression on the other side.
-  if (condition.left_expr.type == COND_EXPR_VALUE &&
-      condition.right_expr.type == COND_EXPR_VALUE) {
-    try_to_match_values_type(condition.left_expr.value.value,
-                             condition.right_expr.value.value);
-  }
-  if (condition.left_expr.type != COND_EXPR_VALUE) {
-    left = create_expression(session, &condition.left_expr, schema);
-  }
-  right = create_expression(session, &condition.right_expr, schema,
-                            left == nullptr ? UNDEFINED : left->type());
-  if (condition.left_expr.type == COND_EXPR_VALUE) {
-    left =
-        create_expression(session, &condition.left_expr, schema, right->type());
-  }
+  std::tie(left, right) = create_expression_pair(
+      session, schema, &condition.left_expr, &condition.right_expr);
 
   // TODO: Comparable table is hard code for now. Needs to be refactored. It may be possible to use an undirected graph to represent comparable and comparative methods.
   auto ltype = left->type(), rtype = right->type();

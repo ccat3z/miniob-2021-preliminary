@@ -24,3 +24,31 @@ std::unique_ptr<Expression> create_expression(Session *session,
     break;
   }
 }
+
+inline bool try_to_match_values_type(Value &a, Value &b) {
+  return value_cast(&a, b.type) || value_cast(&b, a.type);
+}
+
+std::pair<std::unique_ptr<Expression>, std::unique_ptr<Expression>>
+create_expression_pair(Session *session, const TupleSchema &schema,
+                       ConditionExpr *left, ConditionExpr *right) {
+  std::pair<std::unique_ptr<Expression>, std::unique_ptr<Expression>> res;
+
+  // Handle value expressions as far back as possible
+  // since the AttrType of the value expression must be determined by
+  // the expression on the other side.
+  if (left->type == COND_EXPR_VALUE && right->type == COND_EXPR_VALUE) {
+    try_to_match_values_type(left->value.value, right->value.value);
+  }
+  if (left->type != COND_EXPR_VALUE) {
+    res.first = create_expression(session, left, schema);
+  }
+  res.second =
+      create_expression(session, right, schema,
+                        res.first == nullptr ? UNDEFINED : res.first->type());
+  if (left->type == COND_EXPR_VALUE) {
+    res.first = create_expression(session, left, schema, res.second->type());
+  }
+
+  return res;
+}
