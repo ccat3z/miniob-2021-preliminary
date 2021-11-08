@@ -1209,6 +1209,20 @@ TEST_F(SQLTest, SubQueryShouldWork) {
             "3 | 3\n");
 }
 
+TEST_F(SQLTest, SubQueryCompareMultiQueryResultsShouldFailure) {
+  ASSERT_EQ(exec_sql("create table t(a float, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create table t2(b int, d int);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("insert into t values (1.0, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2.0, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (3.0, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t2 values (1, 200);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t2 values (3, 500);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select * from t where a = (select b from t2);"),
+            "FAILURE\n");
+}
+
 TEST_F(SQLTest, SubQueryInShouldWork) {
   ASSERT_EQ(exec_sql("create table t(a float, b int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("create table t2(b int, d int);"), "SUCCESS\n");

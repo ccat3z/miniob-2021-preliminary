@@ -37,7 +37,7 @@ RC FilterNode::next(Tuple &tuple) {
         add = filter->filter(tuple);
       } catch (const std::exception &e) {
         LOG_WARN("Filter failed: %s", e.what());
-        add = false;
+        return RC::INVALID_ARGUMENT;
       }
 
       if (!add)
@@ -115,7 +115,12 @@ TupleFilter::~TupleFilter() {}
 
 bool TupleFilter::filter(const Tuple &tuple) const {
   if (EQUAL_TO <= op && op <= GREAT_THAN) {
-    int cmp = left->eval(tuple)->compare(right->eval(tuple).get());
+    auto lvalue = left->eval(tuple);
+    auto rvalue = right->eval(tuple);
+    if (lvalue->is_null() || rvalue->is_null()) {
+      return false;
+    }
+    int cmp = lvalue->compare(rvalue.get());
 
     switch (op) {
     case EQUAL_TO:
