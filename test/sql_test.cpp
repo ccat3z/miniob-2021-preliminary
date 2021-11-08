@@ -1222,6 +1222,17 @@ TEST_F(SQLTest, SubQueryShouldWork) {
       "3 | 3\n");
 }
 
+TEST_F(SQLTest, SubQueryWithOfficialTestCaseShouldWork) {
+  ASSERT_EQ(exec_sql("create table CSQ_1(ID int, COL1 int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create table CSQ_2(ID int, COL2 int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create table CSQ_3(ID int);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("SELECT * FROM CSQ_1 WHERE COL1 NOT IN (SELECT CSQ_2.COL2 "
+                     "FROM CSQ_2 WHERE CSQ_2.ID IN (SELECT CSQ_3.ID FROM CSQ_3 "
+                     "WHERE CSQ_1.ID = CSQ_3.ID));"),
+            "ID | COL1\n");
+}
+
 TEST_F(SQLTest, SubQueryWithInvalidReferenceShouldFailure) {
   ASSERT_EQ(exec_sql("create table t(a float, b int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("create table t2(b int, d int);"), "SUCCESS\n");

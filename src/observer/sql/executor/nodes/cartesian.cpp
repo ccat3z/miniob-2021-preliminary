@@ -9,6 +9,7 @@
 // Mulan PSL v2 for more details.
 
 #include "cartesian.h"
+#include "common/log/log.h"
 #include "filter.h"
 
 CartesianSelectNode::CartesianSelectNode(
@@ -77,33 +78,33 @@ std::unique_ptr<CartesianSelectNode> CartesianSelectNode::create(
   return root;
 }
 
+bool is_expr_involved_schema(ConditionExpr &expr, const TupleSchema &schema) {
+  switch (expr.type) {
+  case COND_EXPR_VALUE:
+    return false;
+  case COND_EXPR_ATTR:
+    return schema.index_of_field(expr.value.attr.relation_name,
+                                 expr.value.attr.attribute_name) >= 0;
+  case COND_EXPR_SELECT:
+    // TODO
+    return true;
+  default:
+    LOG_ERROR("Cannot determine if it is involved");
+    return true;
+  }
+}
+
 void extract_condition(Condition &condition, std::list<Condition *> &both,
                        const TupleSchema &lschema,
                        std::list<Condition *> &left_only,
                        const TupleSchema &rschema,
                        std::list<Condition *> &right_only) {
-  bool lschema_involved = false, rschema_involved = false;
-  if (condition.left_expr.type == COND_EXPR_ATTR) {
-    lschema_involved = lschema_involved ||
-                       lschema.index_of_field(
-                           condition.left_expr.value.attr.relation_name,
-                           condition.left_expr.value.attr.attribute_name) >= 0;
-    rschema_involved = rschema_involved ||
-                       rschema.index_of_field(
-                           condition.left_expr.value.attr.relation_name,
-                           condition.left_expr.value.attr.attribute_name) >= 0;
-  }
-
-  if (condition.right_expr.type == COND_EXPR_ATTR) {
-    lschema_involved = lschema_involved ||
-                       lschema.index_of_field(
-                           condition.right_expr.value.attr.relation_name,
-                           condition.right_expr.value.attr.attribute_name) >= 0;
-    rschema_involved = rschema_involved ||
-                       rschema.index_of_field(
-                           condition.right_expr.value.attr.relation_name,
-                           condition.right_expr.value.attr.attribute_name) >= 0;
-  }
+  bool lschema_involved =
+           is_expr_involved_schema(condition.left_expr, lschema) ||
+           is_expr_involved_schema(condition.right_expr, lschema),
+       rschema_involved =
+           is_expr_involved_schema(condition.left_expr, rschema) ||
+           is_expr_involved_schema(condition.right_expr, rschema);
 
   if (!lschema_involved && !rschema_involved) {
     left_only.push_back(&condition);
