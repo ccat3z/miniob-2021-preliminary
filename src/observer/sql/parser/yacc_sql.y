@@ -154,9 +154,11 @@ ParserContext *get_context(yyscan_t scanner)
 %type <list> order_by_attr_list;
 %type <list> order_by;
 %type <select_statement> select_statement;
-%type <condition_expr> condition_expr;
+%type <condition_expr> condition_expr condition_calc_expr;
 %type <boolean> attr_def_nullable;
 
+%left ADD MINUS
+%left STAR DIV
 %%
 
 commands:		//commands or sqls. parser starts here.
@@ -538,7 +540,32 @@ condition_expr:
 		$$.type = COND_EXPR_SELECT;
 		$$.value.selects = $2;
 	}
+	| condition_calc_expr {
+		$$ = $1;
+	}
 	;
+condition_calc_expr:
+	condition_expr ADD condition_expr {
+		$$.type = COND_EXPR_CALC;
+		$$.value.calc = condition_calc_create(&$1, CALC_ADD, &$3);
+	}
+	| condition_expr MINUS condition_expr {
+		$$.type = COND_EXPR_CALC;
+		$$.value.calc = condition_calc_create(&$1, CALC_MINUS, &$3);
+	}
+	| condition_expr STAR condition_expr {
+		$$.type = COND_EXPR_CALC;
+		$$.value.calc = condition_calc_create(&$1, CALC_MULTI, &$3);
+	}
+	| condition_expr DIV condition_expr {
+		$$.type = COND_EXPR_CALC;
+		$$.value.calc = condition_calc_create(&$1, CALC_DIV, &$3);
+	}
+	| LBRACE condition_calc_expr RBRACE {
+		$$ = $2;
+	}
+	;
+
 
 comp_op:
   	  EQ { $$ = EQUAL_TO; }

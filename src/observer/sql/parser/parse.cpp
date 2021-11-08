@@ -95,6 +95,20 @@ void value_destroy(Value *value) {
   value->data = nullptr;
 }
 
+ConditionCalcExpr *condition_calc_create(ConditionExpr *left, CalcOp op,
+                                         ConditionExpr *right) {
+  ConditionCalcExpr *expr =
+      (ConditionCalcExpr *)malloc(sizeof(ConditionCalcExpr));
+  expr->left = *left;
+  expr->right = *right;
+  expr->op = op;
+
+  return expr;
+}
+void condition_calc_expr_destroy(ConditionCalcExpr *expr) {
+  condition_expr_destroy(&expr->left);
+  condition_expr_destroy(&expr->right);
+}
 void condition_expr_destroy(ConditionExpr *expr) {
   switch (expr->type) {
   case COND_EXPR_ATTR:
@@ -106,6 +120,10 @@ void condition_expr_destroy(ConditionExpr *expr) {
   case COND_EXPR_SELECT:
     selects_destroy(expr->value.selects);
     free(expr->value.selects);
+    break;
+  case COND_EXPR_CALC:
+    condition_calc_expr_destroy(expr->value.calc);
+    free(expr->value.calc);
     break;
   default:
     throw std::logic_error("Unreachable code");

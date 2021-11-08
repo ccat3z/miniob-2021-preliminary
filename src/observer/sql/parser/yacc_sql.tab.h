@@ -118,7 +118,10 @@ extern int yydebug;
     PATH = 313,                    /* PATH  */
     SSS = 314,                     /* SSS  */
     STAR = 315,                    /* STAR  */
-    STRING_V = 316                 /* STRING_V  */
+    STRING_V = 316,                /* STRING_V  */
+    ADD = 317,                     /* ADD  */
+    MINUS = 318,                   /* MINUS  */
+    DIV = 319                      /* DIV  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -145,7 +148,7 @@ union YYSTYPE
   Selects *select_statement;
   ConditionExpr condition_expr;
 
-#line 149 "yacc_sql.tab.h"
+#line 152 "yacc_sql.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

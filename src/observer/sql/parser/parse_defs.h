@@ -31,6 +31,8 @@ typedef struct _RelAttr {
   char *attribute_name; // attribute name              属性名
 } RelAttr;
 
+typedef enum { CALC_ADD, CALC_MINUS, CALC_MULTI, CALC_DIV } CalcOp;
+
 typedef enum {
   EQUAL_TO,    //"="     0
   LESS_EQUAL,  //"<="    1
@@ -58,17 +60,25 @@ typedef struct _Value {
 typedef enum {
   COND_EXPR_VALUE,
   COND_EXPR_ATTR,
-  COND_EXPR_SELECT
+  COND_EXPR_SELECT,
+  COND_EXPR_CALC
 } ConditionExprType;
 
-typedef struct {
+typedef struct _ConditonExpr {
   union {
     Value value;
     RelAttr attr;
     struct _Selects *selects;
+    struct _ConditionCalcExpr *calc;
   } value;
   ConditionExprType type;
 } ConditionExpr;
+
+typedef struct _ConditionCalcExpr {
+  ConditionExpr left;
+  CalcOp op;
+  ConditionExpr right;
+} ConditionCalcExpr;
 
 typedef struct _Condition {
   ConditionExpr left_expr;
@@ -240,6 +250,9 @@ void agg_expr_init_attr(AggExpr *expr, const char *func, const RelAttr *attr);
 void agg_expr_destroy(AggExpr *expr);
 void select_expr_destroy(SelectExpr *expr);
 
+ConditionCalcExpr *condition_calc_create(ConditionExpr *left, CalcOp op,
+                                         ConditionExpr *right);
+void condition_calc_expr_destroy(ConditionCalcExpr *expr);
 void condition_expr_destroy(ConditionExpr *expr);
 void condition_init(Condition *condition, CompOp comp, ConditionExpr *left,
                     ConditionExpr *right);
