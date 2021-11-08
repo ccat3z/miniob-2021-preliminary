@@ -1217,6 +1217,15 @@ TEST_F(SQLTest, SubQueryShouldWork) {
       "3 | 3\n");
 }
 
+TEST_F(SQLTest, SubQueryWithInvalidReferenceShouldFailure) {
+  ASSERT_EQ(exec_sql("create table t(a float, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create table t2(b int, d int);"), "SUCCESS\n");
+
+  // Ambiguous column: b
+  ASSERT_EQ(exec_sql("select * from t where a > (select avg(b) from t2);"),
+            "FAILURE\n");
+}
+
 TEST_F(SQLTest, SubQueryCompareMultiQueryResultsShouldFailure) {
   ASSERT_EQ(exec_sql("create table t(a float, b int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("create table t2(b int, d int);"), "SUCCESS\n");

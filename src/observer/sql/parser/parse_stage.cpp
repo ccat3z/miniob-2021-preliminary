@@ -273,10 +273,16 @@ RC complete_sql(SQLStageEvent *event, Selects &selects,
 
     // Complete sub selects in condition
     if (condition.left_expr.type == COND_EXPR_SELECT) {
-      complete_sql(event, *condition.left_expr.value.selects);
+      RC rc = complete_sql(event, *condition.left_expr.value.selects, &tables);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
     }
     if (condition.right_expr.type == COND_EXPR_SELECT) {
-      complete_sql(event, *condition.right_expr.value.selects);
+      RC rc = complete_sql(event, *condition.right_expr.value.selects, &tables);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
     }
   }
 
