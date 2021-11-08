@@ -12,7 +12,7 @@ please refer to docs/how_to_build.md
 
 [日测结果](https://open.oceanbase.com/answer)
 
-[测试请求](https://github.com/hnwyllmm/miniob_test/issues/7#issue-comment-box)
+[测试请求](https://github.com/oceanbase/miniob/issues/7#issue-comment-box)
 
 [榜单](https://open.oceanbase.com/competition/index)
 
