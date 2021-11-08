@@ -13,8 +13,9 @@ SubQueryExpression::SubQueryExpression(Session *session, Selects *select) {
 
 std::shared_ptr<TupleValue> SubQueryExpression::eval(const Tuple &tuple) {
   retrieve();
-  if (tuple_set.size() == 0) {
-    throw std::logic_error("Nothing is found in sub query");
+  if (tuple_set.size() != 1) {
+    throw std::logic_error(
+        "Nothing or more than one tuple is retrieved from sub query");
   }
 
   return tuple_set.tuples()[0].get_pointer(0);
