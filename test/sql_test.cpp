@@ -1459,6 +1459,37 @@ TEST_F(SQLTest, ExpressionInSelectTablesShouldWork) {
             "3 | 5\n");
 }
 
+//  ######   ########   #######  ##     ## ########
+// ##    ##  ##     ## ##     ## ##     ## ##     ##
+// ##        ##     ## ##     ## ##     ## ##     ##
+// ##   #### ########  ##     ## ##     ## ########
+// ##    ##  ##   ##   ##     ## ##     ## ##
+// ##    ##  ##    ##  ##     ## ##     ## ##
+//  ######   ##     ##  #######   #######  ##
+
+TEST_F(SQLTest, GroupByShouldWork) {
+  ASSERT_EQ(exec_sql("create table t (a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select a, count(b) from t group by a;"), "a | count(b)\n"
+                                                               "1 | 2\n"
+                                                               "2 | 1\n");
+}
+
+TEST_F(SQLTest, GroupByMultiKeysShouldWork) {
+  ASSERT_EQ(exec_sql("create table t (a int, b int, c int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 3, 1);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 3, 2);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3, 3);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select a, count(*) from t group by a, b;"),
+            "a | count(*)\n"
+            "1 | 2\n"
+            "2 | 1\n");
+}
+
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
   testing::InitGoogleTest(&argc, argv);

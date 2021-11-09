@@ -339,5 +339,12 @@ RC complete_sql(SQLStageEvent *event, Selects &selects,
     }
   }
 
+  // Complete attributes in group by
+  for (size_t i = 0; i < selects.group_by_num; i++) {
+    if (!ensure_and_complete_relattr(tables, selects.group_by[i])) {
+      return RC::SQL_SYNTAX;
+    }
+  }
+
   return RC::SUCCESS;
 }

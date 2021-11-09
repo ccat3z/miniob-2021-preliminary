@@ -65,6 +65,7 @@ QUOTE            [\'\"]
 [Oo][Rr][Dd][Ee][Rr]                     RETURN_TOKEN(ORDER);
 [Bb][Yy]                                 RETURN_TOKEN(BY);
 [Aa][Ss][Cc]                             RETURN_TOKEN(ASC);
+[Gg][Rr][Oo][Uu][Pp]                     RETURN_TOKEN(GROUP);
 [Ii][Nn][Ss][Ee][rR][tT]                 RETURN_TOKEN(INSERT);
 [Ii][Nn][Tt][Oo]					 	             RETURN_TOKEN(INTO);
 [Vv][Aa][Ll][Uu][Ee][Ss]                 RETURN_TOKEN(VALUES);

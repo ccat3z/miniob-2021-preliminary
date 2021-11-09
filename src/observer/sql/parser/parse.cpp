@@ -338,6 +338,12 @@ void selects_append_order_attrs(Selects *selects, OrderBy *order_by,
     selects->order_by[selects->order_by_num++] = order_by[i];
   }
 }
+void selects_append_group_attrs(Selects *selects, RelAttr *order_by,
+                                size_t len) {
+  for (int i = len - 1; i >= 0; i--) {
+    selects->group_by[selects->group_by_num++] = order_by[i];
+  }
+}
 
 void selects_destroy(Selects *selects) {
   for (size_t i = 0; i < selects->attr_num; i++) {

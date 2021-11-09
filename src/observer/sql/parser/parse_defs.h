@@ -127,6 +127,8 @@ typedef struct _Selects {
   char *joins[MAX_NUM];           // relations in Join clause
   size_t order_by_num;            // Length of order attribute
   OrderBy order_by[MAX_NUM];      // order attribute
+  size_t group_by_num;            // Length of group attribute
+  RelAttr group_by[MAX_NUM];      // group by attribute
 } Selects;
 
 // struct of insert
@@ -285,6 +287,8 @@ void selects_append_join_relation(Selects *selects, const char *relation_name);
 void selects_append_conditions(Selects *selects, Condition conditions[],
                                size_t condition_num);
 void selects_append_order_attrs(Selects *selects, OrderBy *order_by,
+                                size_t len);
+void selects_append_group_attrs(Selects *selects, RelAttr *order_by,
                                 size_t len);
 void selects_destroy(Selects *selects);
 

@@ -95,6 +95,7 @@ ParserContext *get_context(yyscan_t scanner)
 		ORDER
 		BY
 		ASC
+		GROUP
         SET
         ON
         LOAD
@@ -153,6 +154,8 @@ ParserContext *get_context(yyscan_t scanner)
 %type <list> select_expr_list;
 %type <list> order_by_attr_list;
 %type <list> order_by;
+%type <list> group_by group_by_attr_list;
+%type <rel_attr> group_attr;
 %type <select_statement> select_statement;
 %type <condition_expr> condition_expr condition_calc_expr;
 %type <boolean> attr_def_nullable;
@@ -388,7 +391,7 @@ select:
 	;
 
 select_statement:				/*  select 语句的语法解析树*/
-    SELECT select_expr_list FROM ID rel_list join_list where order_by
+    SELECT select_expr_list FROM ID rel_list join_list where group_by order_by
 		{
 			Selects *selects = (Selects *) malloc(sizeof(Selects));
 			memset(selects, 0, sizeof(*selects));
@@ -408,8 +411,13 @@ select_statement:				/*  select 语句的语法解析树*/
 			list_free($7);
 
 			if ($8 != NULL) {
-				selects_append_order_attrs(selects, (OrderBy *) $8->values, $8->len);
+				selects_append_group_attrs(selects, (RelAttr *) $8->values, $8->len);
 				list_free($8);
+			}
+
+			if ($9 != NULL) {
+				selects_append_order_attrs(selects, (OrderBy *) $9->values, $9->len);
+				list_free($9);
 			}
 
 			CONTEXT->ssql->flag=SCF_SELECT;//"select";
@@ -673,6 +681,37 @@ order_dir:
 	{ $$ = DIR_ASC; }
 	| ASC { $$ = DIR_ASC; }
 	| DESC { $$ = DIR_DESC; }
+	;
+
+group_by:
+	/* empty */ { $$ = NULL; }
+	| GROUP BY group_by_attr_list {
+		$$ = $3;
+	}
+	;
+
+group_by_attr_list:
+    group_attr {
+		$$ = list_create(sizeof(RelAttr), MAX_NUM);
+		list_append($$, $1);
+    }
+    | group_attr COMMA group_by_attr_list {
+		$$ = $3;
+		list_append($$, $1);
+    }
+	;
+
+group_attr:
+    ID {
+		RelAttr *attr = malloc(sizeof(RelAttr));
+		relation_attr_init(attr, NULL, $1);
+		$$ = attr;
+	}
+    | ID DOT ID {
+		RelAttr *attr = malloc(sizeof(RelAttr));
+		relation_attr_init(attr, $1, $3);
+		$$ = attr;
+	}
 	;
 
 
