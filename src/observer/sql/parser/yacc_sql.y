@@ -460,13 +460,8 @@ select_expr:
 
 select_calc_expr:
 	MINUS select_expr {
-		SelectExpr expr;
-		memset(&expr, 0, sizeof expr);
-		expr.value = (Value *) malloc(sizeof(Value));
-		value_init_integer(expr.value, 0);
-
 		memset(&$$, 0, sizeof $$);
-		$$.calc = select_calc_expr_create(&expr, CALC_MINUS, &$2);
+		$$.calc = select_calc_expr_create(NULL, CALC_MINUS, &$2);
 	}
 	| select_expr ADD select_expr {
 		memset(&$$, 0, sizeof $$);
@@ -477,6 +472,7 @@ select_calc_expr:
 		$$.calc = select_calc_expr_create(&$1, CALC_MINUS, &$3);
 	}
 	| select_expr STAR select_expr {
+		// 9 * 9
 		memset(&$$, 0, sizeof $$);
 		$$.calc = select_calc_expr_create(&$1, CALC_MULTI, &$3);
 	}
@@ -486,6 +482,7 @@ select_calc_expr:
 	}
 	| LBRACE select_calc_expr RBRACE {
 		$$ = $2;
+	    select_calc_expr_add_brace($$.calc);
 	}
 	;
 

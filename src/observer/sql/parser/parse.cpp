@@ -212,14 +212,63 @@ void agg_expr_destroy(AggExpr *expr) {
 SelectCalcExpr *select_calc_expr_create(SelectExpr *left, CalcOp op,
                                         SelectExpr *right) {
   SelectCalcExpr *expr = (SelectCalcExpr *)malloc(sizeof(SelectCalcExpr));
-  expr->left = (SelectExpr *)malloc(sizeof(SelectExpr));
-  *expr->left = *left;
 
+  // Operation
   expr->op = op;
 
+  // Left expression
+  expr->left = (SelectExpr *)malloc(sizeof(SelectExpr));
+  if (left == nullptr) {
+    if (op != CALC_MINUS) {
+      throw std::invalid_argument(
+          "left expr can only be omitted in minus calc");
+    }
+
+    memset(expr->left, 0, sizeof *expr->left);
+    expr->left->value = (Value *)malloc(sizeof *expr->left->value);
+    value_init_integer(expr->left->value, 0);
+  } else {
+    *expr->left = *left;
+  }
+
+  // Right expression
   expr->right = (SelectExpr *)malloc(sizeof(SelectExpr));
+  assert(right != nullptr);
   *expr->right = *right;
+
+  // Name
+  std::stringstream ss;
+  if (left != nullptr) {
+    ss << *left;
+  }
+  switch (op) {
+  case CALC_ADD:
+    ss << '+';
+    break;
+  case CALC_MINUS:
+    ss << '-';
+    break;
+  case CALC_MULTI:
+    ss << '*';
+    break;
+  case CALC_DIV:
+    ss << '/';
+    break;
+  default:
+    throw std::logic_error("Unreachable code: 258");
+    break;
+  }
+  ss << *right;
+  expr->name = strdup(ss.str().c_str());
+
   return expr;
+}
+
+void select_calc_expr_add_brace(SelectCalcExpr *expr) {
+  std::stringstream ss;
+  ss << '(' << expr->name << ')';
+  free(expr->name);
+  expr->name = strdup(ss.str().c_str());
 }
 
 void select_calc_expr_free(SelectCalcExpr *expr) {
@@ -227,6 +276,7 @@ void select_calc_expr_free(SelectCalcExpr *expr) {
   free(expr->left);
   select_expr_destroy(expr->right);
   free(expr->right);
+  free(expr->name);
   free(expr);
 }
 
@@ -247,6 +297,9 @@ void select_expr_destroy(SelectExpr *expr) {
   }
   if (expr->calc != nullptr) {
     select_calc_expr_free(expr->calc);
+  }
+  if (expr->name != nullptr) {
+    free(expr->name);
   }
 }
 
@@ -557,6 +610,45 @@ void list_free(List *list) {
 #ifdef __cplusplus
 } // extern "C"
 #endif // __cplusplus
+
+std::ostream &operator<<(std::ostream &out, const SelectExpr &expr) {
+  if (expr.name != nullptr) {
+    out << expr.name;
+  } else if (expr.agg != nullptr) {
+    out << expr.agg->name;
+  } else if (expr.attribute != nullptr) {
+    if (expr.attribute->relation_name != nullptr) {
+      out << expr.attribute->relation_name << '.';
+    }
+
+    out << expr.attribute->attribute_name;
+  } else if (expr.value != nullptr) {
+    if (expr.value->is_null) {
+      out << "NULL";
+    } else {
+      switch (expr.value->type) {
+      case INTS:
+        out << *((int *)expr.value->data);
+        break;
+      case FLOATS:
+        out << *((float *)expr.value->data);
+        break;
+      case CHARS:
+        out << (char *)expr.value->data;
+        break;
+      default:
+        out << "??";
+        break;
+      }
+    }
+  } else if (expr.calc != nullptr) {
+    out << expr.calc->name;
+  } else {
+    out << "??";
+  }
+
+  return out;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

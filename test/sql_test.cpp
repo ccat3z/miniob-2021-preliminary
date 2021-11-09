@@ -1439,11 +1439,12 @@ TEST_F(SQLTest, ExpressionInConditionShouldWork) {
 TEST_F(SQLTest, ExpressionInSelectShouldWork) {
   ASSERT_EQ(exec_sql("create table t (a int, b int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
-  ASSERT_EQ(exec_sql("select a + b from t;"), "#\n5\n");
-  ASSERT_EQ(exec_sql("select a + b, a - b from t;"), "# | #\n5 | -1\n");
-  ASSERT_EQ(exec_sql("select 1 + 1, a - b from t;"), "# | #\n2 | -1\n");
-  ASSERT_EQ(exec_sql("select a + b - a * (b - b / a) from t;"), "#\n2\n");
-  ASSERT_EQ(exec_sql("select -a + b from t;"), "#\n1\n");
+  ASSERT_EQ(exec_sql("select a + b from t;"), "a+b\n5\n");
+  ASSERT_EQ(exec_sql("select a + b, a - b from t;"), "a+b | a-b\n5 | -1\n");
+  ASSERT_EQ(exec_sql("select 1 + 1, a - b from t;"), "1+1 | a-b\n2 | -1\n");
+  ASSERT_EQ(exec_sql("select a + b - a * (b - b / a) from t;"),
+            "a+b-a*(b-b/a)\n2\n");
+  ASSERT_EQ(exec_sql("select -a + b from t;"), "-a+b\n1\n");
 }
 
 int main(int argc, char **argv) {

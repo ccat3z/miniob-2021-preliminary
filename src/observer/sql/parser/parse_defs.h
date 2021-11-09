@@ -98,12 +98,14 @@ typedef struct {
   AggExpr *agg;
   RelAttr *attribute;
   struct _SelectCalcExpr *calc;
+  char *name;
 } SelectExpr;
 
 typedef struct _SelectCalcExpr {
   SelectExpr *left;
   CalcOp op;
   SelectExpr *right;
+  char *name;
 } SelectCalcExpr;
 
 typedef enum { DIR_ASC, DIR_DESC } OrderDir;
@@ -258,6 +260,7 @@ void agg_expr_init_attr(AggExpr *expr, const char *func, const RelAttr *attr);
 void agg_expr_destroy(AggExpr *expr);
 SelectCalcExpr *select_calc_expr_create(SelectExpr *left, CalcOp op,
                                         SelectExpr *right);
+void select_calc_expr_add_brace(SelectCalcExpr *expr);
 void select_calc_expr_free(SelectCalcExpr *expr);
 void select_expr_destroy(SelectExpr *expr);
 

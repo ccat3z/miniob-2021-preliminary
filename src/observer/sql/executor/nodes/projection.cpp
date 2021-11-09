@@ -31,7 +31,9 @@ ProjectionNode::ProjectionNode(Session *session,
       add_field(&attr, tables);
     } else {
       exprs.push_back(create_expression(&expr, this->child->schema()));
-      tuple_schema_.add(exprs.back()->type(), "", "#");
+      std::stringstream ss;
+      ss << expr;
+      tuple_schema_.add(exprs.back()->type(), "", ss.str().c_str());
     }
   }
 }
