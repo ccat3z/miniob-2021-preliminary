@@ -137,7 +137,7 @@ ParserContext *get_context(yyscan_t scanner)
 
 %type <number> type;
 %type <condition> condition;
-%type <value> value;
+%type <value> value pos_value;
 %type <list> value_list;
 %type <list> value_lists;
 %type <number> number;
@@ -334,6 +334,17 @@ value_list:
 	  }
     ;
 value:
+	pos_value {
+		$$ = $1;
+	}
+    |MINUS NUMBER{	
+  		value_init_integer(&$$, -$2);
+		}
+    |MINUS FLOAT{
+  		value_init_float(&$$, -$2);
+		}
+    ;
+pos_value:
 	NULL_VALUE {
 		value_init_null(&$$);
 	}
@@ -342,12 +353,6 @@ value:
 		}
     |FLOAT{
   		value_init_float(&$$, $1);
-		}
-    |MINUS NUMBER{	
-  		value_init_integer(&$$, -$2);
-		}
-    |MINUS FLOAT{
-  		value_init_float(&$$, -$2);
 		}
     |SSS {
 			$1 = substr($1,1,strlen($1)-2);
@@ -429,7 +434,7 @@ select_expr:
 		memset(&$$, 0, sizeof $$);
 		$$.attribute = $1;
 	}
-	| value {
+	| pos_value {
 		memset(&$$, 0, sizeof $$);
 		$$.value = malloc(sizeof(Value));
 		*$$.value = $1;
@@ -454,7 +459,16 @@ select_expr:
 	;
 
 select_calc_expr:
-	select_expr ADD select_expr {
+	MINUS select_expr {
+		SelectExpr expr;
+		memset(&expr, 0, sizeof expr);
+		expr.value = (Value *) malloc(sizeof(Value));
+		value_init_integer(expr.value, 0);
+
+		memset(&$$, 0, sizeof $$);
+		$$.calc = select_calc_expr_create(&expr, CALC_MINUS, &$2);
+	}
+	| select_expr ADD select_expr {
 		memset(&$$, 0, sizeof $$);
 		$$.calc = select_calc_expr_create(&$1, CALC_ADD, &$3);
 	}
@@ -570,7 +584,7 @@ condition_expr:
 		$$.type = COND_EXPR_ATTR;
 		relation_attr_init(&$$.value.attr, $1, $3);
 	}
-	| value {
+	| pos_value {
 		$$.type = COND_EXPR_VALUE;
 		$$.value.value = $1;
 	}
@@ -583,7 +597,15 @@ condition_expr:
 	}
 	;
 condition_calc_expr:
-	condition_expr ADD condition_expr {
+	MINUS condition_expr {
+		ConditionExpr expr;
+		expr.type = COND_EXPR_VALUE;
+		value_init_integer(&expr.value.value, 0);
+
+		$$.type = COND_EXPR_CALC;
+		$$.value.calc = condition_calc_create(&expr, CALC_MINUS, &$2);
+	}
+	| condition_expr ADD condition_expr {
 		$$.type = COND_EXPR_CALC;
 		$$.value.calc = condition_calc_create(&$1, CALC_ADD, &$3);
 	}
