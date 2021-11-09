@@ -1431,6 +1431,8 @@ TEST_F(SQLTest, ExpressionInConditionShouldWork) {
   ASSERT_EQ(exec_sql("select * from t where 2 = a + b - a * (b - b / a);"),
             "a | b\n2 | 3\n");
   ASSERT_EQ(exec_sql("select * from t where 1 + 1 > 2;"), "a | b\n");
+  ASSERT_EQ(exec_sql("select * from t where a-2 > 0;"), "a | b\n");
+  ASSERT_EQ(exec_sql("select * from t where a - -2 = 4;"), "a | b\n2 | 3\n");
 }
 
 TEST_F(SQLTest, ExpressionInSelectShouldWork) {

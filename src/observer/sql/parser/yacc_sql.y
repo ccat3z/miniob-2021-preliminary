@@ -343,6 +343,12 @@ value:
     |FLOAT{
   		value_init_float(&$$, $1);
 		}
+    |MINUS NUMBER{	
+  		value_init_integer(&$$, -$2);
+		}
+    |MINUS FLOAT{
+  		value_init_float(&$$, -$2);
+		}
     |SSS {
 			$1 = substr($1,1,strlen($1)-2);
   		value_init_string(&$$, $1);
