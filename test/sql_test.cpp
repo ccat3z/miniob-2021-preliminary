@@ -1445,6 +1445,18 @@ TEST_F(SQLTest, ExpressionInSelectShouldWork) {
   ASSERT_EQ(exec_sql("select a + b - a * (b - b / a) from t;"),
             "a+b-a*(b-b/a)\n2\n");
   ASSERT_EQ(exec_sql("select -a + b from t;"), "-a+b\n1\n");
+  ASSERT_EQ(exec_sql("select a,3*a from t;"), "a | 3*a\n2 | 6\n");
+}
+
+TEST_F(SQLTest, ExpressionInSelectTablesShouldWork) {
+  ASSERT_EQ(exec_sql("create table t (a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (2, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create table t2 (a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t2 values (2, 3);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select t.a + 1, t.a + t.b from t, t2;"),
+            "t.a+1 | t.a+t.b\n"
+            "3 | 5\n");
 }
 
 int main(int argc, char **argv) {

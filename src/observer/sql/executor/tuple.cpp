@@ -132,13 +132,13 @@ void TupleSchema::print(std::ostream &os, bool show_table) const {
   for (std::vector<TupleField>::const_iterator iter = fields_.begin(),
                                                end = --fields_.end();
        iter != end; ++iter) {
-    if (show_table) {
+    if (show_table && iter->table_name()[0] != '\0') {
       os << iter->table_name() << ".";
     }
     os << iter->field_name() << " | ";
   }
 
-  if (show_table) {
+  if (show_table && fields_.back().table_name()[0] != '\0') {
     os << fields_.back().table_name() << ".";
   }
   os << fields_.back().field_name() << std::endl;
