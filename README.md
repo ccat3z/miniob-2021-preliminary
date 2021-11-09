@@ -70,7 +70,7 @@ See details [here](./docs/lectures/miniob-topics.md).
 - [X] 支持NULL类型 (null)
 - [ ] 多列索引 (multi-index)
 - [ ] 超长字段 (text)
-- [ ] 查询条件支持表达式 (expression)
+- [X] 查询条件支持表达式 (expression)
 - [X] 子查询
   - [X] 简单子查询 (simple-sub-query)
   - [X] 复杂子查询 (complex-sub-query)
