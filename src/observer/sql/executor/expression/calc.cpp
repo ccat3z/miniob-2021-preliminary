@@ -12,7 +12,7 @@ CalcExpression::CalcExpression(ConditionCalcExpr &calc_expr, Session *session,
       session, schema, &calc_expr.left, &calc_expr.right);
   op = calc_expr.op;
 
-  if (!((left->type() == INTS || right->type() == FLOATS) &&
+  if (!((left->type() == INTS || left->type() == FLOATS) &&
         (right->type() == INTS || right->type() == FLOATS))) {
     throw std::invalid_argument("Calc expr only support INTS and FLOATS");
   }
@@ -24,7 +24,7 @@ CalcExpression::CalcExpression(SelectCalcExpr &calc_expr,
       create_expression_pair(schema, calc_expr.left, calc_expr.right);
   op = calc_expr.op;
 
-  if (!((left->type() == INTS || right->type() == FLOATS) &&
+  if (!((left->type() == INTS || left->type() == FLOATS) &&
         (right->type() == INTS || right->type() == FLOATS))) {
     throw std::invalid_argument("Calc expr only support INTS and FLOATS");
   }
