@@ -10,15 +10,12 @@ please refer to docs/how_to_build.md
 
 ## 相关连接
 
-[日测结果](https://open.oceanbase.com/answer)
-
-[测试请求](https://github.com/oceanbase/miniob/issues/7#issue-comment-box)
-
-[榜单](https://open.oceanbase.com/competition/index)
+* [竞赛文档](./docs/lectures/README.md), [在线文档](https://oceanbase-partner.github.io/lectures-on-dbms-implementation/)
+* [赛题](./docs/lectures/miniob-topics.md), [在线赛题说明](https://oceanbase-partner.github.io/lectures-on-dbms-implementation/miniob-topics)
+* [日测结果](https://open.oceanbase.com/answer), [日更榜单](https://open.oceanbase.com/competition/index)
+* [测试请求](https://github.com/oceanbase/miniob/issues/7#issue-comment-box)
 
 ## TODO
-
-See details [here](./docs/lectures/miniob-topics.md).
 
 - [ ] Build executor tree in parser stage
 - [ ] <del>RC stringify</del>
@@ -66,7 +63,7 @@ See details [here](./docs/lectures/miniob-topics.md).
 
 - [X] 多表join操作 (join-tables)
 - [X] 一次插入多条数据 (insert)
-- [ ] 唯一索引 (unique)
+- [X] 唯一索引 (unique)
 - [X] 支持NULL类型 (null)
 - [ ] 多列索引 (multi-index)
 - [ ] 超长字段 (text)
@@ -75,4 +72,4 @@ See details [here](./docs/lectures/miniob-topics.md).
   - [X] 简单子查询 (simple-sub-query)
   - [X] 复杂子查询 (complex-sub-query)
 - [X] 排序 (order-by)
-- [ ] 分组 (group-by)
+- [X] 分组 (group-by)
