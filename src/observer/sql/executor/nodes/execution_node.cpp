@@ -52,7 +52,8 @@ build_select_executor_node(Session *session, Selects &selects,
   }
   if (need_agg) {
     exec_node = std::make_unique<AggregationNode>(
-        std::move(exec_node), selects.attributes, selects.attr_num);
+        std::move(exec_node), selects.attributes, selects.attr_num,
+        selects.group_by, selects.group_by_num);
   }
 
   // Order

@@ -11,13 +11,32 @@
 #include "aggregation.h"
 #include "../expression/expression.h"
 #include "common/log/log.h"
+#include <algorithm>
 
 AggregationNode::AggregationNode(std::unique_ptr<ExecutionNode> child,
-                                 SelectExpr *exprs, int expr_num) {
+                                 SelectExpr *exprs, int expr_num,
+                                 RelAttr *group_keys, int group_keys_num) {
+  for (int i = 0; i < group_keys_num; i++) {
+    auto &key_attr = group_keys[i];
+    auto field_idx = child->schema().index_of_field(key_attr.relation_name,
+                                                    key_attr.attribute_name);
+    if (field_idx < 0) {
+      std::stringstream ss;
+      ss << "Cannot find group key " << group_keys->relation_name << '.'
+         << group_keys->attribute_name;
+      throw std::invalid_argument(ss.str());
+    }
+
+    keys.push_back(field_idx);
+
+    auto &field = child->schema().field(field_idx);
+    tuple_schema_.add(field.type(), field.table_name(), field.field_name());
+  }
+
   for (int i = 0; i < expr_num; i++) {
     auto &expr = exprs[i];
-    if (expr.attribute != nullptr) {
-      throw std::invalid_argument("Group aggregation is not support yet");
+    if (expr.agg == nullptr) {
+      continue; // skip non-aggregation exprs
     }
 
     auto &aggor = add_aggregator(expr.agg->agg_func);
@@ -34,18 +53,66 @@ AggregationNode::AggregationNode(std::unique_ptr<ExecutionNode> child,
 AggregationNode::~AggregationNode() {}
 const TupleSchema &AggregationNode::schema() { return tuple_schema_; }
 
-RC AggregationNode::execute(TupleSet &tuple_set) {
-  for (auto &agg : aggregators) {
-    agg->reset();
+bool operator==(const Tuple &a, const Tuple &b) {
+  if (a.size() != b.size())
+    return false;
+
+  for (int i = 0; i < a.size(); i++) {
+    auto &v_a = a.get(i);
+    auto &v_b = b.get(i);
+
+    if (v_a.is_null() && v_b.is_null()) {
+      continue;
+    } else if (v_a.is_null() || v_b.is_null()) {
+      return false;
+    } else {
+      if (v_a.compare(&v_b) != 0) {
+        return false;
+      }
+    }
   }
+
+  return true;
+}
+
+RC AggregationNode::execute(TupleSet &tuple_set) {
+  // Reset child node
   child->reset();
 
+  // Perpare aggregators
+  typedef std::pair<std::shared_ptr<Tuple>,
+                    std::vector<std::unique_ptr<Aggregator>>>
+      key_to_aggs_t;
+  std::vector<key_to_aggs_t> keys_to_aggs;
+  auto get_aggors_of_key = [&keys_to_aggs, &aggs_template = aggregators](
+                               std::unique_ptr<Tuple> key_tuple)
+      -> std::vector<std::unique_ptr<Aggregator>> & {
+    auto key_to_aggs_iter = std::find_if(
+        keys_to_aggs.begin(), keys_to_aggs.end(),
+        [&](const key_to_aggs_t &a) { return *a.first == *key_tuple; });
+    if (key_to_aggs_iter == keys_to_aggs.end()) {
+      keys_to_aggs.emplace_back(std::move(key_tuple),
+                                std::vector<std::unique_ptr<Aggregator>>());
+      auto &aggs = keys_to_aggs.back().second;
+      for (auto &agg : aggs_template) {
+        aggs.push_back(agg->clone());
+      }
+
+      return keys_to_aggs.back().second;
+    }
+
+    return key_to_aggs_iter->second;
+  };
+
+  // Iter and aggregate data
   Tuple buf;
   RC rc;
   while ((rc = child->next(buf)) != RC::RECORD_EOF) {
-    for (size_t i = 0; i < tuple_schema_.fields().size(); i++) {
+    auto &aggors = get_aggors_of_key(build_key_tuple(buf));
+
+    for (size_t i = 0; i < aggors.size(); i++) {
       try {
-        aggregators[i]->add_tuple(buf);
+        aggors[i]->add_tuple(buf);
       } catch (const std::exception &e) {
         LOG_ERROR(e.what());
         return RC::GENERIC_ERROR;
@@ -53,17 +120,47 @@ RC AggregationNode::execute(TupleSet &tuple_set) {
     }
   }
 
-  tuple_set.set_schema(schema());
-  Tuple tuple;
-  for (auto &agg : aggregators) {
-    tuple.add(agg->value());
-  }
-  tuple_set.add(std::move(tuple));
-
   if (rc == RC::RECORD_EOF) {
-    return RC::SUCCESS;
+    rc = RC::SUCCESS;
   }
-  return rc;
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+
+  // Write tuple set
+  tuple_set.set_schema(schema());
+
+  if (keys_to_aggs.size() == 0 && keys.size() == 0) {
+    // If no group keys and no data, write default values
+
+    Tuple tuple;
+    for (auto &agg : aggregators) {
+      tuple.add(agg->value());
+    }
+    tuple_set.add(std::move(tuple));
+  } else {
+    for (auto &key_to_aggs : keys_to_aggs) {
+      auto &keys_tuple = key_to_aggs.first;
+      auto &aggors = key_to_aggs.second;
+
+      Tuple tuple(*keys_tuple);
+      for (auto &agg : aggors) {
+        tuple.add(agg->value());
+      }
+      tuple_set.add(std::move(tuple));
+    }
+  }
+
+  return RC::SUCCESS;
+}
+
+std::unique_ptr<Tuple> AggregationNode::build_key_tuple(const Tuple &tuple) {
+  auto key_tuple = std::make_unique<Tuple>();
+  for (auto idx : keys) {
+    key_tuple->add(tuple.get_pointer(idx));
+  }
+
+  return key_tuple;
 }
 
 Aggregator &AggregationNode::add_aggregator(const char *func) {

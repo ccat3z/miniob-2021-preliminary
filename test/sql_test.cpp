@@ -1467,7 +1467,7 @@ TEST_F(SQLTest, ExpressionInSelectTablesShouldWork) {
 // ##    ##  ##    ##  ##     ## ##     ## ##
 //  ######   ##     ##  #######   #######  ##
 
-TEST_F(SQLTest, DISABLED_GroupByShouldWork) {
+TEST_F(SQLTest, GroupByShouldWork) {
   ASSERT_EQ(exec_sql("create table t (a int, b int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1, 3);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1, 3);"), "SUCCESS\n");
@@ -1478,7 +1478,7 @@ TEST_F(SQLTest, DISABLED_GroupByShouldWork) {
                                                                "2 | 1\n");
 }
 
-TEST_F(SQLTest, DISABLED_GroupByMultiKeysShouldWork) {
+TEST_F(SQLTest, GroupByMultiKeysShouldWork) {
   ASSERT_EQ(exec_sql("create table t (a int, b int, c int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1, 3, 1);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1, 3, 2);"), "SUCCESS\n");
@@ -1488,6 +1488,17 @@ TEST_F(SQLTest, DISABLED_GroupByMultiKeysShouldWork) {
             "a | count(*)\n"
             "1 | 2\n"
             "2 | 1\n");
+}
+
+TEST_F(SQLTest, GroupByNullShouldWork) {
+  ASSERT_EQ(exec_sql("create table t (a int nullable, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (1, 3);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values (NULL, 3);"), "SUCCESS\n");
+
+  ASSERT_EQ(exec_sql("select a, count(b) from t group by a;"), "a | count(b)\n"
+                                                               "1 | 2\n"
+                                                               "NULL | 1\n");
 }
 
 int main(int argc, char **argv) {
