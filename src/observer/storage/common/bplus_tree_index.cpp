@@ -61,6 +61,19 @@ RC BplusTreeIndex::close() {
 }
 
 RC BplusTreeIndex::insert_entry(const char *record, const RID *rid) {
+  if (this->index_meta_.unique()) {
+    RID id;
+    RC rc;
+    switch (rc = index_handler_.get_entry(record + field_meta_.offset(), &id)) {
+    case RC::RECORD_INVALID_KEY:
+      break;
+    case RC::SUCCESS:
+      LOG_ERROR("Conflict index key");
+      return RC::INVALID_ARGUMENT;
+    default:
+      return rc;
+    }
+  }
   return index_handler_.insert_entry(record + field_meta_.offset(), rid);
 }
 
