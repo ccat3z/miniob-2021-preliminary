@@ -1467,7 +1467,7 @@ TEST_F(SQLTest, ExpressionInSelectTablesShouldWork) {
 // ##    ##  ##    ##  ##     ## ##     ## ##
 //  ######   ##     ##  #######   #######  ##
 
-TEST_F(SQLTest, GroupByShouldWork) {
+TEST_F(SQLTest, DISABLED_GroupByShouldWork) {
   ASSERT_EQ(exec_sql("create table t (a int, b int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1, 3);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1, 3);"), "SUCCESS\n");
@@ -1478,7 +1478,7 @@ TEST_F(SQLTest, GroupByShouldWork) {
                                                                "2 | 1\n");
 }
 
-TEST_F(SQLTest, GroupByMultiKeysShouldWork) {
+TEST_F(SQLTest, DISABLED_GroupByMultiKeysShouldWork) {
   ASSERT_EQ(exec_sql("create table t (a int, b int, c int);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1, 3, 1);"), "SUCCESS\n");
   ASSERT_EQ(exec_sql("insert into t values (1, 3, 2);"), "SUCCESS\n");
