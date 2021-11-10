@@ -34,18 +34,15 @@ AggregationNode::AggregationNode(std::unique_ptr<ExecutionNode> child,
 AggregationNode::~AggregationNode() {}
 const TupleSchema &AggregationNode::schema() { return tuple_schema_; }
 
-RC AggregationNode::next(Tuple &tuple) {
-  if (end) {
-    return RC::RECORD_EOF;
+RC AggregationNode::execute(TupleSet &tuple_set) {
+  for (auto &agg : aggregators) {
+    agg->reset();
   }
+  child->reset();
 
   Tuple buf;
   RC rc;
   while ((rc = child->next(buf)) != RC::RECORD_EOF) {
-    if (rc != RC::SUCCESS) {
-      return rc;
-    }
-
     for (size_t i = 0; i < tuple_schema_.fields().size(); i++) {
       try {
         aggregators[i]->add_tuple(buf);
@@ -56,20 +53,17 @@ RC AggregationNode::next(Tuple &tuple) {
     }
   }
 
+  tuple_set.set_schema(schema());
+  Tuple tuple;
   for (auto &agg : aggregators) {
     tuple.add(agg->value());
   }
+  tuple_set.add(std::move(tuple));
 
-  end = true;
-  return RC::SUCCESS;
-}
-
-void AggregationNode::reset() {
-  end = false;
-  child->reset();
-  for (auto &agg : aggregators) {
-    agg->reset();
+  if (rc == RC::RECORD_EOF) {
+    return RC::SUCCESS;
   }
+  return rc;
 }
 
 Aggregator &AggregationNode::add_aggregator(const char *func) {

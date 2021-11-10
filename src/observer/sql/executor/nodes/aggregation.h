@@ -91,19 +91,18 @@ private:
   double avg;
 };
 
-class AggregationNode : public VolcanoExecutionNode {
+class AggregationNode : public SetExecutionNode {
 public:
   AggregationNode(std::unique_ptr<ExecutionNode> child, SelectExpr *exprs,
                   int expr_num);
   virtual ~AggregationNode();
   const TupleSchema &schema() override;
-  RC next(Tuple &tuple) override;
-  void reset() override;
+
+  RC execute(TupleSet &tuple_set) override;
   // TODO: predicate push down is required for trigger push down in child node
 
 private:
   TupleSchema tuple_schema_;
-  bool end = false;
   Aggregator &add_aggregator(const char *func);
   std::vector<std::unique_ptr<Aggregator>> aggregators;
   std::unique_ptr<ExecutionNode> child;
