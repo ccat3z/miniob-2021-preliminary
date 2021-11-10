@@ -152,61 +152,24 @@ void attr_info_destroy(AttrInfo *attr_info) {
   attr_info->name = nullptr;
 }
 
-void agg_expr_init_value(AggExpr *expr, const char *func, const Value *value) {
+void agg_expr_init(AggExpr *expr, const char *func,
+                   const SelectExpr *select_expr) {
   expr->agg_func = strdup(func);
+  expr->expr = (SelectExpr *)malloc(sizeof *expr->expr);
+  *expr->expr = *select_expr;
 
-  expr->value = (Value *)malloc(sizeof(Value));
-  *expr->value = *value;
-  expr->attr = nullptr;
-
-  expr->name = (char *)malloc(sizeof(char) * 50);
-  switch (value->type) {
-  case INTS:
-    snprintf(expr->name, 50, "%s(%d)", func, *((int *)value->data));
-    break;
-  case FLOATS:
-    snprintf(expr->name, 50, "%s(%g)", func, *((float *)value->data));
-    break;
-  case CHARS:
-    snprintf(expr->name, 50, "%s('%s')", func, (char *)value->data);
-    break;
-  default:
-    std::stringstream ss;
-    ss << "Failed to generate agg name because unsupport value type: "
-       << value->type;
-    throw std::logic_error(ss.str());
-  }
-}
-
-void agg_expr_init_attr(AggExpr *expr, const char *func, const RelAttr *attr) {
-  expr->agg_func = strdup(func);
-
-  expr->value = nullptr;
-  expr->attr = (RelAttr *)malloc(sizeof(RelAttr));
-  *expr->attr = *attr;
-
-  expr->name = (char *)malloc(sizeof(char) * 50);
-  if (attr->relation_name == nullptr) {
-    snprintf(expr->name, 50, "%s(%s)", func, attr->attribute_name);
-  } else {
-    snprintf(expr->name, 50, "%s(%s.%s)", func, attr->relation_name,
-             attr->attribute_name);
-  }
+  std::stringstream ss;
+  ss << expr->agg_func << '(' << *expr->expr << ')';
+  expr->name = strdup(ss.str().c_str());
 }
 
 void agg_expr_destroy(AggExpr *expr) {
   if (expr == nullptr)
     return;
   free(expr->agg_func);
-  if (expr->attr != nullptr) {
-    relation_attr_destroy(expr->attr);
-  }
-  if (expr->value != nullptr) {
-    value_destroy(expr->value);
-  }
-  if (expr->name != nullptr) {
-    free(expr->name);
-  }
+  select_expr_destroy(expr->expr);
+  free(expr->expr);
+  free(expr->name);
 }
 
 SelectCalcExpr *select_calc_expr_create(SelectExpr *left, CalcOp op,
@@ -640,7 +603,7 @@ std::ostream &operator<<(std::ostream &out, const SelectExpr &expr) {
         out << *((float *)expr.value->data);
         break;
       case CHARS:
-        out << (char *)expr.value->data;
+        out << '\'' << (char *)expr.value->data << '\'';
         break;
       default:
         out << "??";

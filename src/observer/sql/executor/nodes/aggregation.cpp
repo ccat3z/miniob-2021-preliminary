@@ -9,6 +9,7 @@
 // Mulan PSL v2 for more details.
 
 #include "aggregation.h"
+#include "../expression/expression.h"
 #include "common/log/log.h"
 
 AggregationNode::AggregationNode(std::unique_ptr<ExecutionNode> child,
@@ -19,41 +20,12 @@ AggregationNode::AggregationNode(std::unique_ptr<ExecutionNode> child,
       throw std::invalid_argument("Group aggregation is not support yet");
     }
 
-    auto &agg = expr.agg;
-    auto &aggor = add_aggregator(agg->agg_func);
+    auto &aggor = add_aggregator(expr.agg->agg_func);
+    aggor.set_input_expr(expr.agg->expr, child->schema());
 
-    if (agg->value != nullptr) {
-      aggor.set_input_type(agg->value->type);
-
-      values.emplace_back(TupleValue::from_value(*agg->value));
-      fields_map.push_back(-values.size());
-    } else if (agg->attr != nullptr) {
-      int field_idx;
-      if (strcmp(agg->attr->attribute_name, "*") == 0) {
-        if (!aggor.support_any_column()) {
-          std::stringstream ss;
-          ss << "* is not support in agg func: " << agg->agg_func;
-          throw std::invalid_argument(ss.str());
-        }
-        field_idx = 0;
-      } else {
-        field_idx = child->schema().index_of_field(agg->attr->relation_name,
-                                                   agg->attr->attribute_name);
-
-        if (field_idx < 0) {
-          throw std::invalid_argument("cannot find field for aggregation func");
-        }
-
-        aggor.set_input_type(child->schema().field(field_idx).type());
-        field_idx++;
-      }
-
-      fields_map.push_back(field_idx);
-    } else {
-      throw std::invalid_argument("non value or attr for aggregation func");
-    }
-
-    tuple_schema_.add(aggor.out_type(), "", agg->name);
+    std::stringstream ss;
+    ss << expr;
+    tuple_schema_.add(aggor.out_type(), "", ss.str().c_str());
   }
 
   this->child = std::move(child);
@@ -76,14 +48,7 @@ RC AggregationNode::next(Tuple &tuple) {
 
     for (size_t i = 0; i < tuple_schema_.fields().size(); i++) {
       try {
-        int idx = fields_map[i];
-        if (idx < 0) {
-          aggregators[i]->add(values[-idx - 1]);
-        } else if (idx == 0) {
-          aggregators[i]->add(nullptr);
-        } else {
-          aggregators[i]->add(buf.get_pointer(idx - 1));
-        }
+        aggregators[i]->add_tuple(buf);
       } catch (const std::exception &e) {
         LOG_ERROR(e.what());
         return RC::GENERIC_ERROR;
@@ -127,6 +92,30 @@ Aggregator &AggregationNode::add_aggregator(const char *func) {
   }
 
   return *aggregators.back();
+}
+
+void Aggregator::set_input_expr(SelectExpr *expr, const TupleSchema &schema) {
+  if (expr->attribute != nullptr) {
+    if (strcmp(expr->attribute->attribute_name, "*") == 0) {
+      if (!support_any_column()) {
+        throw std::invalid_argument("* is not support in this aggregator");
+      }
+      return;
+    }
+  }
+
+  expression = std::move(create_expression(expr, schema));
+  set_input_type(expression->type());
+}
+
+void Aggregator::add_tuple(const Tuple &tuple) {
+  if (expression == nullptr) {
+    add(nullptr);
+    return;
+  }
+
+  auto value = expression->eval(tuple);
+  add(value);
 }
 
 AttrType CountAggregator::out_type() { return INTS; }

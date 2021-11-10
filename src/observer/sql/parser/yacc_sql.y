@@ -450,16 +450,9 @@ select_expr:
 	| select_calc_expr {
 		$$ = $1;
 	}
-	| ID LBRACE select_attr RBRACE {
+	| ID LBRACE select_expr RBRACE {
 		AggExpr *expr = (AggExpr *) malloc(sizeof(AggExpr));
-		agg_expr_init_attr(expr, $1, $3);
-
-		memset(&$$, 0, sizeof $$);
-		$$.agg = expr;
-	}
-	| ID LBRACE value RBRACE {
-		AggExpr *expr = (AggExpr *) malloc(sizeof(AggExpr));
-		agg_expr_init_value(expr, $1, &$3);
+		agg_expr_init(expr, $1, &$3);
 
 		memset(&$$, 0, sizeof $$);
 		$$.agg = expr;

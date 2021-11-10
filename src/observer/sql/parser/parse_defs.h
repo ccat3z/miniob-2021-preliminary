@@ -87,19 +87,18 @@ typedef struct _Condition {
 } Condition;
 
 typedef struct {
-  char *agg_func;
   Value *value;
-  RelAttr *attr;
-  char *name;
-} AggExpr;
-
-typedef struct {
-  Value *value;
-  AggExpr *agg;
+  struct _AggExpr *agg;
   RelAttr *attribute;
   struct _SelectCalcExpr *calc;
   char *name;
 } SelectExpr;
+
+typedef struct _AggExpr {
+  char *agg_func;
+  SelectExpr *expr;
+  char *name;
+} AggExpr;
 
 typedef struct _SelectCalcExpr {
   SelectExpr *left;
@@ -257,8 +256,8 @@ void value_init_string(Value *value, const char *v);
 bool value_cast(Value *value, AttrType type);
 void value_destroy(Value *value);
 
-void agg_expr_init_value(AggExpr *expr, const char *func, const Value *value);
-void agg_expr_init_attr(AggExpr *expr, const char *func, const RelAttr *attr);
+void agg_expr_init(AggExpr *expr, const char *func,
+                   const SelectExpr *select_expr);
 void agg_expr_destroy(AggExpr *expr);
 SelectCalcExpr *select_calc_expr_create(SelectExpr *left, CalcOp op,
                                         SelectExpr *right);

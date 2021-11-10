@@ -27,8 +27,12 @@ ProjectionNode::ProjectionNode(Session *session,
     } else if (expr.agg != nullptr) {
       RelAttr attr;
       attr.relation_name = strdup("");
-      attr.attribute_name = expr.agg->name;
+
+      std::stringstream ss;
+      ss << expr;
+      attr.attribute_name = strdup(ss.str().c_str());
       add_field(&attr, tables);
+      relation_attr_destroy(&attr);
     } else {
       exprs.push_back(create_expression(&expr, this->child->schema()));
       std::stringstream ss;

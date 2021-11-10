@@ -243,8 +243,8 @@ RC complete_select_expr(SelectExpr *expr,
     }
   }
 
-  if (expr->agg != nullptr && expr->agg->attr != nullptr) {
-    RC rc = complete_attr(tables, *expr->agg->attr);
+  if (expr->agg != nullptr) {
+    RC rc = complete_select_expr(expr->agg->expr, tables);
     if (rc != RC::SUCCESS) {
       return rc;
     }
