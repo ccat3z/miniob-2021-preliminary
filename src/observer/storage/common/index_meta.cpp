@@ -31,6 +31,7 @@ RC IndexMeta::init(const char *name, const FieldMeta &field, bool unique) {
 
   name_ = name;
   field_ = field.name();
+  unique_ = unique;
   return RC::SUCCESS;
 }
 
@@ -77,6 +78,9 @@ const char *IndexMeta::name() const { return name_.c_str(); }
 
 const char *IndexMeta::field() const { return field_.c_str(); }
 
+bool IndexMeta::unique() const { return unique_; };
+
 void IndexMeta::desc(std::ostream &os) const {
-  os << "index name=" << name_ << ", field=" << field_;
+  os << "index name=" << name_ << ", field=" << field_
+     << ", unique=" << (unique_ ? "yes" : "no");
 }

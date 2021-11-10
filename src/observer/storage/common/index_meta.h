@@ -34,6 +34,7 @@ public:
 public:
   const char *name() const;
   const char *field() const;
+  bool unique() const;
 
   void desc(std::ostream &os) const;
 

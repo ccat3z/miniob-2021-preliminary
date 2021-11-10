@@ -63,6 +63,7 @@ ParserContext *get_context(yyscan_t scanner)
 		NULL_VALUE
 		NULLABLE
         INDEX
+		UNIQUE
         SELECT
         DESC
         SHOW
@@ -158,7 +159,7 @@ ParserContext *get_context(yyscan_t scanner)
 %type <rel_attr> group_attr;
 %type <select_statement> select_statement;
 %type <condition_expr> condition_expr condition_calc_expr;
-%type <boolean> attr_def_nullable;
+%type <boolean> attr_def_nullable create_index_unique;
 
 %left ADD MINUS
 %left STAR DIV
@@ -243,12 +244,16 @@ desc_table:
     ;
 
 create_index:		/*create index 语句的语法解析树*/
-    CREATE INDEX ID ON ID LBRACE ID RBRACE SEMICOLON 
+    CREATE create_index_unique INDEX ID ON ID LBRACE ID RBRACE SEMICOLON 
 		{
 			CONTEXT->ssql->flag = SCF_CREATE_INDEX;//"create_index";
-			create_index_init(&CONTEXT->ssql->sstr.create_index, $3, $5, $7);
+			create_index_init(&CONTEXT->ssql->sstr.create_index, $4, $6, $8, $2);
 		}
     ;
+create_index_unique:
+	{ $$ = false; }
+	| UNIQUE { $$ = true; }
+	;
 
 drop_index:			/*drop index 语句的语法解析树*/
     DROP INDEX ID  SEMICOLON 

@@ -1501,6 +1501,29 @@ TEST_F(SQLTest, GroupByNullShouldWork) {
                                                                "NULL | 1\n");
 }
 
+// ##     ## ##    ## ####  #######  ##     ## ########
+// ##     ## ###   ##  ##  ##     ## ##     ## ##
+// ##     ## ####  ##  ##  ##     ## ##     ## ##
+// ##     ## ## ## ##  ##  ##     ## ##     ## ######
+// ##     ## ##  ####  ##  ##  ## ## ##     ## ##
+// ##     ## ##   ###  ##  ##    ##  ##     ## ##
+//  #######  ##    ## ####  ##### ##  #######  ########
+
+TEST_F(SQLTest, UniqueIndexMetaShouldWork) {
+  ASSERT_EQ(exec_sql("create table t (a int, b int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create unique index t_a on t(a);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create index t_b on t(b);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("desc t;"),
+            "t(\n"
+            "\tfield name=__trx, type=ints, len=4, visible=no, nullable=no\n"
+            "\tfield name=__null, type=ints, len=4, visible=no, nullable=no\n"
+            "\tfield name=a, type=ints, len=4, visible=yes, nullable=no\n"
+            "\tfield name=b, type=ints, len=4, visible=yes, nullable=no\n"
+            "\tindex name=t_a, field=a, unique=1\n"
+            "\tindex name=t_b, field=b, unique=0\n"
+            ")\n");
+}
+
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
   testing::InitGoogleTest(&argc, argv);
