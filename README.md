@@ -66,7 +66,7 @@ please refer to docs/how_to_build.md
 - [X] 唯一索引 (unique)
 - [X] 支持NULL类型 (null)
 - [ ] 多列索引 (multi-index)
-- [ ] 超长字段 (text)
+- [X] 超长字段 (text)
 - [X] 查询条件支持表达式 (expression)
 - [X] 子查询
   - [X] 简单子查询 (simple-sub-query)
