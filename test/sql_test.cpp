@@ -1549,6 +1549,24 @@ TEST_F(SQLTest, UniqueIndexUpdateConflictRecordShouldFailure) {
                                                       "2 | 3\n");
 }
 
+// ######## ######## ##     ## ########
+//    ##    ##        ##   ##     ##
+//    ##    ##         ## ##      ##
+//    ##    ######      ###       ##
+//    ##    ##         ## ##      ##
+//    ##    ##        ##   ##     ##
+//    ##    ######## ##     ##    ##
+
+TEST_F(SQLTest, TextCreateTableShouldWork) {
+  ASSERT_EQ(exec_sql("create table t (a text);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("desc t;"),
+            "t(\n"
+            "\tfield name=__trx, type=ints, len=4, visible=no, nullable=no\n"
+            "\tfield name=__null, type=ints, len=4, visible=no, nullable=no\n"
+            "\tfield name=a, type=text, len=4, visible=yes, nullable=no\n"
+            ")\n");
+}
+
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
   testing::InitGoogleTest(&argc, argv);
