@@ -1567,6 +1567,33 @@ TEST_F(SQLTest, TextCreateTableShouldWork) {
             ")\n");
 }
 
+TEST_F(SQLTest, TextInsertSelectShouldWork) {
+  ASSERT_EQ(exec_sql("create table t (a text);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("insert into t values ('aa');"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t;"), "a\n"
+                                          "aa\n");
+}
+
+TEST_F(SQLTest, TextInsertSelectVeryLongTextShouldWork) {
+  ASSERT_EQ(exec_sql("create table t (a text);"), "SUCCESS\n");
+  std::string long_text = common::random_string(4095);
+  ASSERT_EQ(
+      exec_sql(std::string() + "insert into t values ('" + long_text + "');"),
+      "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t;"),
+            std::string() + "a\n" + long_text + "\n");
+}
+
+TEST_F(SQLTest, TextInsertSelectOverTextShouldWork) {
+  ASSERT_EQ(exec_sql("create table t (a text);"), "SUCCESS\n");
+  std::string long_text = common::random_string(4096);
+  ASSERT_EQ(
+      exec_sql(std::string() + "insert into t values ('" + long_text + "');"),
+      "SUCCESS\n");
+  ASSERT_EQ(exec_sql("select * from t;"),
+            std::string() + "a\n" + long_text.substr(0, 4095) + "\n");
+}
+
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
   testing::InitGoogleTest(&argc, argv);

@@ -30,7 +30,7 @@ public:
   void close();
   RC remove();
 
-  std::unique_ptr<LargeBlock> get(uint32_t idx);
+  std::unique_ptr<LargeBlock> get(uint32_t idx) const;
   RC set(uint32_t idx, const char *data, size_t size, bool end_null = true);
   void mark(uint32_t idx, bool used);
 

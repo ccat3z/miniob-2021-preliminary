@@ -53,7 +53,7 @@ RC LargeBlockPool::remove() {
   return RC::SUCCESS;
 }
 
-std::unique_ptr<LargeBlock> LargeBlockPool::get(uint32_t idx) {
+std::unique_ptr<LargeBlock> LargeBlockPool::get(uint32_t idx) const {
   if (fd < 0) {
     LOG_ERROR("LargeBlockPool is not opened");
     return nullptr;

@@ -87,6 +87,11 @@ bool value_cast(Value *value, AttrType type) {
     return true;
   }
 
+  if (value->type == CHARS && type == TEXT) {
+    value->type = TEXT;
+    return true;
+  }
+
   return false;
 }
 void value_destroy(Value *value) {

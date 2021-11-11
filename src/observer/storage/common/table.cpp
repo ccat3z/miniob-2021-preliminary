@@ -30,10 +30,12 @@ See the Mulan PSL v2 for more details. */
 #include "storage/common/table.h"
 #include "storage/common/table_meta.h"
 #include "storage/default/disk_buffer_pool.h"
+#include "storage/default/large_block_pool.h"
 #include "storage/trx/trx.h"
 
 Table::Table()
-    : data_buffer_pool_(nullptr), file_id_(-1), record_handler_(nullptr) {}
+    : data_buffer_pool_(nullptr), large_block_pool_(nullptr), file_id_(-1),
+      record_handler_(nullptr) {}
 
 Table::~Table() {
   delete record_handler_;
@@ -42,6 +44,10 @@ Table::~Table() {
   if (data_buffer_pool_ != nullptr && file_id_ >= 0) {
     data_buffer_pool_->close_file(file_id_);
     data_buffer_pool_ = nullptr;
+  }
+
+  if (large_block_pool_ != nullptr) {
+    delete large_block_pool_;
   }
 
   LOG_INFO("Table has been closed: %s", name());
@@ -115,6 +121,15 @@ RC Table::create(const char *path, const char *name, const char *base_dir,
   rc = init_record_handler(base_dir);
 
   base_dir_ = base_dir;
+
+  // Large block pool
+  large_block_pool_ = new LargeBlockPool();
+  rc = large_block_pool_->open_file(std::string(base_dir) + "/" +
+                                    table_meta_.name() + ".lbp");
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+
   LOG_INFO("Successfully create table %s:%s", base_dir, name);
   return rc;
 }
@@ -140,6 +155,15 @@ RC Table::open(const char *meta_file, const char *base_dir) {
 
   base_dir_ = base_dir;
 
+  // Large block pool
+  large_block_pool_ = new LargeBlockPool();
+  rc = large_block_pool_->open_file(std::string(base_dir) + "/" +
+                                    table_meta_.name() + ".lbp");
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+
+  // Index
   const int index_num = table_meta_.index_num();
   for (int i = 0; i < index_num; i++) {
     const IndexMeta *index_meta = table_meta_.index(i);
@@ -194,6 +218,12 @@ RC Table::drop() {
   if (::remove(data_file.c_str()) != 0) {
     LOG_ERROR("Failed to delete data file: %s", data_file);
     return RC::IOERR_DELETE;
+  }
+
+  // Large block pool
+  RC rc = large_block_pool_->remove();
+  if (rc != RC::SUCCESS) {
+    return rc;
   }
 
   return RC::SUCCESS;
@@ -329,7 +359,18 @@ RC Table::make_record(int value_num, Value *values, char *&record_out) {
     const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
     Value &value = values[i];
 
-    memcpy(record + field->offset(), value.data, field->len());
+    // TODO: refactor
+    if (value.type == TEXT) {
+      uint32_t idx = large_block_pool_->find_next_free();
+      const char *text = (const char *)value.data;
+      RC rc = large_block_pool_->set(idx, text, strlen(text) + 1);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
+      memcpy(record + field->offset(), &idx, field->len());
+    } else {
+      memcpy(record + field->offset(), value.data, field->len());
+    }
     if (value.is_null) {
       if (field->nullable()) {
         *null_field |= 1 << (i + normal_field_start_index);
@@ -677,8 +718,22 @@ RC Table::update_record(Trx *trx, const char *attribute_name, Value *value,
     auto old_value = std::unique_ptr<char, decltype(free) *>(
         (char *)malloc(field->len()), free);
     auto updater = [&](Record &record) {
+      // TODO: CLEAN TEXT values
       memcpy(old_value.get(), record.data + field->offset(), field->len());
-      memcpy(record.data + field->offset(), value->data, field->len());
+
+      // TODO: refactor
+      if (value->type == TEXT) {
+        uint32_t idx = large_block_pool_->find_next_free();
+        const char *text = (const char *)value->data;
+        RC rc = large_block_pool_->set(idx, text, strlen(text) + 1);
+        if (rc != RC::SUCCESS) {
+          return rc;
+        }
+        memcpy(record.data + field->offset(), &idx, field->len());
+      } else {
+        memcpy(record.data + field->offset(), value->data, field->len());
+      }
+
       return RC::SUCCESS;
     };
     auto recovery = [&](Record &record) {
@@ -777,6 +832,7 @@ RC Table::commit_delete(Trx *trx, const RID &rid) {
   if (rc != RC::SUCCESS) {
     return rc;
   }
+  // TODO: CLEAN TEXT values
   rc = delete_entry_of_indexes(record.data, record.rid, false);
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Failed to delete indexes of record(rid=%d.%d). rc=%d:%s",
@@ -918,4 +974,8 @@ RC Table::sync() {
   }
   LOG_INFO("Sync table over. table=%s", name());
   return rc;
+}
+
+std::unique_ptr<LargeBlock> Table::get_block(uint32_t idx) const {
+  return large_block_pool_->get(idx);
 }

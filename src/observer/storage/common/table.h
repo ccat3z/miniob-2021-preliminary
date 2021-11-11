@@ -16,6 +16,7 @@ See the Mulan PSL v2 for more details. */
 #define __OBSERVER_STORAGE_COMMON_TABLE_H__
 
 #include "storage/common/table_meta.h"
+#include "storage/default/large_block_pool.h"
 #include <functional>
 
 class DiskBufferPool;
@@ -69,6 +70,8 @@ public:
   RC create_index(Trx *trx, const char *index_name, const char *attribute_name,
                   bool unique);
 
+  std::unique_ptr<LargeBlock> get_block(uint32_t idx) const;
+
 public:
   const char *name() const;
 
@@ -115,6 +118,7 @@ private:
   std::string base_dir_;
   TableMeta table_meta_;
   DiskBufferPool *data_buffer_pool_; /// 数据文件关联的buffer pool
+  LargeBlockPool *large_block_pool_;
   int file_id_;
   RecordFileHandler *record_handler_; /// 记录操作
   std::vector<Index *> indexes_;
