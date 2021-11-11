@@ -9,7 +9,14 @@ MESSAGE("${CMAKE_COMMON_FLAGS}")
 
 
 #INCLUDE_DIRECTORIES([AFTER|BEFORE] [SYSTEM] dir1 dir2 ...)
-INCLUDE_DIRECTORIES(. ${PROJECT_SOURCE_DIR}/../deps ${PROJECT_SOURCE_DIR}/../src/observer /usr/local/include SYSTEM)
+INCLUDE_DIRECTORIES(
+    .
+    ${PROJECT_SOURCE_DIR}/../deps
+    ${PROJECT_SOURCE_DIR}/../deps/filesystem/include
+    ${PROJECT_SOURCE_DIR}/../src/observer
+    /usr/local/include
+    SYSTEM
+)
 # 父cmake 设置的include_directories 和link_directories并不传导到子cmake里面
 #INCLUDE_DIRECTORIES(BEFORE ${CMAKE_INSTALL_PREFIX}/include)
 LINK_DIRECTORIES(/usr/local/lib /usr/local/lib64 ${PROJECT_BINARY_DIR}/../lib)
