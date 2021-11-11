@@ -59,10 +59,10 @@ TEST_F(LBPTest, LongDataShouldBeCutAndEndWithNull) {
   strcpy(data + 4090, "123456789");
 
   auto idx = lbp.find_next_free();
-  ASSERT_EQ(lbp.set(idx, data, 4100, true), RC::SUCCESS);
+  ASSERT_EQ(lbp.set(idx, data, 4100), RC::SUCCESS);
 
   auto res = lbp.get(idx);
-  ASSERT_EQ(std::string(res->data + 4090), "12345");
+  ASSERT_EQ(std::string(res->data + 4090), "123456");
 }
 
 int main(int argc, char **argv) {

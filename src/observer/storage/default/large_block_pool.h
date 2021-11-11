@@ -19,6 +19,7 @@
 class LargeBlock {
 public:
   char data[LARGE_BLOCK_POOL_BLOCK_SIZE];
+  char null = 0;
 };
 
 class LargeBlockPool {
@@ -31,7 +32,7 @@ public:
   RC remove();
 
   std::unique_ptr<LargeBlock> get(uint32_t idx) const;
-  RC set(uint32_t idx, const char *data, size_t size, bool end_null = true);
+  RC set(uint32_t idx, const char *data, size_t size);
   void mark(uint32_t idx, bool used);
 
   uint32_t find_next_free();

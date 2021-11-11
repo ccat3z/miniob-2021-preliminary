@@ -69,8 +69,7 @@ std::unique_ptr<LargeBlock> LargeBlockPool::get(uint32_t idx) const {
   return blk;
 }
 
-RC LargeBlockPool::set(uint32_t idx, const char *data, size_t size,
-                       bool end_null) {
+RC LargeBlockPool::set(uint32_t idx, const char *data, size_t size) {
   if (fd < 0) {
     LOG_ERROR("LargeBlockPool is not opened");
     return RC::GENERIC_ERROR;
@@ -83,12 +82,6 @@ RC LargeBlockPool::set(uint32_t idx, const char *data, size_t size,
   if (write(fd, data, size) < 0) {
     LOG_ERROR("Failed to read set %d: %s", idx, strerror(errno));
     return RC::IOERR;
-  }
-
-  if (end_null) {
-    lseek(fd, -1, SEEK_CUR);
-    write(fd, "", 1);
-    // TODO: handle error
   }
 
   if (idx > 0) {

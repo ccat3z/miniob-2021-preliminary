@@ -1576,7 +1576,7 @@ TEST_F(SQLTest, TextInsertSelectShouldWork) {
 
 TEST_F(SQLTest, TextInsertSelectVeryLongTextShouldWork) {
   ASSERT_EQ(exec_sql("create table t (a text);"), "SUCCESS\n");
-  std::string long_text = common::random_string(4095);
+  std::string long_text = common::random_string(4096);
   ASSERT_EQ(
       exec_sql(std::string() + "insert into t values ('" + long_text + "');"),
       "SUCCESS\n");
@@ -1586,12 +1586,12 @@ TEST_F(SQLTest, TextInsertSelectVeryLongTextShouldWork) {
 
 TEST_F(SQLTest, TextInsertSelectOverTextShouldWork) {
   ASSERT_EQ(exec_sql("create table t (a text);"), "SUCCESS\n");
-  std::string long_text = common::random_string(4096);
+  std::string long_text = common::random_string(4097);
   ASSERT_EQ(
       exec_sql(std::string() + "insert into t values ('" + long_text + "');"),
       "SUCCESS\n");
   ASSERT_EQ(exec_sql("select * from t;"),
-            std::string() + "a\n" + long_text.substr(0, 4095) + "\n");
+            std::string() + "a\n" + long_text.substr(0, 4096) + "\n");
 }
 
 int main(int argc, char **argv) {
