@@ -65,7 +65,8 @@ please refer to docs/how_to_build.md
 - [X] 一次插入多条数据 (insert)
 - [X] 唯一索引 (unique)
 - [X] 支持NULL类型 (null)
-- [ ] 多列索引 (multi-index)
+- [X] 多列索引 (multi-index)
+  - [ ] Refactor b+ tree index?
 - [X] 超长字段 (text)
 - [X] 查询条件支持表达式 (expression)
 - [X] 子查询
