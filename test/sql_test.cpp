@@ -1594,6 +1594,27 @@ TEST_F(SQLTest, TextInsertSelectOverTextShouldWork) {
             std::string() + "a\n" + long_text.substr(0, 4096) + "\n");
 }
 
+// ##     ## ##     ## ##       ######## ####
+// ###   ### ##     ## ##          ##     ##
+// #### #### ##     ## ##          ##     ##
+// ## ### ## ##     ## ##          ##     ##
+// ##     ## ##     ## ##          ##     ##
+// ##     ## ##     ## ##          ##     ##
+// ##     ##  #######  ########    ##    ####
+// #### ##    ## ########  ######## ##     ##
+//  ##  ###   ## ##     ## ##        ##   ##
+//  ##  ####  ## ##     ## ##         ## ##
+//  ##  ## ## ## ##     ## ######      ###
+//  ##  ##  #### ##     ## ##         ## ##
+//  ##  ##   ### ##     ## ##        ##   ##
+// #### ##    ## ########  ######## ##     ##
+
+TEST_F(SQLTest, MultiIndexCanCreate) {
+  ASSERT_EQ(exec_sql("create table t (a int, b float, c int);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create index t1 on t(a, b);"), "SUCCESS\n");
+  ASSERT_EQ(exec_sql("create index t2 on t(b, c);"), "SUCCESS\n");
+}
+
 int main(int argc, char **argv) {
   srand((unsigned)time(NULL));
   testing::InitGoogleTest(&argc, argv);
