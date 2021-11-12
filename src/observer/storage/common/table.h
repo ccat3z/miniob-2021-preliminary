@@ -67,8 +67,8 @@ public:
   RC scan_record(Trx *trx, ConditionFilter *filter, int limit, void *context,
                  void (*record_reader)(const char *data, void *context));
 
-  RC create_index(Trx *trx, const char *index_name, const char *attribute_name,
-                  bool unique);
+  RC create_index(Trx *trx, const char *index_name, const char **attribute_name,
+                  size_t attribute_num, bool unique);
 
   std::unique_ptr<LargeBlock> get_block(uint32_t idx) const;
 

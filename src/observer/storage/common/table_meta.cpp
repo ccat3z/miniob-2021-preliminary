@@ -152,8 +152,24 @@ const IndexMeta *TableMeta::index(const char *name) const {
 }
 
 const IndexMeta *TableMeta::find_index_by_field(const char *field) const {
+  return find_index_by_field(&field, 1);
+}
+
+const IndexMeta *TableMeta::find_index_by_field(const char **fields,
+                                                size_t fields_num) const {
   for (const IndexMeta &index : indexes_) {
-    if (0 == strcmp(index.field(), field)) {
+    if (fields_num != index.fields().size()) {
+      continue;
+    }
+
+    bool matched = true;
+    for (size_t i = 0; i < fields_num; i++) {
+      if (index.fields()[i] != fields[i]) {
+        matched = false;
+        break;
+      }
+    }
+    if (matched) {
       return &index;
     }
   }
